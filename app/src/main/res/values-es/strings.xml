@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Inicio -->
+    <string name="battery_percent">%1$d %%</string>
+    <string name="battery_charging">cargando</string>
+    <string name="alarm_next">alarma %1$s</string>
+    <string name="favorites_empty">Desliza hacia arriba y mantén pulsada una app para añadirla aquí.</string>
+
+    <!-- Cajón -->
+    <string name="search_hint">Buscar</string>
+    <string name="apps_count">%1$d apps</string>
+    <string name="mode_actions">acciones</string>
+    <string name="mode_calculator">calculadora</string>
+    <string name="drawer_hint">enter abre · &gt; acciones · = calcular</string>
+    <string name="calc_hint">enter copia el resultado</string>
+    <string name="calc_type">escribe una operación</string>
+    <string name="calc_copied">copiado</string>
+    <string name="no_results">nada encontrado</string>
+
+    <!-- Acciones -->
+    <string name="act_torch">Linterna</string>
+    <string name="act_wifi">Wi-Fi</string>
+    <string name="act_bluetooth">Bluetooth</string>
+    <string name="act_sound">Sonido</string>
+    <string name="act_battery">Batería</string>
+    <string name="act_alarms">Alarmas</string>
+    <string name="act_lock">Bloquear</string>
+    <string name="act_wallpaper">Fondo NIHIL</string>
+    <string name="act_nihil">Ajustes de NIHIL</string>
+    <string name="act_system">Ajustes del sistema</string>
+    <string name="hint_on">encendida</string>
+    <string name="hint_off">apagada</string>
+    <string name="hint_panel">panel</string>
+    <string name="hint_system">sistema</string>
+    <string name="hint_screen">pantalla</string>
+    <string name="hint_studio">estudio</string>
+
+    <!-- Menú de apps -->
+    <string name="menu_add_home">Añadir a inicio</string>
+    <string name="menu_remove_home">Quitar de inicio</string>
+    <string name="menu_move_up">Subir</string>
+    <string name="menu_move_down">Bajar</string>
+    <string name="menu_hide">Ocultar</string>
+    <string name="menu_info">Información</string>
+    <string name="menu_uninstall">Desinstalar</string>
+
+    <!-- Ajustes -->
+    <string name="settings_title">Ajustes</string>
+    <string name="set_default">App de inicio</string>
+    <string name="set_default_on">NIHIL es tu pantalla de inicio</string>
+    <string name="set_default_off">Toca para usar NIHIL como pantalla de inicio</string>
+    <string name="section_look">aspecto</string>
+    <string name="set_icons">Iconos</string>
+    <string name="icons_mono">mono</string>
+    <string name="icons_grey">gris</string>
+    <string name="icons_color">color</string>
+    <string name="set_icons_sub">Mono usa el icono temático cuando la app lo tiene.</string>
+    <string name="set_fav_icons">Iconos en favoritos</string>
+    <string name="set_dim">Atenuar el fondo</string>
+    <string name="set_wallpaper">Fondo NIHIL</string>
+    <string name="set_wallpaper_sub">Convierte una foto en LEDs</string>
+    <string name="section_behaviour">comportamiento</string>
+    <string name="set_keyboard">Teclado al abrir el cajón</string>
+    <string name="set_glyph">Luz Glyph</string>
+    <string name="set_glyph_sub">Luz alrededor de la pantalla y LEDs con cada notificación. Necesita acceso a las notificaciones.</string>
+    <string name="set_lock">Doble toque para bloquear</string>
+    <string name="set_lock_sub">Usa un servicio de accesibilidad que solo bloquea la pantalla.</string>
+    <string name="section_apps">apps</string>
+    <string name="set_hidden_none">No hay apps ocultas</string>
+    <string name="set_unhide">mostrar</string>
+    <string name="section_about">acerca de</string>
+    <string name="about_text">NIHIL para Android %1$s. Sin anuncios, sin rastreo y sin permiso de Internet.</string>
+    <string name="about_fonts">Doto, Space Grotesk y Space Mono, con licencia SIL Open Font License 1.1.</string>
+
+    <!-- Estudio de fondos -->
+    <string name="studio_title">Fondo NIHIL</string>
+    <string name="studio_empty">Elige una foto: se convertirá en una matriz de LEDs a la resolución exacta de tu pantalla.</string>
+    <string name="studio_pick">elegir foto</string>
+    <string name="studio_dots">puntos</string>
+    <string name="dots_fine">fino</string>
+    <string name="dots_normal">normal</string>
+    <string name="dots_coarse">grueso</string>
+    <string name="studio_apply">aplicar a</string>
+    <string name="apply_home">inicio</string>
+    <string name="apply_lock">bloqueo</string>
+    <string name="apply_both">ambas</string>
+    <string name="studio_rendering">renderizando…</string>
+    <string name="studio_done">listo</string>
+    <string name="studio_failed">no se pudo leer la imagen</string>
+
+    <!-- Servicios -->
+    <string name="glyph_service_label">Luz Glyph de NIHIL</string>
+    <string name="lock_service_label">NIHIL · doble toque para bloquear</string>
+    <string name="lock_service_description">Bloquea la pantalla cuando tocas dos veces el inicio de NIHIL. No lee nada de la pantalla.</string>
+
+    <!-- Avisos y etiquetas extra -->
+    <string name="menu_system_wallpaper">Fondo del sistema</string>
+    <string name="menu_unhide">Mostrar en la lista</string>
+    <string name="launch_failed">No se puede abrir %1$s</string>
+    <string name="open_failed">Nada en este móvil puede abrir eso</string>
+    <string name="shade_failed">No se pudieron abrir las notificaciones</string>
+    <string name="lock_needs_service">Activa «NIHIL · doble toque para bloquear» en Accesibilidad.</string>
+    <string name="glyph_needs_access">Permite el acceso a las notificaciones para la luz Glyph.</string>
+    <string name="restricted_hint">Si Android dice «Ajuste restringido»: Información de la app → ⋮ → Permitir ajustes restringidos.</string>
+    <string name="web_search">Buscar «%1$s» en la web</string>
+    <string name="hint_hidden">oculta</string>
+    <string name="torch_unavailable">Linterna no disponible</string>
+    <string name="set_hidden_sub">Las apps ocultas salen de la lista, pero la búsqueda las sigue encontrando.</string>
+    <plurals name="results">
+        <item quantity="one">%d resultado</item>
+        <item quantity="many">%d resultados</item>
+        <item quantity="other">%d resultados</item>
+    </plurals>
+</resources>

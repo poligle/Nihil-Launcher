@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">NIHIL</string>
+    <string name="tagline" translatable="false">ex nihilo</string>
+
+    <!-- Home -->
+    <string name="battery_percent">%1$d%%</string>
+    <string name="battery_charging">charging</string>
+    <string name="alarm_next">alarm %1$s</string>
+    <string name="favorites_empty">Swipe up and hold an app to add it here.</string>
+
+    <!-- Drawer -->
+    <string name="search_hint">Search</string>
+    <string name="apps_count">%1$d apps</string>
+    <string name="mode_actions">actions</string>
+    <string name="mode_calculator">calculator</string>
+    <string name="drawer_hint">enter opens · &gt; actions · = calculate</string>
+    <string name="calc_hint">enter copies the result</string>
+    <string name="calc_type">type an expression</string>
+    <string name="calc_copied">copied</string>
+    <string name="no_results">nothing found</string>
+
+    <!-- Actions -->
+    <string name="act_torch">Torch</string>
+    <string name="act_wifi">Wi-Fi</string>
+    <string name="act_bluetooth">Bluetooth</string>
+    <string name="act_sound">Sound</string>
+    <string name="act_battery">Battery</string>
+    <string name="act_alarms">Alarms</string>
+    <string name="act_lock">Lock</string>
+    <string name="act_wallpaper">NIHIL wallpaper</string>
+    <string name="act_nihil">NIHIL settings</string>
+    <string name="act_system">System settings</string>
+    <string name="hint_on">on</string>
+    <string name="hint_off">off</string>
+    <string name="hint_panel">panel</string>
+    <string name="hint_system">system</string>
+    <string name="hint_screen">screen</string>
+    <string name="hint_studio">studio</string>
+
+    <!-- App menu -->
+    <string name="menu_add_home">Add to home</string>
+    <string name="menu_remove_home">Remove from home</string>
+    <string name="menu_move_up">Move up</string>
+    <string name="menu_move_down">Move down</string>
+    <string name="menu_hide">Hide</string>
+    <string name="menu_info">App info</string>
+    <string name="menu_uninstall">Uninstall</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="set_default">Home app</string>
+    <string name="set_default_on">NIHIL is your home screen</string>
+    <string name="set_default_off">Tap to make NIHIL your home screen</string>
+    <string name="section_look">look</string>
+    <string name="set_icons">Icons</string>
+    <string name="icons_mono">mono</string>
+    <string name="icons_grey">grey</string>
+    <string name="icons_color">colour</string>
+    <string name="set_icons_sub">Mono uses the themed icon when the app has one.</string>
+    <string name="set_fav_icons">Icons in favourites</string>
+    <string name="set_dim">Dim the wallpaper</string>
+    <string name="set_wallpaper">NIHIL wallpaper</string>
+    <string name="set_wallpaper_sub">Turn a photo into LEDs</string>
+    <string name="section_behaviour">behaviour</string>
+    <string name="set_keyboard">Keyboard when the drawer opens</string>
+    <string name="set_glyph">Glyph light</string>
+    <string name="set_glyph_sub">Light around the screen and LEDs for every notification. Needs notification access.</string>
+    <string name="set_lock">Double tap to lock</string>
+    <string name="set_lock_sub">Uses an accessibility service that only locks the screen.</string>
+    <string name="section_apps">apps</string>
+    <string name="set_hidden_none">No hidden apps</string>
+    <string name="set_unhide">show</string>
+    <string name="section_about">about</string>
+    <string name="about_text">NIHIL for Android %1$s. No ads, no tracking, no internet permission.</string>
+    <string name="about_fonts">Doto, Space Grotesk and Space Mono, under the SIL Open Font License 1.1.</string>
+    <string name="about_site" translatable="false">nihilshell.com</string>
+
+    <!-- Wallpaper studio -->
+    <string name="studio_title">NIHIL wallpaper</string>
+    <string name="studio_empty">Pick a photo: it becomes a matrix of LEDs at the exact resolution of your screen.</string>
+    <string name="studio_pick">choose photo</string>
+    <string name="studio_dots">dots</string>
+    <string name="dots_fine">fine</string>
+    <string name="dots_normal">normal</string>
+    <string name="dots_coarse">coarse</string>
+    <string name="studio_apply">apply to</string>
+    <string name="apply_home">home</string>
+    <string name="apply_lock">lock</string>
+    <string name="apply_both">both</string>
+    <string name="studio_rendering">rendering…</string>
+    <string name="studio_done">done</string>
+    <string name="studio_failed">could not read the image</string>
+
+    <!-- Services -->
+    <string name="glyph_service_label">NIHIL Glyph light</string>
+    <string name="lock_service_label">NIHIL double tap to lock</string>
+    <string name="lock_service_description">Locks the screen when you double tap the NIHIL home screen. It reads nothing on the screen.</string>
+
+    <!-- Notices and extra labels -->
+    <string name="menu_system_wallpaper">System wallpaper</string>
+    <string name="menu_unhide">Show in the list</string>
+    <string name="launch_failed">Can\'t open %1$s</string>
+    <string name="open_failed">Nothing on this phone can open that</string>
+    <string name="shade_failed">Couldn\'t open the notifications</string>
+    <string name="lock_needs_service">Turn on “NIHIL double tap to lock” in Accessibility.</string>
+    <string name="glyph_needs_access">Allow notification access for the Glyph light.</string>
+    <string name="restricted_hint">If Android says “Restricted setting”: App info → ⋮ → Allow restricted settings.</string>
+    <string name="web_search">Search the web for “%1$s”</string>
+    <string name="hint_hidden">hidden</string>
+    <string name="torch_unavailable">No torch available</string>
+    <string name="set_hidden_sub">Hidden apps leave the list, but search still finds them.</string>
+    <plurals name="results">
+        <item quantity="one">%d result</item>
+        <item quantity="other">%d results</item>
+    </plurals>
+</resources>

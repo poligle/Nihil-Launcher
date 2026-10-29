@@ -1,0 +1,20 @@
+# Every push and pull request: the JVM tests and a debug build.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      # The runner's Android SDK is used as is; Gradle installs anything missing.
+      - run: ./gradlew --no-daemon test assembleDebug
