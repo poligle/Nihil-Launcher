@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Settings: when the Glyph light or the double tap is on but Android hasn't granted its
+  access yet, tapping the row opens the access page instead of switching it off.
+- README: a proper one, with the design language, settings, the drawer's grammar and the
+  structure of the code.
+
 ## 0.1.0 — 2026-10-29
 
 The first version.

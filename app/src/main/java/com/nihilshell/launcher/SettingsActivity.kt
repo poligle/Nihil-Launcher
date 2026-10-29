@@ -128,7 +128,15 @@ class SettingsActivity : Activity() {
 
         glyphSub = body(getString(R.string.set_glyph_sub))
         glyphSwitch = LedSwitch(this)
-        column.addView(row(getString(R.string.set_glyph), glyphSub, glyphSwitch) { glyphSwitch.performClick() })
+        // On but without access (the default on a fresh install): the row leads to the
+        // access page instead of switching the light off.
+        column.addView(row(getString(R.string.set_glyph), glyphSub, glyphSwitch) {
+            if (prefs.glyph && !Access.hasNotificationAccess(this)) {
+                Access.startFirst(this, Access.notificationAccessIntents(this))
+            } else {
+                glyphSwitch.performClick()
+            }
+        })
         glyphSwitch.set(prefs.glyph)
         glyphSwitch.onChange = { on ->
             prefs.glyph = on
@@ -138,7 +146,13 @@ class SettingsActivity : Activity() {
 
         lockSub = body(getString(R.string.set_lock_sub))
         lockSwitch = LedSwitch(this)
-        column.addView(row(getString(R.string.set_lock), lockSub, lockSwitch) { lockSwitch.performClick() })
+        column.addView(row(getString(R.string.set_lock), lockSub, lockSwitch) {
+            if (prefs.doubleTapLock && !Access.hasLockService(this)) {
+                Access.startFirst(this, listOf(Access.lockServiceIntent()))
+            } else {
+                lockSwitch.performClick()
+            }
+        })
         lockSwitch.set(prefs.doubleTapLock)
         lockSwitch.onChange = { on ->
             prefs.doubleTapLock = on
