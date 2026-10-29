@@ -16,7 +16,9 @@
 </p>
 
 <p align="center">
-  <img src="docs/screens/home-drawing.webp" width="300" alt="The NIHIL home screen: an LED clock, the date, the battery as ten LEDs and the favourites at the bottom, over a dot-matrix wallpaper.">
+  <img src="docs/screens/home.webp" width="260" alt="The home screen: the LED clock, the date, the battery as ten LEDs, the next alarm and unread apps, and the favourites at the bottom, over a dot-matrix night sky.">&nbsp;
+  <img src="docs/screens/drawer.webp" width="260" alt="The drawer searching for ca: Camera, Calendar, Calculator and Contacts with their icons in ink, Camera ready for enter, and a web search last.">&nbsp;
+  <img src="docs/screens/menu.webp" width="260" alt="The menu of an app held on the home screen: its shortcuts, then remove from home, move up, hide, app info and uninstall in red.">
 </p>
 
 NIHIL for Android is my home screen. It speaks the language of
@@ -55,7 +57,8 @@ framework alone — no AndroidX, no Compose, no libraries beyond the Kotlin stan
   in greys. Or grey, or the original colours.
 - **Spanish or English**, following the phone's language.
 
-<sub>The phone above is drawn by the website with the launcher's LED digits.</sub>
+<sub>The screens at the top are renders of the launcher's own layout (`ui/`) at a Galaxy
+A35's resolution, with generic app icons in ink and a wallpaper made with the studio's algorithm.</sub>
 
 ---
 
