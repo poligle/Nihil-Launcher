@@ -13,8 +13,11 @@ import kotlin.math.roundToInt
 object DotRender {
 
     /** The photo at [uri], scaled and centre-cropped to exactly [width] x [height]. */
-    fun decodeCover(resolver: ContentResolver, uri: Uri, width: Int, height: Int): Bitmap {
-        val source = ImageDecoder.createSource(resolver, uri)
+    fun decodeCover(resolver: ContentResolver, uri: Uri, width: Int, height: Int): Bitmap =
+        decodeCover(ImageDecoder.createSource(resolver, uri), width, height)
+
+    /** The same, from any source (the launcher's own wallpaper, in its assets). */
+    fun decodeCover(source: ImageDecoder.Source, width: Int, height: Int): Bitmap {
         val decoded = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
             decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
             val (scale, _, _) = DotMatrix.cover(info.size.width, info.size.height, width, height)

@@ -100,8 +100,10 @@ Motion uses one curve, `cubic-bezier(0.2, 0, 0, 1)`, at 140, 240, 320 or 480 ms.
 3. Open **NIHIL** from the app list and tap **Home app**, or Settings → Apps → Default
    apps → Home app.
 
-The light on the frame needs notification access, and the double tap the accessibility
-service; NIHIL's settings take you to both. Installed from an APK file, Android 13 and
+The light on the frame needs notification access; the double tap, and the same light over
+other apps, the accessibility service. NIHIL's settings take you to both. The first time
+NIHIL is the home app it puts on its own wallpaper, the night in LEDs, as the desktop
+starts; the studio changes it. Installed from an APK file, Android 13 and
 later may grey them out as a *restricted setting*: App info → ⋮ → **Allow restricted
 settings**.
 
@@ -174,8 +176,8 @@ Open **NIHIL** from the app list, the gear in the drawer, or hold the home scree
 | Dim the wallpaper               | off     | A dark veil over any wallpaper                                    |
 | NIHIL wallpaper                 |         | The studio                                                        |
 | Keyboard when the drawer opens  | on      | Type straight away, or browse first                               |
-| Glyph light                     | on      | The light on the frame and the unread icons (needs notification access) |
-| Double tap to lock              | off     | Needs the accessibility service, which only locks                 |
+| Glyph light                     | on      | The light on the frame and the unread icons (needs notification access); over other apps too with the accessibility service |
+| Double tap to lock              | off     | Needs the accessibility service, which locks and draws the light  |
 | Hidden apps                     |         | Show them in the list again                                       |
 
 ---
@@ -184,16 +186,17 @@ Open **NIHIL** from the app list, the gear in the drawer, or hold the home scree
 
 | Permission                     | What for                                                          |
 |--------------------------------|-------------------------------------------------------------------|
-| `SET_WALLPAPER`                | The studio                                                        |
+| `SET_WALLPAPER`                | The studio, and NIHIL's wallpaper the first time it is home       |
 | `EXPAND_STATUS_BAR`            | Swipe down for the notifications                                  |
 | `REQUEST_DELETE_PACKAGES`      | "Uninstall" in the app menu                                       |
 | Notification access, optional  | The light on the frame and the unread icons                       |
-| Accessibility, optional        | Only to lock the phone on a double tap                            |
+| Accessibility, optional        | To lock the phone on a double tap, and the Glyph light over other apps |
 
 There is no `INTERNET` permission. Of a notification, NIHIL looks at which app posted it,
 its flags and its category, never its text; silent notifications and anything Do Not
 Disturb holds back stay dark. The accessibility service reads no content and only
-listens to NIHIL's own windows.
+listens to NIHIL's own windows; the light it draws is a window of its own that takes no
+touch, and is there only while the light runs.
 
 ---
 
@@ -273,6 +276,10 @@ app/src/main/java/com/nihilshell/launcher/
 - **Nothing runs in the background.** The clock follows `TIME_TICK` and the battery its
   broadcast, only while the home screen is visible. The notification listener and the
   accessibility service exist only if you turn them on.
+- **The Glyph light** is the desktop's (`GlyphLight.qml`): a segment that runs once round,
+  clockwise from the top-right corner, and two lights that climb from the bottom for the
+  charger. Round the card on the home screen; round the screen's own corners, from the
+  accessibility service, over other apps.
 - **Icons**: Android 13's monochrome layer tinted ink. Without one, the foreground layer is
   clipped to the icon's circle, turned to greys and inverted when it's mostly dark; a
   foreground that fills the icon falls back to grey. Rendered on two threads, cached.

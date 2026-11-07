@@ -49,6 +49,10 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
     private val empty = context.mono(context.getString(R.string.favorites_empty), 11f, Nihil.DIM)
 
     private val scrim = Paint()
+    // The shades behind the clock and the favourites, made again only when the card changes.
+    private var topShade: LinearGradient? = null
+    private var bottomShade: LinearGradient? = null
+    private var shadeFor = ""
     private var dim = false
     private var bandTop = 0
     private var bandBottom = 0
@@ -178,11 +182,17 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         }
         // Soft shades behind the clock and the favourites, so any wallpaper stays readable.
         val topEnd = bandTop + h * 0.45f
-        scrim.shader = LinearGradient(0f, bandTop.toFloat(), 0f, topEnd, 0x8C000000.toInt(), 0, Shader.TileMode.CLAMP)
-        canvas.drawRect(0f, 0f, w, topEnd, scrim)
         val cardEnd = h - bandBottom
         val bottomStart = cardEnd - h * 0.5f
-        scrim.shader = LinearGradient(0f, bottomStart, 0f, cardEnd, 0, 0xA6000000.toInt(), Shader.TileMode.CLAMP)
+        val key = "$h $bandTop $bandBottom"
+        if (key != shadeFor) {
+            shadeFor = key
+            topShade = LinearGradient(0f, bandTop.toFloat(), 0f, topEnd, 0x8C000000.toInt(), 0, Shader.TileMode.CLAMP)
+            bottomShade = LinearGradient(0f, bottomStart, 0f, cardEnd, 0, 0xA6000000.toInt(), Shader.TileMode.CLAMP)
+        }
+        scrim.shader = topShade
+        canvas.drawRect(0f, 0f, w, topEnd, scrim)
+        scrim.shader = bottomShade
         canvas.drawRect(0f, bottomStart, w, h, scrim)
     }
 

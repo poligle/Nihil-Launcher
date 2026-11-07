@@ -1,5 +1,7 @@
 package com.nihilshell.launcher.ui
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.ColorStateList
@@ -16,6 +18,7 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityNodeInfo
 import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -110,6 +113,15 @@ class LedSwitch(context: Context) : View(context) {
         isClickable = true
         isFocusable = true
         setOnClickListener { set(!checked, animate = true, notify = true) }
+        // TalkBack: a switch, on or off.
+        accessibilityDelegate = object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.className = android.widget.Switch::class.java.name
+                info.isCheckable = true
+                info.isChecked = checked
+            }
+        }
     }
 
     fun set(value: Boolean, animate: Boolean = false, notify: Boolean = false) {
@@ -132,6 +144,11 @@ class LedSwitch(context: Context) : View(context) {
                     position = it.animatedValue as Float
                     invalidate()
                 }
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        if (animator === animation) animator = null
+                    }
+                })
                 start()
             }
         }
@@ -190,6 +207,7 @@ class Segmented(
         items.forEachIndexed { i, item ->
             val on = i == index
             item.setTextColor(if (on) Nihil.VOID else Nihil.DIM)
+            item.isSelected = on
             item.background = if (on) rounded(Nihil.INK, radius) else ripple(radius)
         }
         if (notify) onSelect(index)

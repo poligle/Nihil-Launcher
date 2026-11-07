@@ -1,8 +1,10 @@
 package com.nihilshell.launcher.core
 
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
@@ -10,6 +12,7 @@ import android.content.pm.ShortcutInfo
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -21,7 +24,7 @@ import java.text.Collator
 import java.util.concurrent.Executors
 
 /** One launchable activity, in one user profile (personal, work, Secure Folder...). */
-class AppEntry(val info: LauncherActivityInfo, serial: Long) {
+class AppEntry(val info: LauncherActivityInfo, serial: Long, val paused: Boolean = false) {
     val component: ComponentName = info.componentName
     val packageName: String = component.packageName
     val user: UserHandle = info.user
@@ -55,6 +58,8 @@ object Apps {
     private val loader = Executors.newSingleThreadExecutor()
     private val painter = Executors.newFixedThreadPool(2)
     private val listeners = LinkedHashSet<() -> Unit>()
+    /** Icons being painted, and who waits for each (main thread only). */
+    private val waiting = HashMap<String, MutableList<(Bitmap) -> Unit>>()
 
     private val icons = object : LruCache<String, Bitmap>(
         (Runtime.getRuntime().maxMemory() / 8).coerceAtMost(48L * 1024 * 1024).toInt(),
@@ -74,6 +79,19 @@ object Apps {
         launcherApps = this.context.getSystemService(LauncherApps::class.java)
         userManager = this.context.getSystemService(UserManager::class.java)
         launcherApps.registerCallback(callback, main)
+        // A work profile paused, resumed, added or removed: its apps change look or go.
+        val profiles = IntentFilter().apply {
+            addAction(Intent.ACTION_MANAGED_PROFILE_AVAILABLE)
+            addAction(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE)
+            addAction(Intent.ACTION_MANAGED_PROFILE_ADDED)
+            addAction(Intent.ACTION_MANAGED_PROFILE_REMOVED)
+            addAction(Intent.ACTION_MANAGED_PROFILE_UNLOCKED)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            this.context.registerReceiver(profilesChanged, profiles, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            this.context.registerReceiver(profilesChanged, profiles)
+        }
         reload()
     }
 
@@ -102,10 +120,11 @@ object Apps {
         val out = ArrayList<AppEntry>()
         for (user in userManager.userProfiles) {
             val serial = userManager.getSerialNumberForUser(user)
+            val paused = user != Process.myUserHandle() && runCatching { userManager.isQuietModeEnabled(user) }.getOrDefault(false)
             for (info in launcherApps.getActivityList(null, user)) {
                 // The launcher itself shows up once, as its settings ("NIHIL").
                 if (info.componentName.packageName == self && user != Process.myUserHandle()) continue
-                out += AppEntry(info, serial)
+                out += AppEntry(info, serial, paused)
             }
         }
         out.sortWith { a, b -> collator.compare(a.label, b.label) }
@@ -122,11 +141,11 @@ object Apps {
 
     /** Cached icon, or null; then [ready] is called on the main thread once it's painted. */
     fun icon(entry: AppEntry, size: Int, style: IconStyle, ready: (Bitmap) -> Unit): Bitmap? {
-        val cacheKey = "${entry.key}|$style|$size"
+        val cacheKey = "${entry.key}|$style|$size|${entry.paused}"
         icons.get(cacheKey)?.let { return it }
         val density = context.resources.displayMetrics.densityDpi
         paint(cacheKey, ready) {
-            IconRenderer.render(entry.info.getIcon(density), size, style, badge = !entry.isPersonal)
+            IconRenderer.render(entry.info.getIcon(density), size, style, badge = !entry.isPersonal, paused = entry.paused)
         }
         return null
     }
@@ -141,12 +160,21 @@ object Apps {
         return null
     }
 
+    // One painting per icon, however many rows ask for it while it is painted.
     private fun paint(cacheKey: String, ready: (Bitmap) -> Unit, render: () -> Bitmap?) {
+        waiting[cacheKey]?.let {
+            it += ready
+            return
+        }
+        waiting[cacheKey] = mutableListOf(ready)
         painter.execute {
-            val bitmap = runCatching(render).getOrNull() ?: return@execute
+            val bitmap = runCatching(render).getOrNull()
             main.post {
-                icons.put(cacheKey, bitmap)
-                ready(bitmap)
+                val waiters = waiting.remove(cacheKey).orEmpty()
+                if (bitmap != null) {
+                    icons.put(cacheKey, bitmap)
+                    waiters.forEach { it(bitmap) }
+                }
             }
         }
     }
@@ -208,5 +236,13 @@ object Apps {
         override fun onPackagesAvailable(packageNames: Array<out String>, user: UserHandle, replacing: Boolean) = reload()
 
         override fun onPackagesUnavailable(packageNames: Array<out String>, user: UserHandle, replacing: Boolean) = reload()
+
+        override fun onPackagesSuspended(packageNames: Array<out String>, user: UserHandle) = reload()
+
+        override fun onPackagesUnsuspended(packageNames: Array<out String>, user: UserHandle) = reload()
+    }
+
+    private val profilesChanged = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) = reload()
     }
 }

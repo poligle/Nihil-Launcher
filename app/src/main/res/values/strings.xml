@@ -65,9 +65,9 @@
     <string name="section_behaviour">behaviour</string>
     <string name="set_keyboard">Keyboard when the drawer opens</string>
     <string name="set_glyph">Glyph light</string>
-    <string name="set_glyph_sub">Light around the screen and LEDs for every notification. Needs notification access.</string>
+    <string name="set_glyph_sub">Light around the screen and LEDs for every notification. Needs notification access; over other apps, the double tap’s accessibility service too.</string>
     <string name="set_lock">Double tap to lock</string>
-    <string name="set_lock_sub">Uses an accessibility service that only locks the screen.</string>
+    <string name="set_lock_sub">Uses an accessibility service that locks the screen and draws the Glyph light over other apps. It reads nothing.</string>
     <string name="section_apps">apps</string>
     <string name="set_hidden_none">No hidden apps</string>
     <string name="set_unhide">show</string>
@@ -94,8 +94,8 @@
 
     <!-- Services -->
     <string name="glyph_service_label">NIHIL Glyph light</string>
-    <string name="lock_service_label">NIHIL double tap to lock</string>
-    <string name="lock_service_description">Locks the screen when you double tap the NIHIL home screen. It reads nothing on the screen.</string>
+    <string name="lock_service_label">NIHIL lock and Glyph light</string>
+    <string name="lock_service_description">Locks the screen when you double tap the NIHIL home screen, and draws the Glyph light around the screen while you are in other apps. It reads nothing on the screen.</string>
 
     <!-- Notices and extra labels -->
     <string name="menu_system_wallpaper">System wallpaper</string>
@@ -114,4 +114,5 @@
         <item quantity="one">%d result</item>
         <item quantity="other">%d results</item>
     </plurals>
+    <string name="wallpaper_seeded">NIHIL’s wallpaper is on · the studio changes it</string>
 </resources>

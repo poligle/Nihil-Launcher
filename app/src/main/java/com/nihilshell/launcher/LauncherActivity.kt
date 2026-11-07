@@ -23,6 +23,8 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.graphics.ImageDecoder
+import android.service.notification.NotificationListenerService
 import android.text.format.DateFormat
 import android.view.Gravity
 import android.view.RoundedCorner
@@ -36,6 +38,7 @@ import com.nihilshell.launcher.core.Action
 import com.nihilshell.launcher.core.ActionHost
 import com.nihilshell.launcher.core.Actions
 import com.nihilshell.launcher.core.AppEntry
+import com.nihilshell.launcher.core.DotRender
 import com.nihilshell.launcher.core.Apps
 import com.nihilshell.launcher.core.Prefs
 import com.nihilshell.launcher.core.Torch
@@ -91,6 +94,7 @@ class LauncherActivity :
     private var imeBottom = 0
     private var receiving = false
     private var charging: Boolean? = null
+    private var resumed = false
     private var backCallback: OnBackInvokedCallback? = null
 
     // --- Lifecycle -------------------------------------------------------------
@@ -161,12 +165,36 @@ class LauncherActivity :
         home.updateClock(animate = false)
         updateAlarm()
         Glyph.listen(this)
+        // Notification access granted but its listener not bound (after an
+        // update, on some phones): ask Android to bind it again.
+        if (Access.hasNotificationAccess(this) && !Glyph.connected) {
+            runCatching { NotificationListenerService.requestRebind(Access.glyphComponent(this)) }
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        resumed = true
+        updateHomeShowing()
         home.updateClock(animate = false)
         updateAlarm()
+        if (!prefs.wallpaperSeeded && Access.isDefaultHome(this)) seedWallpaper()
+    }
+
+    override fun onPause() {
+        resumed = false
+        updateHomeShowing()
+        super.onPause()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        updateHomeShowing()
+    }
+
+    /** Whether the home card is what the light runs round now, or the screen's edge (Glyph.homeShowing). */
+    private fun updateHomeShowing() {
+        Glyph.homeShowing = resumed && hasWindowFocus() && drawerProgress == 0f
     }
 
     override fun onStop() {
@@ -247,6 +275,7 @@ class LauncherActivity :
         home.translationY = -drawerProgress * dp(36f)
         home.importantForAccessibility =
             if (drawerProgress > 0.5f) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+        updateHomeShowing()
     }
 
     private fun animateDrawer(open: Boolean, velocity: Float = 0f) {
@@ -507,7 +536,7 @@ class LauncherActivity :
     }
 
     override fun onPulse(pulse: Glyph.Pulse) {
-        if (prefs.glyph && hasWindowFocus() && drawerProgress == 0f) frame.pulse(pulse)
+        if (prefs.glyph && Glyph.homeShowing) frame.pulse(pulse)
     }
 
     // --- Time, battery, alarm ------------------------------------------------------
@@ -559,9 +588,34 @@ class LauncherActivity :
         if (level < 0 || scale <= 0) return
         val plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0
         // The charger going in while NIHIL is on screen: light rises from the bottom.
-        if (charging == false && plugged && prefs.glyph && hasWindowFocus() && drawerProgress == 0f) frame.pulse(Glyph.Pulse.CHARGE)
+        if (charging == false && plugged && prefs.glyph && Glyph.homeShowing) frame.pulse(Glyph.Pulse.CHARGE)
         charging = plugged
         home.updateBattery(level * 100 / scale, plugged)
+    }
+
+    /**
+     * The first time NIHIL is the home app, its own wallpaper, as the desktop
+     * starts with it: the night in LEDs, drawn here at the screen's size with
+     * the studio's algorithm. Only on a fresh install: an update never changes
+     * a wallpaper someone already has, and the studio changes it any time.
+     */
+    private fun seedWallpaper() {
+        prefs.wallpaperSeeded = true
+        val info = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull() ?: return
+        if (info.firstInstallTime != info.lastUpdateTime) return
+        val bounds = windowManager.maximumWindowMetrics.bounds
+        val width = minOf(bounds.width(), bounds.height())
+        val height = maxOf(bounds.width(), bounds.height())
+        val pitch = prefs.dotPitch
+        val app = applicationContext
+        Thread {
+            val done = runCatching {
+                val photo = DotRender.decodeCover(ImageDecoder.createSource(app.assets, DEFAULT_WALLPAPER), width, height)
+                val dots = DotRender.render(DotRender.grid(photo, pitch), width, height)
+                WallpaperManager.getInstance(app).setBitmap(dots, null, true, WallpaperManager.FLAG_SYSTEM)
+            }.isSuccess
+            if (done) runOnUiThread { if (!isDestroyed) notice(getString(R.string.wallpaper_seeded)) }
+        }.start()
     }
 
     private fun updateAlarm() {
@@ -570,5 +624,6 @@ class LauncherActivity :
 
     private companion object {
         const val DAY = 24L * 60 * 60 * 1000
+        const val DEFAULT_WALLPAPER = "wallpapers/night.jpg"
     }
 }

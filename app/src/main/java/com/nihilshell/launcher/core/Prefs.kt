@@ -55,6 +55,11 @@ class Prefs private constructor(context: Context) {
         get() = sp.getBoolean(DOUBLE_TAP, false)
         set(value) = sp.edit().putBoolean(DOUBLE_TAP, value).apply()
 
+    /** Whether NIHIL's own wallpaper was put on, the first time it was the home app. */
+    var wallpaperSeeded: Boolean
+        get() = sp.getBoolean(SEEDED, false)
+        set(value) = sp.edit().putBoolean(SEEDED, value).apply()
+
     /** Distance between the LEDs of a studio wallpaper, in pixels. */
     var dotPitch: Int
         get() = sp.getInt(PITCH, 20)
@@ -103,6 +108,7 @@ class Prefs private constructor(context: Context) {
         const val GLYPH = "glyph"
         const val DOUBLE_TAP = "double_tap"
         const val PITCH = "pitch"
+        const val SEEDED = "wallpaper_seeded"
 
         @Volatile
         private var instance: Prefs? = null

@@ -27,9 +27,11 @@ import com.nihilshell.launcher.ui.Nihil
  */
 object IconRenderer {
 
-    fun render(icon: Drawable, size: Int, style: IconStyle, badge: Boolean = false): Bitmap {
+    fun render(icon: Drawable, size: Int, style: IconStyle, badge: Boolean = false, paused: Boolean = false): Bitmap {
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
+        // A paused work profile: its apps half lit, as LEDs switched off.
+        if (paused) canvas.saveLayerAlpha(0f, 0f, size.toFloat(), size.toFloat(), 115)
         val drawn = when (style) {
             IconStyle.MONO -> drawThemed(canvas, icon, size) || drawAutoMono(canvas, icon, size)
             IconStyle.COLOR -> {
@@ -39,6 +41,7 @@ object IconRenderer {
             IconStyle.GREY -> false
         }
         if (!drawn) drawPlain(canvas, icon, size, greyFilter())
+        if (paused) canvas.restore()
         if (badge) drawBadge(canvas, size)
         return bitmap
     }

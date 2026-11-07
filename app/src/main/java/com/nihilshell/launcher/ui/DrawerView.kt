@@ -323,6 +323,9 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         private val enter = ImageView(context).apply { setImageDrawable(LineIcon(LineIcon.Shape.ENTER, Nihil.MUTED)) }
         private val iconSize = context.dp(26)
         private var key: String? = null
+        // The two backgrounds a row can have, made once per row.
+        private val plain = ripple(context.dp(18f))
+        private val raised = context.dp(18f).let { ripple(it, rounded(Nihil.RAISED, it)) }
 
         init {
             orientation = HORIZONTAL
@@ -337,8 +340,8 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         }
 
         private fun frame(first: Boolean) {
-            val r = context.dp(18f)
-            background = ripple(r, if (first) rounded(Nihil.RAISED, r) else null)
+            val wanted = if (first) raised else plain
+            if (background !== wanted) background = wanted
             enter.visibility = if (first) View.VISIBLE else View.GONE
         }
 

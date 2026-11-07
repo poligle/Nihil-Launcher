@@ -18,3 +18,14 @@ jobs:
           cache: gradle
       # The runner's Android SDK is used as is; Gradle installs anything missing.
       - run: ./gradlew --no-daemon test assembleDebug
+      # Android lint, as a report for now: it doesn't fail the build until what
+      # it finds is fixed or put in a baseline; then drop continue-on-error.
+      - name: Lint
+        run: ./gradlew --no-daemon lintDebug
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint
+          path: app/build/reports/lint-results-debug.html
+          if-no-files-found: ignore

@@ -29,6 +29,14 @@ object Glyph {
     var unread: List<String> = emptyList()
         private set
 
+    /**
+     * True while the home screen draws the light itself (NIHIL in front, its
+     * drawer closed); otherwise the accessibility service draws it over
+     * whatever is on screen (HaloOverlay), when it is on.
+     */
+    @Volatile
+    var homeShowing = false
+
     /** True while the notification listener is bound. */
     var connected = false
         private set
