@@ -38,6 +38,15 @@ jobs:
           fi
           "$home/bin/gradle" --version
           echo "GRADLE=$home/bin/gradle" >> "$GITHUB_ENV"
+          # Dependencies can come from GitHub's releases too (Maven Central sends
+          # the Kotlin compiler there): when those are slow, Gradle waits two
+          # minutes for an answer instead of 30 seconds, and tries again more.
+          {
+            echo "systemProp.org.gradle.internal.http.connectionTimeout=120000"
+            echo "systemProp.org.gradle.internal.http.socketTimeout=120000"
+            echo "systemProp.org.gradle.internal.repository.max.retries=8"
+            echo "systemProp.org.gradle.internal.repository.initial.backoff=2000"
+          } >> "$HOME/.gradle/gradle.properties"
       # The runner's Android SDK is used as is; Gradle installs anything missing.
       - run: $GRADLE --no-daemon test assembleDebug
       # The debug APK of this run, to install on a phone: the run's page, Artifacts.
