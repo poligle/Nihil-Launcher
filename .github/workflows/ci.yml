@@ -16,22 +16,34 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: gradle
-      # The wrapper downloads Gradle from GitHub's releases, which now and then
-      # answer 504: a few tries, with a pause between them, before giving up.
+      # Gradle, the wrapper's version, fetched apart from the wrapper: from
+      # services.gradle.org (GitHub's releases behind it) with curl's patient
+      # retries, or, when those are down, from Gradle's official Docker image on
+      # Docker Hub. setup-java's cache keeps it a week; later steps use $GRADLE.
       - name: Gradle
         run: |
-          for attempt in 1 2 3 4; do
-            ./gradlew --no-daemon --version && exit 0
-            echo "::warning::downloading Gradle failed (attempt $attempt), trying again"
-            sleep $((attempt * 15))
-          done
-          exit 1
+          url=$(sed -n 's/^distributionUrl=//p' gradle/wrapper/gradle-wrapper.properties | sed 's/\\:/:/g')
+          version=$(basename "$url" | sed -E 's/^gradle-(.+)-(bin|all)\.zip$/\1/')
+          home="$HOME/.gradle/wrapper/ci/gradle-$version"
+          if [ ! -x "$home/bin/gradle" ]; then
+            mkdir -p "$(dirname "$home")"
+            if curl -fsSL --retry 8 --retry-all-errors --retry-delay 20 --connect-timeout 20 -o "$RUNNER_TEMP/gradle.zip" "$url" &&
+               unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP/gradle"; then
+              mv "$RUNNER_TEMP/gradle/gradle-$version" "$home"
+            else
+              echo "::warning::$url isn't answering: Gradle $version from its official Docker image instead"
+              docker run --rm --user "$(id -u):$(id -g)" -v "$(dirname "$home"):/out" \
+                "gradle:$version-jdk17" cp -r /opt/gradle "/out/gradle-$version"
+            fi
+          fi
+          "$home/bin/gradle" --version
+          echo "GRADLE=$home/bin/gradle" >> "$GITHUB_ENV"
       # The runner's Android SDK is used as is; Gradle installs anything missing.
-      - run: ./gradlew --no-daemon test assembleDebug
+      - run: $GRADLE --no-daemon test assembleDebug
       # Android lint, as a report for now: it doesn't fail the build until what
       # it finds is fixed or put in a baseline; then drop continue-on-error.
       - name: Lint
-        run: ./gradlew --no-daemon lintDebug
+        run: $GRADLE --no-daemon lintDebug
         continue-on-error: true
       - uses: actions/upload-artifact@v4
         if: always()
