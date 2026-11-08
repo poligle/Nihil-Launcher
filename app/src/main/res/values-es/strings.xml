@@ -69,7 +69,7 @@
     <string name="set_hidden_none">No hay apps ocultas</string>
     <string name="set_unhide">mostrar</string>
     <string name="section_about">acerca de</string>
-    <string name="about_text">NIHIL para Android %1$s. Sin anuncios, sin rastreo y sin permiso de Internet.</string>
+    <string name="about_text">NIHIL para Android %1$s. Sin anuncios, sin rastreo y sin cuentas: solo habla con tu ordenador, y solo como su deck.</string>
     <string name="about_fonts">Doto, Space Grotesk y Space Mono, con licencia SIL Open Font License 1.1.</string>
 
     <!-- Estudio de fondos -->
@@ -147,7 +147,6 @@
     <string name="deck_next">Siguiente</string>
     <string name="deck_volume_down">Bajar volumen</string>
     <string name="deck_volume_up">Subir volumen</string>
-    <string name="deck_volume">Volumen %1$d %%</string>
     <string name="deck_muted">Silencio</string>
     <string name="deck_apps">Apps</string>
     <string name="deck_webs">Webs</string>
@@ -165,4 +164,8 @@
     <string name="deck_paired">Emparejado con %1$s</string>
     <string name="deck_settings_sub">Este móvil como deck de NIHIL en el ordenador.</string>
     <string name="hint_deck">deck</string>
+    <string name="deck_apps_webs">Apps y webs</string>
+    <string name="deck_volume_title">Volumen</string>
+    <string name="set_language">Idioma</string>
+    <string name="set_language_sub">NIHIL habla el idioma del móvil; aquí puede tener uno propio, inglés o español.</string>
 </resources>

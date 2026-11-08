@@ -18,7 +18,7 @@ object Search {
     sealed class Row {
         class App(val entry: AppEntry) : Row()
         class Act(val action: Action) : Row()
-        class Calc(val expression: String, val value: Double) : Row()
+        class Calc(val expression: String, val value: Double, val text: String) : Row()
         class Web(val query: String) : Row()
         class Letter(val letter: String) : Row()
         class Message(val text: Int) : Row()
@@ -56,9 +56,9 @@ object Search {
     }
 
     private fun calculator(expression: String): Result {
-        val value = if (expression.isBlank()) null else Calculator.evaluate(expression)
-        return if (value != null) {
-            Result(Mode.CALCULATOR, listOf(Row.Calc(expression, value)), 1)
+        val answer = if (expression.isBlank()) null else Calculator.calculate(expression)
+        return if (answer != null) {
+            Result(Mode.CALCULATOR, listOf(Row.Calc(expression, answer.value, answer.text)), 1)
         } else {
             Result(Mode.CALCULATOR, listOf(Row.Message(R.string.calc_type)), 0)
         }
@@ -89,7 +89,7 @@ object Search {
         scored.sortByDescending { it.second }
 
         val rows = ArrayList<Row>()
-        if (isMath(raw)) Calculator.evaluate(raw)?.let { rows += Row.Calc(raw, it) }
+        if (isMath(raw) || Calculator.isConversion(raw)) Calculator.calculate(raw)?.let { rows += Row.Calc(raw, it.value, it.text) }
         scored.asSequence().take(LIMIT).mapTo(rows) { it.first }
         if (rows.isEmpty() || raw.length >= 2) rows += Row.Web(raw)
         return Result(Mode.SEARCH, rows, scored.size)

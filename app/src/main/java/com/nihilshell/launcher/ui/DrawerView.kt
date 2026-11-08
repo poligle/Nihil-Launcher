@@ -303,7 +303,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         when (row) {
             is Search.Row.App -> host.launch(row.entry, view ?: firstTile() ?: list)
             is Search.Row.Act -> host.run(row.action)
-            is Search.Row.Calc -> host.copy(Calculator.format(row.value))
+            is Search.Row.Calc -> host.copy(row.text)
             is Search.Row.Web -> host.webSearch(row.query)
             is Search.Row.Letter, is Search.Row.Message -> Unit
         }
@@ -369,7 +369,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
                 })
                 addView(context.mono(size = 11f, color = Nihil.MUTED), llp(MATCH, WRAP).apply { topMargin = context.dp(8) })
             }
-            (view.getChildAt(0) as TextView).text = Calculator.format(row.value)
+            (view.getChildAt(0) as TextView).text = row.text
             (view.getChildAt(1) as TextView).text = "= ${row.expression.trim()}"
             return view
         }

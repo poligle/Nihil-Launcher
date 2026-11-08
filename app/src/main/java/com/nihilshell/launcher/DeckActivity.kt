@@ -33,6 +33,8 @@ import com.nihilshell.launcher.ui.LineIcon
 import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
 import com.nihilshell.launcher.ui.Notice
+import com.nihilshell.launcher.ui.PageDots
+import com.nihilshell.launcher.ui.Workspaces
 import com.nihilshell.launcher.ui.WRAP
 import com.nihilshell.launcher.ui.dp
 import com.nihilshell.launcher.ui.llp
@@ -54,12 +56,15 @@ import java.util.concurrent.Executors
  * in Nihil-Shell). Its music and volume, its lock, and its apps and the webs
  * kept here, each with its icon: the apps' from the computer's icon theme,
  * the webs' found by the computer, so the phone talks to no one else.
- * Sharing a web to "Open on the computer" opens it there.
+ * In landscape, on one screen without scrolling, in workspaces as the
+ * desktop's: the music, the volume and the lock in one; the apps and the webs,
+ * each scrolling on its own, in the other. Sharing a web to "Open on the
+ * computer" is DeckShareActivity.
  */
 class DeckActivity : Activity() {
 
     private lateinit var store: DeckStore
-    private lateinit var column: LinearLayout
+    private lateinit var content: FrameLayout
     private lateinit var notice: Notice
     private val pool = Executors.newFixedThreadPool(3)
     private val main = Handler(Looper.getMainLooper())
@@ -71,9 +76,13 @@ class DeckActivity : Activity() {
     private var artist: TextView? = null
     private var play: ImageView? = null
     private var volume: TextView? = null
+    private var volumeUnit: TextView? = null
     private var appsGrid: LinearLayout? = null
     private var websGrid: LinearLayout? = null
+    private var workspaces: Workspaces? = null
     private var playing = false
+    private var appsColumns = 6
+    private var websColumns = 4
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,27 +90,21 @@ class DeckActivity : Activity() {
         @Suppress("DEPRECATION")
         window.setDecorFitsSystemWindows(false)
         window.isNavigationBarContrastEnforced = false
-        column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        val scroll = ScrollView(this).apply {
-            isVerticalScrollBarEnabled = false
-            setBackgroundColor(Nihil.VOID)
-            addView(column, llp(MATCH, WRAP))
-        }
+        content = FrameLayout(this).apply { setBackgroundColor(Nihil.VOID) }
         notice = Notice(this)
         val root = FrameLayout(this)
-        root.addView(scroll, lp(MATCH, MATCH))
+        root.addView(content, lp(MATCH, MATCH))
         root.addView(notice, lp(WRAP, WRAP, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL))
         setContentView(root)
         root.setOnApplyWindowInsetsListener { _, insets ->
             val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
-            column.setPadding(bars.left + dp(24), bars.top + dp(28), bars.right + dp(24), bars.bottom + dp(40))
-            (notice.layoutParams as FrameLayout.LayoutParams).bottomMargin = bars.bottom + dp(24)
+            content.setPadding(bars.left + dp(20), bars.top + dp(14), bars.right + dp(20), bars.bottom + dp(8))
+            (notice.layoutParams as FrameLayout.LayoutParams).bottomMargin = bars.bottom + dp(20)
             insets
         }
         if (intent?.getBooleanExtra(EXTRA_PAIRED, false) == true) {
             store.computer?.let { main.postDelayed({ notice.show(getString(R.string.deck_paired, it.name)) }, 300) }
         }
-        if (intent?.action == Intent.ACTION_SEND && shareToComputer(intent)) return
         build()
     }
 
@@ -115,107 +118,147 @@ class DeckActivity : Activity() {
         super.onDestroy()
     }
 
-    // --- Shared from another app ---------------------------------------------------
-
-    /** A web shared from the browser opens on the computer, and this screen goes. */
-    private fun shareToComputer(intent: Intent): Boolean {
-        val computer = store.computer ?: return false
-        val text = intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
-        val url = URL_IN_TEXT.find(text)?.value
-        if (url == null) {
-            notice.show(getString(R.string.deck_no_url))
-            main.postDelayed({ finish() }, 1600)
-            return true
-        }
-        val client = DeckClient(computer, store.token())
-        pool.execute {
-            val reply = client.call("POST", "/v1/open", JSONObject().put("url", url), this)
-            store.save(computer)
-            main.post {
-                notice.show(message(reply, computer, getString(R.string.deck_opened, computer.name)))
-                main.postDelayed({ finish() }, 1400)
-            }
-        }
-        return true
-    }
-
     // --- The screen -----------------------------------------------------------------
 
     private fun build() {
-        column.removeAllViews()
+        content.removeAllViews()
         status = null
+        workspaces = null
         val computer = store.computer
-        column.addView(text(getString(R.string.app_name), 44f, Nihil.INK, fonts.dot), llp(WRAP, WRAP))
-        column.addView(mono(getString(R.string.deck_title), 11f, Nihil.MUTED), llp(WRAP, WRAP).apply { topMargin = dp(6) })
         if (computer == null) {
-            column.addView(text(getString(R.string.deck_pair_title), 22f, Nihil.INK), llp(MATCH, WRAP).apply { topMargin = dp(40) })
-            column.addView(text(getString(R.string.deck_unpaired_sub), 13f, Nihil.DIM).apply { setLineSpacing(dp(2f), 1f) },
-                llp(MATCH, WRAP).apply { topMargin = dp(6) })
+            val column = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+            }
+            column.addView(text(getString(R.string.app_name), 40f, Nihil.INK, fonts.dot))
+            column.addView(text(getString(R.string.deck_pair_title), 22f, Nihil.INK), llp(WRAP, WRAP).apply { topMargin = dp(18) })
+            column.addView(text(getString(R.string.deck_unpaired_sub), 13f, Nihil.DIM).apply {
+                gravity = Gravity.CENTER
+                setLineSpacing(dp(2f), 1f)
+            }, llp(dp(460), WRAP).apply { topMargin = dp(6) })
             column.addView(KeyButton(this, getString(R.string.deck_pair), accent = true).apply {
                 setOnClickListener { startActivity(Intent(this@DeckActivity, DeckScanActivity::class.java)) }
-            }, llp(WRAP, WRAP).apply { topMargin = dp(20) })
+            }, llp(WRAP, WRAP).apply { topMargin = dp(18) })
+            content.addView(column, lp(WRAP, WRAP, Gravity.CENTER))
             return
         }
 
-        column.addView(text(computer.name, 22f, Nihil.INK), llp(MATCH, WRAP).apply { topMargin = dp(40) })
-        status = mono(getString(R.string.deck_looking, computer.name), 11f, Nihil.MUTED)
-        column.addView(status, llp(MATCH, WRAP).apply { topMargin = dp(6) })
+        // As many tiles across as fit: the apps on three fifths of the width, the webs on two.
+        val wide = resources.displayMetrics.widthPixels / resources.displayMetrics.density
+        appsColumns = ((wide * 0.6f - 40) / 84).toInt().coerceIn(4, 10)
+        websColumns = ((wide * 0.4f - 40) / 84).toInt().coerceIn(3, 6)
 
-        // The music, the volume and the lock, in a card like the desktop's media widget.
-        val card = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = rounded(Nihil.VOID, dp(22f), dp(1), Nihil.LINE)
-            setPadding(dp(18), dp(16), dp(18), dp(16))
+        val screen = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
-        card.addView(mono(getString(R.string.deck_music), 11f, Nihil.MUTED))
-        track = text(getString(R.string.deck_nothing_playing), 15f, Nihil.INK).apply {
+        header.addView(text(getString(R.string.app_name), 22f, Nihil.INK, fonts.dot))
+        val names = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        names.addView(text(computer.name, 16f, Nihil.INK))
+        status = mono(getString(R.string.deck_looking, computer.name), 11f, Nihil.MUTED)
+        names.addView(status, llp(WRAP, WRAP).apply { topMargin = dp(2) })
+        header.addView(names, llp(0, WRAP, 1f).apply { marginStart = dp(16) })
+        header.addView(circle(LineIcon.Shape.TRASH, R.string.deck_forget) { forget(computer) })
+        screen.addView(header, llp(MATCH, WRAP))
+
+        val pages = Workspaces(this)
+        pages.addView(musicPage())
+        pages.addView(appsPage())
+        workspaces = pages
+        screen.addView(pages, llp(MATCH, 0, 1f).apply { topMargin = dp(10) })
+        val dots = PageDots(this, listOf(getString(R.string.deck_music), getString(R.string.deck_apps_webs))) { pages.show(it) }
+        pages.onPage = { dots.select(it) }
+        screen.addView(dots, llp(MATCH, dp(28)))
+        content.addView(screen, lp(MATCH, MATCH))
+        showWebs()
+    }
+
+    /** The first workspace: what plays, with its keys, and the volume and the lock beside it. */
+    private fun musicPage(): View {
+        val page = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val music = card()
+        music.addView(mono(getString(R.string.deck_music), 11f, Nihil.MUTED))
+        track = text(getString(R.string.deck_nothing_playing), 22f, Nihil.INK).apply {
+            maxLines = 2
+            ellipsize = TextUtils.TruncateAt.END
+        }
+        music.addView(track, llp(MATCH, WRAP).apply { topMargin = dp(10) })
+        artist = text("", 15f, Nihil.MUTED).apply {
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END
         }
-        card.addView(track, llp(MATCH, WRAP).apply { topMargin = dp(8) })
-        artist = text("", 13f, Nihil.MUTED).apply {
-            maxLines = 1
-            ellipsize = TextUtils.TruncateAt.END
-        }
-        card.addView(artist, llp(MATCH, WRAP).apply { topMargin = dp(3) })
+        music.addView(artist, llp(MATCH, WRAP).apply { topMargin = dp(4) })
+        music.addView(View(this), llp(MATCH, 0, 1f))
         val transport = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+            gravity = Gravity.CENTER
         }
-        transport.addView(circle(LineIcon.Shape.PREVIOUS, R.string.deck_previous) { media("previous") })
-        play = circle(LineIcon.Shape.PLAY, R.string.deck_toggle, big = true) { media("toggle") }
-        transport.addView(play, llp(dp(48), dp(48)).apply { marginStart = dp(14); marginEnd = dp(14) })
-        transport.addView(circle(LineIcon.Shape.NEXT, R.string.deck_next) { media("next") })
-        card.addView(transport, llp(WRAP, WRAP).apply {
-            topMargin = dp(14)
-            gravity = Gravity.CENTER_HORIZONTAL
+        transport.addView(circle(LineIcon.Shape.PREVIOUS, R.string.deck_previous, size = 52) { media("previous") })
+        play = circle(LineIcon.Shape.PLAY, R.string.deck_toggle, big = true, size = 68) { media("toggle") }
+        transport.addView(play, llp(dp(68), dp(68)).apply {
+            marginStart = dp(22)
+            marginEnd = dp(22)
         })
-        card.addView(rule(), llp(MATCH, dp(1)).apply { topMargin = dp(16); bottomMargin = dp(12) })
-        val sound = LinearLayout(this).apply {
+        transport.addView(circle(LineIcon.Shape.NEXT, R.string.deck_next, size = 52) { media("next") })
+        music.addView(transport, llp(MATCH, WRAP))
+        page.addView(music, llp(0, MATCH, 3f).apply { marginEnd = dp(14) })
+
+        val sound = card()
+        sound.addView(mono(getString(R.string.deck_volume_title), 11f, Nihil.MUTED))
+        val level = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.BOTTOM
+        }
+        volume = text("--", 56f, Nihil.INK, fonts.dot)
+        level.addView(volume)
+        volumeUnit = mono("%", 13f, Nihil.MUTED)
+        level.addView(volumeUnit, llp(WRAP, WRAP).apply {
+            marginStart = dp(6)
+            bottomMargin = dp(12)
+        })
+        sound.addView(level, llp(WRAP, WRAP).apply { topMargin = dp(4) })
+        val turn = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        sound.addView(circle(LineIcon.Shape.MINUS, R.string.deck_volume_down) { turn("down") })
-        volume = mono("", 11f, Nihil.DIM).apply { gravity = Gravity.CENTER }
-        sound.addView(volume, llp(dp(84), WRAP))
-        sound.addView(circle(LineIcon.Shape.PLUS, R.string.deck_volume_up) { turn("up") })
-        sound.addView(View(this), llp(0, 1, 1f))
-        sound.addView(KeyButton(this, getString(R.string.deck_lock)).apply { setOnClickListener { lock() } })
-        card.addView(sound, llp(MATCH, WRAP))
-        column.addView(card, llp(MATCH, WRAP).apply { topMargin = dp(22) })
+        turn.addView(circle(LineIcon.Shape.MINUS, R.string.deck_volume_down, size = 52) { turn("down") })
+        turn.addView(circle(LineIcon.Shape.PLUS, R.string.deck_volume_up, size = 52) { turn("up") }, llp(dp(52), dp(52)).apply { marginStart = dp(14) })
+        sound.addView(turn, llp(WRAP, WRAP).apply { topMargin = dp(6) })
+        sound.addView(View(this), llp(MATCH, 0, 1f))
+        sound.addView(KeyButton(this, getString(R.string.deck_lock)).apply { setOnClickListener { lock() } }, llp(MATCH, WRAP))
+        page.addView(sound, llp(0, MATCH, 2f))
+        return page
+    }
 
-        column.addView(text(getString(R.string.deck_apps), 22f, Nihil.INK), llp(MATCH, WRAP).apply { topMargin = dp(36) })
+    /** The second workspace: the computer's apps and the webs kept here, each scrolling on its own. */
+    private fun appsPage(): View {
+        val page = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         appsGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        column.addView(appsGrid, llp(MATCH, WRAP).apply { topMargin = dp(8) })
-
-        column.addView(text(getString(R.string.deck_webs), 22f, Nihil.INK), llp(MATCH, WRAP).apply { topMargin = dp(32) })
+        page.addView(panel(R.string.deck_apps, appsGrid!!), llp(0, MATCH, 3f).apply { marginEnd = dp(14) })
         websGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        column.addView(websGrid, llp(MATCH, WRAP).apply { topMargin = dp(8) })
-        showWebs()
+        page.addView(panel(R.string.deck_webs, websGrid!!), llp(0, MATCH, 2f))
+        return page
+    }
 
-        column.addView(rule(), llp(MATCH, dp(1)).apply { topMargin = dp(36) })
-        column.addView(KeyButton(this, getString(R.string.deck_forget)).apply { setOnClickListener { forget(computer) } },
-            llp(WRAP, WRAP).apply { topMargin = dp(18) })
+    private fun panel(title: Int, grid: LinearLayout): View = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        background = rounded(Nihil.VOID, dp(22f), dp(1), Nihil.LINE)
+        setPadding(dp(14), dp(12), dp(14), dp(4))
+        addView(mono(getString(title), 11f, Nihil.MUTED), llp(WRAP, WRAP).apply { marginStart = dp(4) })
+        addView(ScrollView(this@DeckActivity).apply {
+            isVerticalScrollBarEnabled = false
+            addView(grid, llp(MATCH, WRAP))
+        }, llp(MATCH, 0, 1f))
+    }
+
+    private fun card(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        background = rounded(Nihil.VOID, dp(22f), dp(1), Nihil.LINE)
+        setPadding(dp(20), dp(16), dp(20), dp(16))
     }
 
     /** The computer's apps and what it plays, asked again each time the screen shows. */
@@ -261,18 +304,15 @@ class DeckActivity : Activity() {
     }
 
     private fun showVolume(level: JSONObject?) {
-        volume?.text = when {
-            level == null -> ""
-            level.optBoolean("muted") -> getString(R.string.deck_muted)
-            else -> getString(R.string.deck_volume, level.optInt("level"))
-        }
+        volume?.text = if (level == null) "--" else level.optInt("level").toString()
+        volumeUnit?.text = if (level?.optBoolean("muted") == true) getString(R.string.deck_muted) else "%"
     }
 
     // --- Tiles ---------------------------------------------------------------------
 
     private fun showApps(apps: List<Pair<String, String>>, computer: Computer) {
         val grid = appsGrid ?: return
-        fill(grid, apps.map { (id, name) ->
+        fill(grid, appsColumns, apps.map { (id, name) ->
             tile(name, "app:$id", "/v1/apps/${Uri.encode(id)}/icon", name, computer) { open(JSONObject().put("app", id)) }
         })
     }
@@ -284,16 +324,16 @@ class DeckActivity : Activity() {
             tile(web.title, "web:${web.url}", "/v1/favicon?url=" + URLEncoder.encode(web.url, "UTF-8"), web.title, computer,
                 onLong = { removeWeb(web) }) { open(JSONObject().put("url", web.url)) }
         } + addTile()
-        fill(grid, tiles)
+        fill(grid, websColumns, tiles)
     }
 
-    /** Rows of four, as the drawer's grid. */
-    private fun fill(grid: LinearLayout, tiles: List<View>) {
+    /** Rows of [columns], as the drawer's grid. */
+    private fun fill(grid: LinearLayout, columns: Int, tiles: List<View>) {
         grid.removeAllViews()
-        tiles.chunked(COLUMNS).forEach { chunk ->
+        tiles.chunked(columns).forEach { chunk ->
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
             chunk.forEach { row.addView(it, llp(0, dp(104), 1f)) }
-            repeat(COLUMNS - chunk.size) { row.addView(View(this), llp(0, dp(104), 1f)) }
+            repeat(columns - chunk.size) { row.addView(View(this), llp(0, dp(104), 1f)) }
             grid.addView(row, llp(MATCH, WRAP))
         }
     }
@@ -489,15 +529,15 @@ class DeckActivity : Activity() {
             .show()
     }
 
-    private fun circle(shape: LineIcon.Shape, description: Int, big: Boolean = false, onTap: () -> Unit): ImageView =
+    private fun circle(shape: LineIcon.Shape, description: Int, big: Boolean = false, size: Int = 40, onTap: () -> Unit): ImageView =
         ImageView(this).apply {
-            val r = dp(if (big) 24f else 20f)
+            val r = dp(size / 2f)
             setImageDrawable(LineIcon(shape, if (big) Nihil.VOID else Nihil.DIM))
-            pad(dp(if (big) 13 else 11))
+            pad(dp(size * 0.27f).toInt())
             background = ripple(r, if (big) rounded(Nihil.INK, r) else rounded(Nihil.SURFACE, r, dp(1), Nihil.LINE))
             contentDescription = getString(description)
             setOnClickListener { onTap() }
-            layoutParams = llp(dp(40), dp(40))
+            layoutParams = llp(dp(size), dp(size))
         }
 
     private fun sha(text: String): String =
@@ -505,8 +545,6 @@ class DeckActivity : Activity() {
 
     companion object {
         const val EXTRA_PAIRED = "paired"
-        private const val COLUMNS = 4
         private const val WEEK = 7L * 24 * 60 * 60 * 1000
-        private val URL_IN_TEXT = Regex("https?://\\S+")
     }
 }

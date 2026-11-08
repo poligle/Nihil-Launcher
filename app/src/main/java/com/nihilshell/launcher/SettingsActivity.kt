@@ -133,6 +133,18 @@ class SettingsActivity : Activity() {
         // Behaviour.
         section(R.string.section_behaviour, R.string.section_behaviour_sub)
         column.addView(switchRow(getString(R.string.set_keyboard), null, prefs.keyboardOnOpen) { prefs.keyboardOnOpen = it })
+        // Android 13 and later give each app its own language (res/xml/locales_config.xml).
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            column.addView(row(getString(R.string.set_language), body(getString(R.string.set_language_sub)), chevron()) {
+                Access.startFirst(
+                    this,
+                    listOf(
+                        Intent(android.provider.Settings.ACTION_APP_LOCALE_SETTINGS, Uri.parse("package:$packageName")),
+                        Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")),
+                    ),
+                )
+            })
+        }
 
         glyphSub = body(getString(R.string.set_glyph_sub))
         glyphSwitch = Toggle(this)
@@ -181,7 +193,7 @@ class SettingsActivity : Activity() {
         column.addView(body(getString(R.string.about_fonts)), llp(MATCH, WRAP).apply { topMargin = dp(10) })
         val site = KeyButton(this, getString(R.string.about_site)).apply {
             setOnClickListener {
-                Access.startFirst(this@SettingsActivity, listOf(Intent(Intent.ACTION_VIEW, Uri.parse("https://nihilshell.com"))))
+                Access.startFirst(this@SettingsActivity, listOf(Intent(Intent.ACTION_VIEW, Uri.parse("https://nihilshell.com/android"))))
             }
         }
         column.addView(site, llp(WRAP, WRAP).apply { topMargin = dp(16) })

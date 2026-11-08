@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- The deck is landscape and fits one screen, in workspaces as the desktop's: the music,
+  the volume and the lock in one; the apps and the webs, each scrolling on its own, in the
+  other. Swipe between them or tap their dots. Forgetting the computer is the bin at the top.
+- "Open on the computer" from the share sheet works over whatever is on screen, without
+  turning the phone.
+- The calculator is nearer the desktop's (qalc): percentages as it reads them
+  (200 + 15% = 230), `mod`, degrees (sin(30°)), 0x 0b 0o numbers and conversions into hex,
+  bin and oct, more functions (ceil, trunc, hyperbolics, min, max, hypot, gcd, lcm, root,
+  log with a base) and unit conversions: `10 km to mi`, `100 °F a °C`, `1 gb to mb`, also
+  without `=`. `%` is now a percentage, as on the desktop; the remainder is `mod`.
+- Settings, Language (Android 13 and later): NIHIL can speak English or Spanish whatever
+  the phone's language.
+- About: no more "no internet permission"; the link goes to nihilshell.com/android.
+
 ## 0.2.0-rc.1 — 2026-11-08
 
 - The deck: the phone as a remote for NIHIL on the computer (Nihil-Shell's docs/deck.md).

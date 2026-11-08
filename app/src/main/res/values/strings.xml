@@ -72,9 +72,9 @@
     <string name="set_hidden_none">No hidden apps</string>
     <string name="set_unhide">show</string>
     <string name="section_about">about</string>
-    <string name="about_text">NIHIL for Android %1$s. No ads, no tracking, no internet permission.</string>
+    <string name="about_text">NIHIL for Android %1$s. No ads, no tracking, no account: it talks to nothing but your own computer, and only as its deck.</string>
     <string name="about_fonts">Doto, Space Grotesk and Space Mono, under the SIL Open Font License 1.1.</string>
-    <string name="about_site" translatable="false">nihilshell.com</string>
+    <string name="about_site" translatable="false">nihilshell.com/android</string>
 
     <!-- Wallpaper studio -->
     <string name="studio_title">NIHIL wallpaper</string>
@@ -150,7 +150,6 @@
     <string name="deck_next">Next</string>
     <string name="deck_volume_down">Volume down</string>
     <string name="deck_volume_up">Volume up</string>
-    <string name="deck_volume">Volume %1$d %%</string>
     <string name="deck_muted">Muted</string>
     <string name="deck_apps">Apps</string>
     <string name="deck_webs">Webs</string>
@@ -168,4 +167,8 @@
     <string name="deck_paired">Paired with %1$s</string>
     <string name="deck_settings_sub">This phone as a deck for NIHIL on the computer.</string>
     <string name="hint_deck">deck</string>
+    <string name="deck_apps_webs">Apps and webs</string>
+    <string name="deck_volume_title">Volume</string>
+    <string name="set_language">Language</string>
+    <string name="set_language_sub">NIHIL speaks the phone’s language; here it can have its own, English or Spanish.</string>
 </resources>
