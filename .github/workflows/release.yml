@@ -54,6 +54,17 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/nihil-release.jks"
           echo "NIHIL_KEYSTORE=$RUNNER_TEMP/nihil-release.jks" >> "$GITHUB_ENV"
 
+      # The wrapper downloads Gradle from GitHub's releases, which now and then
+      # answer 504: a few tries, with a pause between them, before giving up.
+      - name: Gradle
+        run: |
+          for attempt in 1 2 3 4; do
+            ./gradlew --no-daemon --version && exit 0
+            echo "::warning::downloading Gradle failed (attempt $attempt), trying again"
+            sleep $((attempt * 15))
+          done
+          exit 1
+
       - name: Test and build
         env:
           NIHIL_KEYSTORE_PASSWORD: ${{ secrets.NIHIL_KEYSTORE_PASSWORD }}
