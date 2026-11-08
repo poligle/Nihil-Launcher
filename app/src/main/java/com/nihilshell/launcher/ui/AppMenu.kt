@@ -15,7 +15,7 @@ import com.nihilshell.launcher.core.Apps
 import com.nihilshell.launcher.core.IconStyle
 
 /**
- * The long-press menu: a black panel with a hairline border. The app's own
+ * The long-press menu, as the desktop's menus: a black card with a hairline border. The app's own
  * shortcuts first (when NIHIL is the home app), then what NIHIL can do with it.
  * Destructive entries are the only red text.
  */
@@ -55,11 +55,11 @@ class AppMenu(private val context: Context) {
         val width = context.dp(248)
         val panel = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            background = rounded(Nihil.VOID, context.dp(22f), context.dp(1), Nihil.LINE)
+            background = rounded(Nihil.VOID, context.dp(16f), context.dp(1), Nihil.LINE)
             setPadding(context.dp(6), context.dp(8), context.dp(6), context.dp(8))
         }
 
-        panel.addView(context.mono(title, 10f, Nihil.MUTED).apply {
+        panel.addView(context.mono(title, 11f, Nihil.MUTED).apply {
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END
             setPadding(context.dp(14), context.dp(6), context.dp(14), context.dp(8))
@@ -87,7 +87,7 @@ class AppMenu(private val context: Context) {
         }
 
         for (item in items) {
-            val row = row(item.label, if (item.danger) Nihil.SIGNAL else Nihil.INK)
+            val row = row(item.label, if (item.danger) Nihil.SIGNAL else Nihil.DIM)
             (row.getChildAt(0) as ImageView).setImageDrawable(LineIcon(item.icon, if (item.danger) Nihil.SIGNAL else Nihil.DIM))
             row.setOnClickListener {
                 dismiss()
@@ -137,11 +137,11 @@ class AppMenu(private val context: Context) {
     private fun row(label: String, color: Int): LinearLayout = LinearLayout(context).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
-        minimumHeight = context.dp(46)
+        minimumHeight = context.dp(44)
         setPadding(context.dp(14), 0, context.dp(14), 0)
-        background = ripple(context.dp(16f))
+        background = ripple(context.dp(10f))
         addView(ImageView(context), llp(context.dp(20), context.dp(20)).apply { marginEnd = context.dp(14) })
-        addView(context.text(label, 15f, color, fonts.sans).apply {
+        addView(context.text(label, 14f, color, fonts.sans).apply {
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END
         }, llp(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))

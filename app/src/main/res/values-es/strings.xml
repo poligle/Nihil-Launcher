@@ -112,4 +112,12 @@
         <item quantity="other">%d resultados</item>
     </plurals>
     <string name="wallpaper_seeded">Fondo de NIHIL puesto · el estudio lo cambia</string>
+    <string name="keys_actions">Acciones</string>
+    <string name="keys_calc">Calcular</string>
+    <string name="keys_open">Abrir</string>
+    <string name="prefs_title">Preferencias</string>
+    <string name="section_look_sub">Cómo se ven el inicio y los iconos.</string>
+    <string name="section_behaviour_sub">Qué hace NIHIL cuando lo tocas, y la luz Glyph.</string>
+    <string name="section_apps_sub">Las apps que has escondido del cajón.</string>
+    <string name="section_about_sub">NIHIL en el móvil, como en el escritorio.</string>
 </resources>

@@ -24,8 +24,8 @@ import com.nihilshell.launcher.core.DotRender
 import com.nihilshell.launcher.core.Prefs
 import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
-import com.nihilshell.launcher.ui.Pill
-import com.nihilshell.launcher.ui.Segmented
+import com.nihilshell.launcher.ui.KeyButton
+import com.nihilshell.launcher.ui.Choice
 import com.nihilshell.launcher.ui.WRAP
 import com.nihilshell.launcher.ui.dp
 import com.nihilshell.launcher.ui.llp
@@ -48,7 +48,7 @@ class WallpaperActivity : Activity() {
     private lateinit var empty: LinearLayout
     private lateinit var status: TextView
     private lateinit var controls: LinearLayout
-    private lateinit var dots: Segmented
+    private lateinit var dots: Choice
 
     private val worker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
@@ -89,7 +89,7 @@ class WallpaperActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
         header.addView(text(getString(R.string.studio_title), 22f, Nihil.INK, Nihil.fonts(this).sans), llp(0, WRAP, 1f))
-        header.addView(Pill(this, getString(R.string.studio_pick)).apply { setOnClickListener { pick() } })
+        header.addView(KeyButton(this, getString(R.string.studio_pick)).apply { setOnClickListener { pick() } })
         column.addView(header, llp(MATCH, WRAP))
 
         // The preview, in the screen's proportions.
@@ -112,7 +112,7 @@ class WallpaperActivity : Activity() {
                 gravity = Gravity.CENTER
                 setLineSpacing(dp(4f), 1f)
             })
-            addView(Pill(this@WallpaperActivity, getString(R.string.studio_pick), filled = true).apply {
+            addView(KeyButton(this@WallpaperActivity, getString(R.string.studio_pick), accent = true).apply {
                 setOnClickListener { pick() }
             }, llp(WRAP, WRAP).apply { topMargin = dp(22) })
         }
@@ -125,7 +125,7 @@ class WallpaperActivity : Activity() {
         // Controls.
         controls = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val chosen = pitches.indices.minByOrNull { abs(pitches[it] - prefs.dotPitch) } ?: 1
-        dots = Segmented(
+        dots = Choice(
             this,
             listOf(getString(R.string.dots_fine), getString(R.string.dots_normal), getString(R.string.dots_coarse)),
             chosen,
@@ -137,13 +137,13 @@ class WallpaperActivity : Activity() {
 
         val targets = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            addView(Pill(this@WallpaperActivity, getString(R.string.apply_home), filled = true).apply {
+            addView(KeyButton(this@WallpaperActivity, getString(R.string.apply_home), accent = true).apply {
                 setOnClickListener { apply(WallpaperManager.FLAG_SYSTEM) }
             })
-            addView(Pill(this@WallpaperActivity, getString(R.string.apply_lock)).apply {
+            addView(KeyButton(this@WallpaperActivity, getString(R.string.apply_lock)).apply {
                 setOnClickListener { apply(WallpaperManager.FLAG_LOCK) }
             }, llp(WRAP, WRAP).apply { marginStart = dp(8) })
-            addView(Pill(this@WallpaperActivity, getString(R.string.apply_both)).apply {
+            addView(KeyButton(this@WallpaperActivity, getString(R.string.apply_both)).apply {
                 setOnClickListener { apply(WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK) }
             }, llp(WRAP, WRAP).apply { marginStart = dp(8) })
         }

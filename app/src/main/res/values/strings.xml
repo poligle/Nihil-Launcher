@@ -115,4 +115,12 @@
         <item quantity="other">%d results</item>
     </plurals>
     <string name="wallpaper_seeded">NIHIL’s wallpaper is on · the studio changes it</string>
+    <string name="keys_actions">Actions</string>
+    <string name="keys_calc">Calculate</string>
+    <string name="keys_open">Open</string>
+    <string name="prefs_title">Preferences</string>
+    <string name="section_look_sub">How the home screen and the icons look.</string>
+    <string name="section_behaviour_sub">What NIHIL does when you touch it, and the Glyph light.</string>
+    <string name="section_apps_sub">Apps you hid from the drawer.</string>
+    <string name="section_about_sub">NIHIL on the phone, as on the desktop.</string>
 </resources>

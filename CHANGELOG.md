@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- It looks like the desktop now, piece by piece from home/shell:
+  - The drawer is the desktop's launcher: the apps in a grid, monochrome, the first
+    result raised and in colour; the field at the bottom, on the surface with a hairline
+    and how many apps it holds; under it the keys `>` and `=`, which start each mode.
+    Actions, the web search and the calculator stay as rows across.
+  - The home screen's clock is a card like the desktop's clock widget: the time in Doto,
+    the day and the date, and under a hairline the battery, the next alarm and the unread
+    apps.
+  - Settings are the desktop's Preferences: a heading for each section saying what it is
+    for, settings with their name on the left and the control on the right, hairlines
+    between them; the desktop's toggle, choice and key buttons.
+  - Labels are written as they are, in Space Mono, without capitals; notices are cards like
+    the desktop's notifications; the app menu is the desktop's black card.
+
 - The Glyph light is the desktop's: a segment that runs round clockwise from the top-right
   corner (red and twice for a call or an alarm), and the charger's two lights rising, as
   strokes with their glow instead of LEDs.

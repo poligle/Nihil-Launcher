@@ -21,8 +21,10 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * The home screen, inside the frame's card: the LED clock, the date, the
- * battery as LEDs, the next alarm, unread apps, and favourites at the bottom
+ * The home screen, inside the frame's card. At the top, a card like the
+ * desktop's clock widget (home/shell/background/Desktop.qml): the time in
+ * dots, the day and the date, and under a hairline the battery as LEDs, the
+ * next alarm and the apps with something unread. Favourites at the bottom,
  * where the thumb is.
  */
 class HomeView(context: Context, private val host: Host) : FrameLayout(context) {
@@ -35,8 +37,16 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
 
     private val fonts = Nihil.fonts(context)
     private val header = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-    private val clock = LedClock(context)
-    private val date = context.mono(size = 13f, color = Nihil.INK)
+    private val card = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        gravity = Gravity.CENTER_HORIZONTAL
+    }
+    private val clock = context.text("", 68f, Nihil.INK, fonts.dot).apply {
+        gravity = Gravity.CENTER
+        maxLines = 1
+    }
+    private val day = context.mono(size = 12f, color = Nihil.DIM)
+    private val date = context.text("", 14f, Nihil.MUTED)
     private val gauge = LedGauge(context)
     private val battery = context.mono(size = 11f, color = Nihil.DIM)
     private val alarm = context.mono(size = 11f, color = Nihil.DIM)
@@ -49,8 +59,7 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
     private val empty = context.mono(context.getString(R.string.favorites_empty), 11f, Nihil.DIM)
 
     private val scrim = Paint()
-    // The shades behind the clock and the favourites, made again only when the card changes.
-    private var topShade: LinearGradient? = null
+    // The shade behind the favourites, made again only when the card changes.
     private var bottomShade: LinearGradient? = null
     private var shadeFor = ""
     private var dim = false
@@ -64,29 +73,38 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         header.clipChildren = false
         header.clipToPadding = false
 
-        header.addView(clock, llp(WRAP, WRAP))
-        header.addView(date, llp(WRAP, WRAP).apply { topMargin = context.dp(18) })
+        card.background = rounded(Nihil.VOID, context.dp(22f), context.dp(1), Nihil.LINE)
+        card.setPadding(context.dp(20), context.dp(18), context.dp(20), context.dp(16))
+        card.addView(clock, llp(MATCH, WRAP))
+        card.addView(day, llp(WRAP, WRAP).apply { topMargin = context.dp(6) })
+        card.addView(date, llp(WRAP, WRAP).apply { topMargin = context.dp(4) })
+        card.addView(context.rule(), llp(MATCH, context.dp(1)).apply {
+            topMargin = context.dp(16)
+            bottomMargin = context.dp(12)
+        })
 
-        val batteryRow = LinearLayout(context).apply {
+        // The battery on the left, the alarm on the right; the unread apps under them.
+        val status = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             addView(gauge, llp(WRAP, WRAP))
-            addView(battery, llp(WRAP, WRAP).apply { marginStart = context.dp(10) })
+            addView(battery, llp(0, WRAP, 1f).apply { marginStart = context.dp(10) })
+            addView(alarm, llp(WRAP, WRAP).apply { marginStart = context.dp(10) })
         }
-        header.addView(batteryRow, llp(WRAP, WRAP).apply { topMargin = context.dp(14) })
-        header.addView(alarm, llp(WRAP, WRAP).apply { topMargin = context.dp(10) })
+        card.addView(status, llp(MATCH, WRAP))
 
         unread.addView(unreadMore)
         unread.setOnClickListener { host.openShade() }
         unread.background = ripple(context.dp(12f))
-        unread.setPadding(0, context.dp(6), context.dp(6), context.dp(6))
-        header.addView(unread, llp(WRAP, WRAP).apply { topMargin = context.dp(12) })
+        unread.setPadding(0, context.dp(6), context.dp(6), context.dp(2))
+        card.addView(unread, llp(MATCH, WRAP).apply { topMargin = context.dp(8) })
 
+        header.addView(card, llp(MATCH, WRAP))
         addView(header, lp(MATCH, WRAP, Gravity.TOP))
         addView(favorites, lp(MATCH, WRAP, Gravity.BOTTOM))
         addView(empty, lp(MATCH, WRAP, Gravity.BOTTOM))
 
-        listOf(date, battery, alarm, unreadMore, empty).forEach { it.setShadowLayer(context.dp(6f), 0f, 0f, 0x99000000.toInt()) }
+        empty.setShadowLayer(context.dp(6f), 0f, 0f, 0x99000000.toInt())
         updateClock(animate = false)
     }
 
@@ -95,7 +113,7 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         bandTop = top
         bandBottom = bottom
         val side = context.dp(24)
-        header.setPadding(left + side, top + context.dp(30), right + side, 0)
+        header.setPadding(left + context.dp(14), top + context.dp(14), right + context.dp(14), 0)
         favorites.setPadding(left + side - context.dp(8), 0, right + side, bottom + context.dp(22))
         empty.setPadding(left + side, 0, right + side, bottom + context.dp(34))
         invalidate()
@@ -109,9 +127,17 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
     fun updateClock(animate: Boolean) {
         val now = Date()
         val is24 = DateFormat.is24HourFormat(context)
-        clock.show(SimpleDateFormat(if (is24) "HH:mm" else "h:mm", Locale.ROOT).format(now), animate)
-        val pattern = DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEdMMM")
-        date.text = SimpleDateFormat(pattern, Locale.getDefault()).format(now).replace(".", "").uppercase()
+        val time = SimpleDateFormat(if (is24) "HH:mm" else "h:mm", Locale.ROOT).format(now)
+        if (clock.text.toString() != time) {
+            clock.text = time
+            if (animate) {
+                clock.alpha = 0.4f
+                clock.animate().alpha(1f).setDuration(Nihil.NORMAL).setInterpolator(EASE).start()
+            }
+        }
+        val locale = Locale.getDefault()
+        day.text = SimpleDateFormat("EEEE", locale).format(now).replaceFirstChar { it.titlecase(locale) }
+        date.text = SimpleDateFormat(DateFormat.getBestDateTimePattern(locale, "dMMMM"), locale).format(now)
     }
 
     fun updateBattery(level: Int, charging: Boolean) {
@@ -180,18 +206,15 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
             canvas.drawColor(0x8C000000.toInt())
             return
         }
-        // Soft shades behind the clock and the favourites, so any wallpaper stays readable.
-        val topEnd = bandTop + h * 0.45f
+        // A soft shade behind the favourites, so any wallpaper stays readable;
+        // the clock has its own card.
         val cardEnd = h - bandBottom
         val bottomStart = cardEnd - h * 0.5f
-        val key = "$h $bandTop $bandBottom"
+        val key = "$h $bandBottom"
         if (key != shadeFor) {
             shadeFor = key
-            topShade = LinearGradient(0f, bandTop.toFloat(), 0f, topEnd, 0x8C000000.toInt(), 0, Shader.TileMode.CLAMP)
             bottomShade = LinearGradient(0f, bottomStart, 0f, cardEnd, 0, 0xA6000000.toInt(), Shader.TileMode.CLAMP)
         }
-        scrim.shader = topShade
-        canvas.drawRect(0f, 0f, w, topEnd, scrim)
         scrim.shader = bottomShade
         canvas.drawRect(0f, bottomStart, w, h, scrim)
     }

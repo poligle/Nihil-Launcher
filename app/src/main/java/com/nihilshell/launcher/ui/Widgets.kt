@@ -43,9 +43,9 @@ fun Context.text(
     includeFontPadding = false
 }
 
-/** Metadata: Space Mono, upper case, spaced out. */
+/** The desktop's Label: metadata in Space Mono, as written. */
 fun Context.mono(value: CharSequence = "", size: Float = 11f, color: Int = Nihil.MUTED): TextView =
-    text(value.toString().uppercase(), size, color, Nihil.fonts(this).mono, 0.08f).apply { isAllCaps = true }
+    text(value, size, color, Nihil.fonts(this).mono)
 
 fun rounded(color: Int, radius: Float, strokeWidth: Int = 0, strokeColor: Int = 0): GradientDrawable =
     GradientDrawable().apply {
@@ -67,38 +67,39 @@ fun llp(width: Int, height: Int, weight: Float = 0f) = LinearLayout.LayoutParams
 const val MATCH = ViewGroup.LayoutParams.MATCH_PARENT
 const val WRAP = ViewGroup.LayoutParams.WRAP_CONTENT
 
-/** A pill button: outlined, Space Mono in capitals. Filled with ink when [filled]. */
-class Pill(context: Context, label: CharSequence, filled: Boolean = false) : TextView(context) {
+/**
+ * The desktop's KeyButton: a small rounded key in Space Mono, on the surface
+ * with a hairline; [accent] fills it with ink, [danger] with red.
+ */
+class KeyButton(context: Context, label: CharSequence, accent: Boolean = false, danger: Boolean = false) : TextView(context) {
     init {
-        text = label.toString().uppercase()
+        text = label
         typeface = Nihil.fonts(context).mono
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-        letterSpacing = 0.08f
+        includeFontPadding = false
         gravity = Gravity.CENTER
-        minHeight = context.dp(40)
-        setPadding(context.dp(18), 0, context.dp(18), 0)
-        val radius = context.dp(20f)
-        if (filled) {
-            setTextColor(Nihil.VOID)
-            background = ripple(radius, rounded(Nihil.INK, radius))
-        } else {
-            setTextColor(Nihil.INK)
-            background = ripple(radius, rounded(0, radius, context.dp(1), Nihil.LINE))
+        minHeight = context.dp(38)
+        minWidth = context.dp(38)
+        setPadding(context.dp(16), 0, context.dp(16), 0)
+        val radius = context.dp(8f)
+        val (fill, edge, ink) = when {
+            danger -> Triple(Nihil.SIGNAL, Nihil.SIGNAL, Nihil.INK)
+            accent -> Triple(Nihil.INK, Nihil.INK, Nihil.VOID)
+            else -> Triple(Nihil.SURFACE, Nihil.LINE, Nihil.DIM)
         }
+        setTextColor(ink)
+        background = ripple(radius, rounded(fill, radius, context.dp(1), edge))
         isClickable = true
         isFocusable = true
     }
 }
 
 /**
- * A switch as an LED: an outlined track with a dot that slides across and
- * lights up when on.
+ * The desktop's Toggle: an outlined track whose dot slides across; on, the
+ * track fills with ink and the dot turns black.
  */
-class LedSwitch(context: Context) : View(context) {
-    private val track = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeWidth = context.dp(1.2f)
-    }
+class Toggle(context: Context) : View(context) {
+    private val track = Paint(Paint.ANTI_ALIAS_FLAG)
     private val dot = Paint(Paint.ANTI_ALIAS_FLAG)
     private val rect = RectF()
     private var position = 0f
@@ -138,7 +139,7 @@ class LedSwitch(context: Context) : View(context) {
             invalidate()
         } else {
             animator = ValueAnimator.ofFloat(position, target).apply {
-                duration = Nihil.NORMAL
+                duration = Nihil.FAST
                 interpolator = EASE
                 addUpdateListener {
                     position = it.animatedValue as Float
@@ -155,24 +156,31 @@ class LedSwitch(context: Context) : View(context) {
         if (notify) onChange?.invoke(value)
     }
 
+    // 34 × 20 on the desktop; a little bigger under a finger.
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) =
-        setMeasuredDimension(context.dp(46), context.dp(26))
+        setMeasuredDimension(context.dp(40), context.dp(24))
 
     override fun onDraw(canvas: Canvas) {
-        val inset = track.strokeWidth / 2
-        rect.set(inset, inset, width - inset, height - inset)
+        val edge = context.dp(1f)
+        rect.set(edge / 2, edge / 2, width - edge / 2, height - edge / 2)
         val r = rect.height() / 2
-        track.color = blend(Nihil.LINE, Nihil.DIM, position)
+        track.style = Paint.Style.FILL
+        track.color = withAlpha(Nihil.INK, position)
         canvas.drawRoundRect(rect, r, r, track)
-        val dotR = r * (0.42f + 0.12f * position)
-        val cx = rect.left + r + (rect.width() - 2 * r) * position
-        dot.color = blend(Nihil.MUTED, Nihil.INK, position)
-        canvas.drawCircle(cx, rect.centerY(), dotR, dot)
+        track.style = Paint.Style.STROKE
+        track.strokeWidth = edge
+        track.color = blend(Nihil.OFF, Nihil.INK, position)
+        canvas.drawRoundRect(rect, r, r, track)
+        val dotR = context.dp(7f)
+        val inset = context.dp(5f) + dotR
+        val cx = inset + (width - 2 * inset) * position
+        dot.color = blend(Nihil.MUTED, Nihil.VOID, position)
+        canvas.drawCircle(cx, height / 2f, dotR, dot)
     }
 }
 
-/** Options in a row; the chosen one is an ink pill. */
-class Segmented(
+/** The desktop's Choice: the options as words; the chosen one in ink, underlined. */
+class Choice(
     context: Context,
     options: List<String>,
     selected: Int,
@@ -185,64 +193,79 @@ class Segmented(
 
     init {
         orientation = HORIZONTAL
-        val radius = context.dp(16f)
-        background = rounded(0, radius + context.dp(3), context.dp(1), Nihil.LINE)
-        pad(context.dp(3))
         options.forEachIndexed { index, label ->
-            val item = context.mono(label, 11f, Nihil.DIM).apply {
+            val item = context.text(label, 14f, Nihil.MUTED).apply {
                 gravity = Gravity.CENTER
-                setPadding(context.dp(12), 0, context.dp(12), 0)
-                minHeight = context.dp(30)
+                minHeight = context.dp(36)
                 setOnClickListener { select(index, notify = true) }
             }
             items += item
-            addView(item, llp(WRAP, context.dp(30)))
+            addView(item, llp(WRAP, context.dp(36)).apply { if (index > 0) marginStart = context.dp(20) })
         }
         select(selected, notify = false)
     }
 
     fun select(index: Int, notify: Boolean) {
         selected = index
-        val radius = context.dp(15f)
         items.forEachIndexed { i, item ->
             val on = i == index
-            item.setTextColor(if (on) Nihil.VOID else Nihil.DIM)
+            item.setTextColor(if (on) Nihil.INK else Nihil.MUTED)
             item.isSelected = on
-            item.background = if (on) rounded(Nihil.INK, radius) else ripple(radius)
+            item.background = if (on) Underline(context.dp(2f)) else null
         }
         if (notify) onSelect(index)
     }
+
+    private class Underline(private val thickness: Float) : Drawable() {
+        private val paint = Paint().apply { color = Nihil.INK }
+        override fun draw(canvas: Canvas) {
+            val b = bounds
+            canvas.drawRect(b.left.toFloat(), b.bottom - thickness, b.right.toFloat(), b.bottom.toFloat(), paint)
+        }
+        override fun setAlpha(alpha: Int) = Unit
+        override fun setColorFilter(colorFilter: android.graphics.ColorFilter?) = Unit
+        @Deprecated("Deprecated in Java")
+        override fun getOpacity(): Int = android.graphics.PixelFormat.TRANSLUCENT
+    }
 }
 
-/** A short message at the bottom of the screen, in the NIHIL voice instead of a toast. */
-class Notice(context: Context) : TextView(context) {
+/** A short message in a card like the desktop's notifications: who says it, and what. */
+class Notice(context: Context) : LinearLayout(context) {
+    private val message = context.text("", 14f, Nihil.INK)
     private val hide = Runnable { animate().alpha(0f).translationY(context.dp(8f)).setDuration(Nihil.NORMAL).start() }
 
     init {
-        typeface = Nihil.fonts(context).mono
-        setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-        letterSpacing = 0.06f
-        setTextColor(Nihil.INK)
-        gravity = Gravity.CENTER
-        setPadding(context.dp(16), context.dp(10), context.dp(16), context.dp(10))
-        background = rounded(Nihil.VOID, context.dp(20f), context.dp(1), Nihil.LINE)
+        orientation = VERTICAL
+        setPadding(context.dp(16), context.dp(12), context.dp(18), context.dp(13))
+        background = rounded(Nihil.VOID, context.dp(16f), context.dp(1), Nihil.LINE)
+        addView(context.mono(context.getString(com.nihilshell.launcher.R.string.app_name), 11f, Nihil.MUTED))
+        addView(message, llp(WRAP, WRAP).apply { topMargin = context.dp(6) })
         alpha = 0f
         isClickable = false
     }
 
-    fun show(message: CharSequence) {
-        text = message.toString().uppercase()
+    fun show(text: CharSequence) {
+        message.text = text
         removeCallbacks(hide)
         translationY = context.dp(8f)
         animate().alpha(1f).translationY(0f).setDuration(Nihil.FAST).setInterpolator(EASE).start()
-        postDelayed(hide, 1800)
+        postDelayed(hide, 2200)
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean = false
 }
 
-/** A thin horizontal rule. */
-fun Context.rule(): View = View(this).apply { background = ColorDrawable(Nihil.LINE) }
+/** A thin horizontal rule, as the desktop's between settings. */
+fun Context.rule(): View = View(this).apply { background = ColorDrawable(withAlpha(Nihil.LINE, 0.6f)) }
+
+/** The desktop's KeyHints key: a little keycap with what to press. */
+fun Context.keycap(key: String): TextView = mono(key, 10f, Nihil.DIM).apply {
+    gravity = Gravity.CENTER
+    minWidth = dp(22)
+    minHeight = dp(22)
+    setPadding(dp(6), 0, dp(6), 0)
+    background = rounded(Nihil.SURFACE, dp(5f), dp(1), Nihil.LINE)
+}
 
 fun blend(from: Int, to: Int, t: Float): Int {
     val k = t.coerceIn(0f, 1f)
