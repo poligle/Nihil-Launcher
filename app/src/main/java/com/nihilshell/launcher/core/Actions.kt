@@ -34,6 +34,7 @@ interface ActionHost {
     fun openStudio()
     fun openSettings()
     fun openDeck()
+    fun openTasks()
     fun notice(text: String)
     fun nextAlarmText(): String?
 }
@@ -50,6 +51,7 @@ object Actions {
     const val NIHIL = "nihil"
     const val SYSTEM = "system"
     const val DECK = "deck"
+    const val TASKS = "tasks"
 
     fun all(context: Context, host: ActionHost): List<Action> {
         fun s(id: Int) = context.getString(id)
@@ -74,6 +76,9 @@ object Actions {
             Action(DECK, s(R.string.deck_title), "deck ordenador computer pc portatil laptop escritorio desktop remote mando", LineIcon.Shape.LAPTOP) {
                 s(R.string.hint_deck)
             },
+            Action(TASKS, s(R.string.tasks_title), "tasks tareas kanban todo pendientes board tablero", LineIcon.Shape.TASKS) {
+                s(R.string.hint_deck)
+            },
             Action(SYSTEM, s(R.string.act_system), "settings ajustes sistema system", LineIcon.Shape.GEAR) { s(R.string.hint_system) },
         )
     }
@@ -96,6 +101,10 @@ object Actions {
         }
         DECK -> {
             host.openDeck()
+            true
+        }
+        TASKS -> {
+            host.openTasks()
             true
         }
         NIHIL -> {

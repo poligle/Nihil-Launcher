@@ -25,6 +25,8 @@ import com.nihilshell.launcher.core.Prefs
 import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
 import com.nihilshell.launcher.ui.KeyButton
+import com.nihilshell.launcher.ui.LineIcon
+import com.nihilshell.launcher.ui.AppMenu
 import com.nihilshell.launcher.ui.Choice
 import com.nihilshell.launcher.ui.WRAP
 import com.nihilshell.launcher.ui.dp
@@ -135,19 +137,18 @@ class WallpaperActivity : Activity() {
         }
         controls.addView(labelled(R.string.studio_dots, dots))
 
-        val targets = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            addView(KeyButton(this@WallpaperActivity, getString(R.string.apply_home), accent = true).apply {
-                setOnClickListener { apply(WallpaperManager.FLAG_SYSTEM) }
-            })
-            addView(KeyButton(this@WallpaperActivity, getString(R.string.apply_lock)).apply {
-                setOnClickListener { apply(WallpaperManager.FLAG_LOCK) }
-            }, llp(WRAP, WRAP).apply { marginStart = dp(8) })
-            addView(KeyButton(this@WallpaperActivity, getString(R.string.apply_both)).apply {
-                setOnClickListener { apply(WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK) }
-            }, llp(WRAP, WRAP).apply { marginStart = dp(8) })
+        // One key to apply; then where: the home screen, the lock screen or both.
+        val apply = KeyButton(this, getString(R.string.studio_apply_button), accent = true)
+        apply.setOnClickListener {
+            AppMenu(this).show(anchor = apply, title = getString(R.string.studio_where), items = listOf(
+                AppMenu.Item(LineIcon.Shape.HOME, getString(R.string.apply_home)) { apply(WallpaperManager.FLAG_SYSTEM) },
+                AppMenu.Item(LineIcon.Shape.LOCK, getString(R.string.apply_lock)) { apply(WallpaperManager.FLAG_LOCK) },
+                AppMenu.Item(LineIcon.Shape.IMAGE, getString(R.string.apply_both)) {
+                    apply(WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK)
+                },
+            ))
         }
-        controls.addView(labelled(R.string.studio_apply, targets), llp(MATCH, WRAP).apply { topMargin = dp(12) })
+        controls.addView(apply, llp(WRAP, WRAP).apply { topMargin = dp(16) })
         status = mono("", 11f, Nihil.DIM).apply {
             gravity = Gravity.CENTER
             minHeight = dp(18)

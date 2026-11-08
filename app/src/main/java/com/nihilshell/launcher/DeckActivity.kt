@@ -16,6 +16,9 @@ import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
 import android.view.WindowInsets
+import com.nihilshell.launcher.ui.ReorderGrid
+import com.nihilshell.launcher.ui.AppMenu
+import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -81,6 +84,10 @@ class DeckActivity : Activity() {
     private var websGrid: LinearLayout? = null
     private var workspaces: Workspaces? = null
     private var playing = false
+    private var keepOn: ImageView? = null
+    private var cover: ImageView? = null
+    private var coverShown = ""
+    private val popup by lazy { AppMenu(this) }
     private var appsColumns = 6
     private var websColumns = 4
 
@@ -110,7 +117,16 @@ class DeckActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        caffeine(store.keepScreenOn)
         refresh()
+    }
+
+    /** The desktop's caffeine, on the deck: the screen stays on while it is open. */
+    private fun caffeine(on: Boolean) {
+        if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        val r = dp(20f)
+        keepOn?.setImageDrawable(LineIcon(LineIcon.Shape.CUP, if (on) Nihil.VOID else Nihil.DIM))
+        keepOn?.background = ripple(r, if (on) rounded(Nihil.INK, r) else rounded(Nihil.SURFACE, r, dp(1), Nihil.LINE))
     }
 
     override fun onDestroy() {
@@ -159,6 +175,13 @@ class DeckActivity : Activity() {
         status = mono(getString(R.string.deck_looking, computer.name), 11f, Nihil.MUTED)
         names.addView(status, llp(WRAP, WRAP).apply { topMargin = dp(2) })
         header.addView(names, llp(0, WRAP, 1f).apply { marginStart = dp(16) })
+        keepOn = circle(LineIcon.Shape.CUP, R.string.deck_caffeine) {
+            store.keepScreenOn = !store.keepScreenOn
+            caffeine(store.keepScreenOn)
+            notice.show(getString(if (store.keepScreenOn) R.string.deck_caffeine_on else R.string.deck_caffeine_off))
+        }
+        header.addView(keepOn, llp(dp(40), dp(40)).apply { marginEnd = dp(10) })
+        caffeine(store.keepScreenOn)
         header.addView(circle(LineIcon.Shape.TRASH, R.string.deck_forget) { forget(computer) })
         screen.addView(header, llp(MATCH, WRAP))
 
@@ -181,17 +204,31 @@ class DeckActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
         val music = card()
-        music.addView(mono(getString(R.string.deck_music), 11f, Nihil.MUTED))
+        val playingRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        cover = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            clipToOutline = true
+            background = rounded(Nihil.SURFACE, dp(14f), dp(1), Nihil.LINE)
+            contentDescription = getString(R.string.deck_cover)
+        }
+        playingRow.addView(cover, llp(dp(104), dp(104)).apply { marginEnd = dp(18) })
+        val words = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        words.addView(mono(getString(R.string.deck_music), 11f, Nihil.MUTED))
         track = text(getString(R.string.deck_nothing_playing), 22f, Nihil.INK).apply {
             maxLines = 2
             ellipsize = TextUtils.TruncateAt.END
         }
-        music.addView(track, llp(MATCH, WRAP).apply { topMargin = dp(10) })
+        words.addView(track, llp(MATCH, WRAP).apply { topMargin = dp(8) })
         artist = text("", 15f, Nihil.MUTED).apply {
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END
         }
-        music.addView(artist, llp(MATCH, WRAP).apply { topMargin = dp(4) })
+        words.addView(artist, llp(MATCH, WRAP).apply { topMargin = dp(4) })
+        playingRow.addView(words, llp(0, WRAP, 1f))
+        music.addView(playingRow, llp(MATCH, WRAP))
         music.addView(View(this), llp(MATCH, 0, 1f))
         val transport = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -299,8 +336,29 @@ class DeckActivity : Activity() {
             artist?.text = media.optString("artist")
             playing = media.optBoolean("playing")
         }
+        showCover(media?.optString("cover").orEmpty())
         play?.setImageDrawable(LineIcon(if (playing) LineIcon.Shape.PAUSE else LineIcon.Shape.PLAY, Nihil.VOID))
         showVolume(state.optJSONObject("volume"))
+    }
+
+    /** The cover of what plays, asked for again only when the computer says it changed. */
+    private fun showCover(token: String) {
+        val view = cover ?: return
+        if (token == coverShown) return
+        coverShown = token
+        if (token.isEmpty()) {
+            view.setImageDrawable(null)
+            return
+        }
+        val computer = store.computer ?: return
+        val client = DeckClient(computer, store.token())
+        pool.execute {
+            val bytes = client.call("GET", "/v1/cover?c=" + Uri.encode(token))?.takeIf { it.status == 200 }?.bytes
+            val bitmap = bytes?.let { runCatching { BitmapFactory.decodeByteArray(it, 0, it.size) }.getOrNull() }
+            main.post {
+                if (!isDestroyed && coverShown == token) view.setImageBitmap(bitmap)
+            }
+        }
     }
 
     private fun showVolume(level: JSONObject?) {
@@ -310,32 +368,62 @@ class DeckActivity : Activity() {
 
     // --- Tiles ---------------------------------------------------------------------
 
+    // The apps in the order put here (held and moved), the ones new on the computer at the end.
     private fun showApps(apps: List<Pair<String, String>>, computer: Computer) {
-        val grid = appsGrid ?: return
-        fill(grid, appsColumns, apps.map { (id, name) ->
-            tile(name, "app:$id", "/v1/apps/${Uri.encode(id)}/icon", name, computer) { open(JSONObject().put("app", id)) }
-        })
-    }
-
-    private fun showWebs() {
-        val grid = websGrid ?: return
-        val computer = store.computer ?: return
-        val tiles = store.webs.map { web ->
-            tile(web.title, "web:${web.url}", "/v1/favicon?url=" + URLEncoder.encode(web.url, "UTF-8"), web.title, computer,
-                onLong = { removeWeb(web) }) { open(JSONObject().put("url", web.url)) }
-        } + addTile()
-        fill(grid, websColumns, tiles)
-    }
-
-    /** Rows of [columns], as the drawer's grid. */
-    private fun fill(grid: LinearLayout, columns: Int, tiles: List<View>) {
-        grid.removeAllViews()
-        tiles.chunked(columns).forEach { chunk ->
-            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-            chunk.forEach { row.addView(it, llp(0, dp(104), 1f)) }
-            repeat(columns - chunk.size) { row.addView(View(this), llp(0, dp(104), 1f)) }
-            grid.addView(row, llp(MATCH, WRAP))
+        val holder = appsGrid ?: return
+        val order = store.appsOrder
+        val sorted = apps.sortedWith(compareBy({ order.indexOf(it.first).let { i -> if (i < 0) Int.MAX_VALUE else i } }, { it.second.lowercase() }))
+        val grid = ReorderGrid(this, appsColumns, dp(104))
+        grid.onReorder = { from, to ->
+            val ids = sorted.map { it.first }.toMutableList()
+            ids.add(to, ids.removeAt(from))
+            store.appsOrder = ids
+            showApps(ids.mapNotNull { id -> sorted.firstOrNull { it.first == id } }, computer)
         }
+        for ((id, name) in sorted) {
+            val cell = tile(name, "app:$id", "/v1/apps/${Uri.encode(id)}/icon", name, computer) { open(JSONObject().put("app", id)) }
+            grid.movable(cell)
+            cell.setOnLongClickListener {
+                grid.arm(it)
+                it.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+                true
+            }
+            grid.addView(cell)
+        }
+        holder.removeAllViews()
+        holder.addView(grid, llp(MATCH, WRAP))
+    }
+
+    // The webs in their order, held and moved; held and let go, a menu to remove one.
+    private fun showWebs() {
+        val holder = websGrid ?: return
+        val computer = store.computer ?: return
+        val webs = store.webs
+        val grid = ReorderGrid(this, websColumns, dp(104))
+        grid.fixedTail = 1
+        grid.onReorder = { from, to ->
+            val list = webs.toMutableList()
+            list.add(to, list.removeAt(from))
+            store.webs = list
+            showWebs()
+        }
+        for (web in webs) {
+            val cell = tile(web.title, "web:${web.url}", "/v1/favicon?url=" + URLEncoder.encode(web.url, "UTF-8"), web.title, computer) {
+                open(JSONObject().put("url", web.url))
+            }
+            grid.movable(cell)
+            cell.setOnLongClickListener {
+                popup.show(anchor = it, title = web.title, items = listOf(
+                    AppMenu.Item(LineIcon.Shape.TRASH, getString(R.string.deck_remove), danger = true) { removeWeb(web) },
+                ))
+                grid.arm(it) { popup.dismiss() }
+                true
+            }
+            grid.addView(cell)
+        }
+        grid.addView(addTile())
+        holder.removeAllViews()
+        holder.addView(grid, llp(MATCH, WRAP))
     }
 
     private fun tile(
@@ -344,7 +432,6 @@ class DeckActivity : Activity() {
         path: String,
         letterOf: String,
         computer: Computer,
-        onLong: (() -> Unit)? = null,
         onTap: () -> Unit,
     ): View {
         val cell = LinearLayout(this).apply {
@@ -354,12 +441,6 @@ class DeckActivity : Activity() {
             background = ripple(dp(18f))
             contentDescription = label
             setOnClickListener { onTap() }
-            if (onLong != null) {
-                setOnLongClickListener {
-                    onLong()
-                    true
-                }
-            }
         }
         val size = dp(46)
         val holder = FrameLayout(this)

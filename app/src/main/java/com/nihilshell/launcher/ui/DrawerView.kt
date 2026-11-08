@@ -45,6 +45,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         fun webSearch(query: String)
         fun openSettings()
         fun openDeck()
+        fun openTasks()
         fun hideKeyboard()
         fun showKeyboard(view: View)
     }
@@ -168,6 +169,15 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
             contentDescription = context.getString(R.string.deck_title)
             setOnClickListener { host.openDeck() }
         }
+        val tasks = ImageView(context).apply {
+            setImageDrawable(LineIcon(LineIcon.Shape.TASKS, Nihil.DIM))
+            pad(context.dp(8))
+            val r = context.dp(17f)
+            background = ripple(r, rounded(Nihil.SURFACE, r, context.dp(1), Nihil.LINE))
+            contentDescription = context.getString(R.string.tasks_title)
+            setOnClickListener { host.openTasks() }
+        }
+        keys.addView(tasks, llp(context.dp(34), context.dp(34)).apply { marginEnd = context.dp(10) })
         keys.addView(deck, llp(context.dp(34), context.dp(34)).apply { marginEnd = context.dp(10) })
         val settings = ImageView(context).apply {
             setImageDrawable(LineIcon(LineIcon.Shape.SETTINGS, Nihil.DIM))
@@ -444,7 +454,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
             visibility = View.VISIBLE
             val wanted = if (selected) raised else plain
             if (background !== wanted) background = wanted
-            name.text = if (entry.key in hidden) "${entry.label} · ${context.getString(R.string.hint_hidden)}" else entry.label
+            name.text = if (entry.key in hidden) "${entry.label} (${context.getString(R.string.hint_hidden).lowercase()})" else entry.label
             name.setTextColor(if (selected) Nihil.INK else Nihil.MUTED)
             contentDescription = entry.label
             key = entry.key

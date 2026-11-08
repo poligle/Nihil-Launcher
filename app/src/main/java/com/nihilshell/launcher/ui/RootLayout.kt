@@ -102,9 +102,16 @@ class RootLayout(context: Context, private val listener: Listener) : FrameLayout
         return true
     }
 
+    /** Whether a vertical drag from a point (raw) by dy belongs to something that scrolls there. */
+    var scrollableAt: ((Float, Float, Float) -> Boolean)? = null
+    private var downRawX = 0f
+    private var downRawY = 0f
+
     private fun begin(ev: MotionEvent) {
         downX = ev.x
         downY = ev.y
+        downRawX = ev.rawX
+        downRawY = ev.rawY
         dragging = false
         spent = false
     }
@@ -114,6 +121,7 @@ class RootLayout(context: Context, private val listener: Listener) : FrameLayout
         val dy = ev.y - downY
         if (abs(dy) < slop || abs(dy) < abs(dx) * 1.2f) return false
         val p = listener.progress
+        if (p <= 0.001f && scrollableAt?.invoke(downRawX, downRawY, dy) == true) return false
         return when {
             p <= 0.001f -> true
             p >= 0.999f -> dy > 0 && listener.canCloseFrom(downY)

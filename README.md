@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/icon.svg" width="88" alt="NIHIL Launcher's icon: the Android robot in white dots on black."></p>
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/brand/nihil-logo-dark.svg">
@@ -5,13 +7,15 @@
   </picture>
 </p>
 
-<p align="center"><b>ex nihilo</b> &nbsp;·&nbsp; a monochrome, dot-matrix launcher for Android</p>
+<p align="center"><i>ex nihilo</i></p>
+
+<p align="center">A monochrome, dot-matrix launcher for Android</p>
 
 <p align="center">
-  <a href="https://github.com/poligle/Nihil-Launcher/releases/latest">Download</a> &nbsp;·&nbsp;
-  <a href="https://nihilshell.com/android/">Website</a> &nbsp;·&nbsp;
-  <a href="#install">Install</a> &nbsp;·&nbsp;
-  <a href="#permissions">Permissions</a> &nbsp;·&nbsp;
+  <a href="https://github.com/poligle/Nihil-Launcher/releases/latest">Download</a> &nbsp;&nbsp;&nbsp;
+  <a href="https://nihilshell.com/android/">Website</a> &nbsp;&nbsp;&nbsp;
+  <a href="#install">Install</a> &nbsp;&nbsp;&nbsp;
+  <a href="#permissions">Permissions</a> &nbsp;&nbsp;&nbsp;
   <a href="https://github.com/poligle/Nihil-Shell">Desktop for NixOS</a>
 </p>
 
@@ -123,8 +127,8 @@ To build it yourself, see [Build](#build).
 | Swipe up           | The drawer, following your finger                          |
 | Swipe down         | The notification shade                                     |
 | Double tap         | Locks the phone (optional)                                 |
-| Hold empty space   | NIHIL wallpaper, system wallpaper, NIHIL settings          |
-| Hold an app        | Its shortcuts · add to home, move, hide · app info · uninstall |
+| Hold empty space   | NIHIL wallpaper, NIHIL settings                            |
+| Hold an app        | Its shortcuts, add to home, move, hide, app info, uninstall; on the home screen, move it to put the favourites in order |
 | Home button        | Closes the drawer or a menu                                |
 
 In the drawer, a downward drag closes it when the list is at the top; back does the same.
@@ -161,7 +165,7 @@ As near the desktop's (qalc) as one Kotlin file gets, comma or point for decimal
 | `0xff`, `255 to hex`         | Hex, binary and octal, both ways                       |
 | `diff(x^2)`, `diff(x^3; 2)`  | 2x, and its value at 2: 12                             |
 | `integrate(x^2)`, `integrate(x^2; 0; 3)` | x^3/3 + C, and 9; bounds may be `inf`      |
-| `solve(x^2 = 4)`             | x = -2 · x = 2 (real solutions)                        |
+| `solve(x^2 = 4)`             | x = -2, x = 2 (real solutions)                        |
 | `sum(i^2; i; 1; 10)`, `limit(sin(x)/x; x; 0)` | 385 and 1; `product` too          |
 
 Spanish names work too: `deriva`, `integra`, `resuelve`, `suma`, `producto`, `límite`. No
@@ -179,8 +183,15 @@ locks it. It can't run commands or read files.
 2. On the phone: the laptop key under the drawer's field, `> computer`, or Settings →
    Computer → **Pair**, and point the camera at the QR.
 
-The deck is landscape, on one screen, in workspaces as the desktop's: the music, the volume
-and the lock in one; the apps and the webs, each scrolling on its own, in the other. Swipe
+<p align="center">
+  <img src="docs/screens/deck-music.webp" width="420" alt="The deck in landscape, its first workspace: the cover of what plays on the computer, its keys, and the volume in dots with the lock beside it.">&nbsp;
+  <img src="docs/screens/deck-apps.webp" width="420" alt="The deck's second workspace: the computer's apps with their icons, and the webs kept on the phone with their favicons.">
+</p>
+
+The deck is landscape, on one screen, in workspaces as the desktop's: the music with its
+cover, the volume and the lock in one; the apps and the webs, each scrolling on its own, in
+the other. Hold an app or a web and move it to put them in order; the cup keeps the screen on,
+as the desktop's caffeine. Swipe
 between them or tap their dots. The apps come with the computer's icons; the webs are kept on
 the phone (add one, or share it from the browser), with icons the computer finds for them.
 **Open on the computer** in the share sheet opens a web there.
@@ -232,6 +243,15 @@ Open **NIHIL** from the app list, the gear in the drawer, or hold the home scree
 | Keyboard when the drawer opens  | on      | Type straight away, or browse first                               |
 | Language                        |         | Android 13 and later: English or Spanish, whatever the phone speaks |
 | Computer                        |         | The deck: pair with NIHIL on your computer                        |
+
+### Tasks
+
+The desktop's kanban, on the phone: the key beside the computer's under the drawer's field,
+or `> tasks`. To do, doing and done, the same cards. Every change stays on the phone at once
+and goes to the computer when it answers; apart for a while, each side goes on, and the next
+sync keeps what both did: for each card, the text written last and the column chosen last, and
+a deletion over anything older (`core/TaskBoard.kt`, as `Tasks.qml` and `TaskMerge.js` on the
+desktop).
 | Glyph light                     | on      | The light on the frame and the unread icons (needs notification access); over other apps too with the accessibility service |
 | Double tap to lock              | off     | Needs the accessibility service, which locks and draws the light  |
 | Hidden apps                     |         | Show them in the list again                                       |
@@ -300,9 +320,11 @@ app/src/main/java/com/nihilshell/launcher/
 ├── DeckActivity.kt        the deck: music, volume, lock, apps and webs, in workspaces
 ├── DeckScanActivity.kt    pairing: the camera and the QR
 ├── DeckShareActivity.kt   "Open on the computer" in the share sheet
+├── TasksActivity.kt       the desktop's kanban
 ├── deck/
 │   ├── DeckClient.kt      HTTPS pinned to the computer, pairing, mDNS
-│   └── DeckStore.kt       the computer, its token in the Keystore, the webs
+│   ├── DeckStore.kt       the computer, its token in the Keystore, the webs
+│   └── TasksStore.kt      the kanban on the phone, its clock and its sync
 ├── core/
 │   ├── Apps.kt            every launchable app, in every profile; icons off the main thread
 │   ├── IconRenderer.kt    mono, grey and colour icons
@@ -311,6 +333,7 @@ app/src/main/java/com/nihilshell/launcher/
 │   ├── Calculator.kt      the calculator: sums, percentages, units, bases
 │   ├── Symbolic.kt        its calculus: derivatives, integrals, equations, series, limits
 │   ├── QrDecoder.kt       the deck's QR reader
+│   ├── TaskBoard.kt       the kanban and how two boards merge
 │   ├── Actions.kt         the "> actions"
 │   ├── LedFont.kt         5 × 7 LED digits
 │   ├── DotMatrix.kt       a photo as LEDs (pure Kotlin)
@@ -324,7 +347,8 @@ app/src/main/java/com/nihilshell/launcher/
 │   ├── DrawerView.kt      the field and the results
 │   ├── RootLayout.kt      swipes, double tap, long press
 │   ├── Workspaces.kt      the deck's pages, side by side
-│   ├── LedGauge.kt · LineIcon.kt · AppMenu.kt · Widgets.kt
+│   ├── ReorderGrid.kt     cells put in order by holding one
+│   ├── LedGauge.kt, LineIcon.kt, AppMenu.kt, Widgets.kt
 │   └── Nihil.kt           tokens, fonts, motion
 └── system/
     ├── GlyphListener.kt   notification access (optional)

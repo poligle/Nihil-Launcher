@@ -82,6 +82,16 @@ class DeckStore private constructor(context: Context) {
             sp.edit().putString(WEBS, a.toString()).apply()
         }
 
+    /** The computer's apps in the order put on the deck (their ids); new ones go at the end. */
+    var appsOrder: List<String>
+        get() = runCatching { JSONArray(sp.getString(APPS_ORDER, "[]")).let { a -> List(a.length()) { a.getString(it) } } }.getOrDefault(emptyList())
+        set(value) = sp.edit().putString(APPS_ORDER, JSONArray(value).toString()).apply()
+
+    /** Caffeine on the deck: the screen stays on while it is open. */
+    var keepScreenOn: Boolean
+        get() = sp.getBoolean(KEEP_ON, false)
+        set(value) = sp.edit().putBoolean(KEEP_ON, value).apply()
+
     private fun key(): SecretKey {
         val store = KeyStore.getInstance(KEYSTORE).apply { load(null) }
         (store.getKey(ALIAS, null) as? SecretKey)?.let { return it }
@@ -101,6 +111,8 @@ class DeckStore private constructor(context: Context) {
         private const val COMPUTER = "computer"
         private const val TOKEN = "token"
         private const val WEBS = "webs"
+        private const val APPS_ORDER = "apps_order"
+        private const val KEEP_ON = "keep_screen_on"
         private const val KEYSTORE = "AndroidKeyStore"
         private const val ALIAS = "nihil-deck-token"
         private const val CIPHER = "AES/GCM/NoPadding"

@@ -6,19 +6,19 @@
     <!-- Home -->
     <string name="battery_percent">%1$d%%</string>
     <string name="battery_charging">charging</string>
-    <string name="alarm_next">alarm %1$s</string>
+    <string name="alarm_next">Alarm %1$s</string>
     <string name="favorites_empty">Swipe up and hold an app to add it here.</string>
 
     <!-- Drawer -->
     <string name="search_hint">Search</string>
     <string name="apps_count">%1$d apps</string>
-    <string name="mode_actions">actions</string>
-    <string name="mode_calculator">calculator</string>
-    <string name="drawer_hint">enter opens · &gt; actions · = calculate</string>
-    <string name="calc_hint">enter copies the result</string>
-    <string name="calc_type">type an expression</string>
-    <string name="calc_copied">copied</string>
-    <string name="no_results">nothing found</string>
+    <string name="mode_actions">Actions</string>
+    <string name="mode_calculator">Calculator</string>
+    <string name="drawer_hint">Enter opens, &gt; actions, = calculates</string>
+    <string name="calc_hint">Enter copies the result</string>
+    <string name="calc_type">Type an expression</string>
+    <string name="calc_copied">Copied</string>
+    <string name="no_results">Nothing found</string>
 
     <!-- Actions -->
     <string name="act_torch">Torch</string>
@@ -31,12 +31,12 @@
     <string name="act_wallpaper">NIHIL wallpaper</string>
     <string name="act_nihil">NIHIL settings</string>
     <string name="act_system">System settings</string>
-    <string name="hint_on">on</string>
-    <string name="hint_off">off</string>
-    <string name="hint_panel">panel</string>
-    <string name="hint_system">system</string>
-    <string name="hint_screen">screen</string>
-    <string name="hint_studio">studio</string>
+    <string name="hint_on">On</string>
+    <string name="hint_off">Off</string>
+    <string name="hint_panel">Panel</string>
+    <string name="hint_system">System</string>
+    <string name="hint_screen">Screen</string>
+    <string name="hint_studio">Studio</string>
 
     <!-- App menu -->
     <string name="menu_add_home">Add to home</string>
@@ -54,9 +54,9 @@
     <string name="set_default_off">Tap to make NIHIL your home screen</string>
     <string name="section_look">Look</string>
     <string name="set_icons">Icons</string>
-    <string name="icons_mono">mono</string>
-    <string name="icons_grey">grey</string>
-    <string name="icons_color">colour</string>
+    <string name="icons_mono">Mono</string>
+    <string name="icons_grey">Grey</string>
+    <string name="icons_color">Colour</string>
     <string name="set_icons_sub">Mono uses the themed icon when the app has one.</string>
     <string name="set_fav_icons">Icons in favourites</string>
     <string name="set_dim">Dim the wallpaper</string>
@@ -70,7 +70,7 @@
     <string name="set_lock_sub">Uses an accessibility service that locks the screen and draws the Glyph light over other apps. It reads nothing.</string>
     <string name="section_apps">Apps</string>
     <string name="set_hidden_none">No hidden apps</string>
-    <string name="set_unhide">show</string>
+    <string name="set_unhide">Show</string>
     <string name="section_about">About</string>
     <string name="about_text">NIHIL for Android %1$s. No ads, no tracking, no account: it talks to nothing but your own computer, and only as its deck.</string>
     <string name="about_fonts">Doto, Space Grotesk and Space Mono, under the SIL Open Font License 1.1.</string>
@@ -79,18 +79,18 @@
     <!-- Wallpaper studio -->
     <string name="studio_title">NIHIL wallpaper</string>
     <string name="studio_empty">Pick a photo: it becomes a matrix of LEDs at the exact resolution of your screen.</string>
-    <string name="studio_pick">choose photo</string>
-    <string name="studio_dots">dots</string>
-    <string name="dots_fine">fine</string>
-    <string name="dots_normal">normal</string>
-    <string name="dots_coarse">coarse</string>
-    <string name="studio_apply">apply to</string>
-    <string name="apply_home">home</string>
-    <string name="apply_lock">lock</string>
-    <string name="apply_both">both</string>
-    <string name="studio_rendering">rendering…</string>
-    <string name="studio_done">done</string>
-    <string name="studio_failed">could not read the image</string>
+    <string name="studio_pick">Choose a photo</string>
+    <string name="studio_dots">Dots</string>
+    <string name="dots_fine">Fine</string>
+    <string name="dots_normal">Normal</string>
+    <string name="dots_coarse">Coarse</string>
+    <string name="studio_apply">Apply to</string>
+    <string name="apply_home">Home screen</string>
+    <string name="apply_lock">Lock screen</string>
+    <string name="apply_both">Both</string>
+    <string name="studio_rendering">Rendering…</string>
+    <string name="studio_done">Done</string>
+    <string name="studio_failed">Could not read the image</string>
 
     <!-- Services -->
     <string name="glyph_service_label">NIHIL Glyph light</string>
@@ -98,23 +98,22 @@
     <string name="lock_service_description">Locks the screen when you double tap the NIHIL home screen, and draws the Glyph light around the screen while you are in other apps. It reads nothing on the screen.</string>
 
     <!-- Notices and extra labels -->
-    <string name="menu_system_wallpaper">System wallpaper</string>
     <string name="menu_unhide">Show in the list</string>
     <string name="launch_failed">Can\'t open %1$s</string>
     <string name="open_failed">Nothing on this phone can open that</string>
     <string name="shade_failed">Couldn\'t open the notifications</string>
-    <string name="lock_needs_service">Turn on “NIHIL double tap to lock” in Accessibility.</string>
+    <string name="lock_needs_service">Turn on “NIHIL lock and Glyph light” in Accessibility.</string>
     <string name="glyph_needs_access">Allow notification access for the Glyph light.</string>
     <string name="restricted_hint">If Android says “Restricted setting”: App info → ⋮ → Allow restricted settings.</string>
     <string name="web_search">Search the web for “%1$s”</string>
-    <string name="hint_hidden">hidden</string>
+    <string name="hint_hidden">Hidden</string>
     <string name="torch_unavailable">No torch available</string>
     <string name="set_hidden_sub">Hidden apps leave the list, but search still finds them.</string>
     <plurals name="results">
         <item quantity="one">%d result</item>
         <item quantity="other">%d results</item>
     </plurals>
-    <string name="wallpaper_seeded">NIHIL’s wallpaper is on · the studio changes it</string>
+    <string name="wallpaper_seeded">NIHIL’s wallpaper is on: the studio changes it</string>
     <string name="keys_actions">Actions</string>
     <string name="keys_calc">Calculate</string>
     <string name="keys_open">Open</string>
@@ -137,7 +136,7 @@
     <string name="deck_error_unreachable">%1$s doesn’t answer: are you on the same network?</string>
     <string name="deck_unpaired_sub">Pair this phone with NIHIL on your computer to open its apps and webs, play its music, turn its volume and lock it from here.</string>
     <string name="deck_pair">Pair</string>
-    <string name="deck_connected">Connected · %1$s</string>
+    <string name="deck_connected">Connected: %1$s</string>
     <string name="deck_looking">Looking for %1$s…</string>
     <string name="deck_unreachable_status">%1$s doesn’t answer</string>
     <string name="deck_forgotten">%1$s forgot this phone: pair it again.</string>
@@ -166,7 +165,7 @@
     <string name="deck_no_url">There’s no web in what you shared.</string>
     <string name="deck_paired">Paired with %1$s</string>
     <string name="deck_settings_sub">This phone as a deck for NIHIL on the computer.</string>
-    <string name="hint_deck">deck</string>
+    <string name="hint_deck">Deck</string>
     <string name="deck_apps_webs">Apps and webs</string>
     <string name="deck_volume_title">Volume</string>
     <string name="set_language">Language</string>
@@ -175,4 +174,24 @@
     <string name="glyph_try">Try the light</string>
     <string name="glyph_listening">Listening to notifications.</string>
     <string name="glyph_not_connected">Notification access is on, but Android hasn’t connected NIHIL to the notifications: switch the access off and on again, or restart the phone.</string>
+    <string name="tasks_title">Tasks</string>
+    <string name="tasks_todo">To do</string>
+    <string name="tasks_doing">Doing</string>
+    <string name="tasks_done">Done</string>
+    <string name="tasks_new">New task</string>
+    <string name="tasks_move">Move to %1$s</string>
+    <string name="tasks_edit">Edit</string>
+    <string name="tasks_delete">Delete</string>
+    <string name="tasks_clear_done">Clear done</string>
+    <string name="tasks_empty">Nothing here</string>
+    <string name="tasks_syncing">Syncing…</string>
+    <string name="tasks_synced">Synced with %1$s</string>
+    <string name="tasks_offline">%1$s doesn’t answer: the changes go when it does</string>
+    <string name="tasks_local">Not paired: on this phone only</string>
+    <string name="deck_caffeine">Caffeine</string>
+    <string name="deck_caffeine_on">The screen stays on</string>
+    <string name="deck_caffeine_off">The screen turns off as usual</string>
+    <string name="deck_cover">Cover</string>
+    <string name="studio_apply_button">Apply</string>
+    <string name="studio_where">Where</string>
 </resources>

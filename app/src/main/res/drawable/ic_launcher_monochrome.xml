@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  NIHIL's icon: the Android robot in dots, the lit dots alone, for the themed
-  icons Android tints, as the desktop wears the NixOS snowflake in dots. The Android
-  robot is reproduced or modified from work created and shared by Google and
-  used according to terms described in the Creative Commons 3.0 Attribution
-  License. Drawn by a script: 15 × 15 dots inside the adaptive icon's safe zone.
+  NIHIL's icon: the Android robot in dots, its dots alone for the themed icons Android tints, as the desktop
+  wears the NixOS snowflake in dots. The Android robot is reproduced or
+  modified from work created and shared by Google and used according to terms
+  described in the Creative Commons 3.0 Attribution License. Drawn by script:
+  a 15 × 15 grid inside the adaptive icon's safe zone, only its lit dots.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"

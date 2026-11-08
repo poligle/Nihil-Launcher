@@ -25,7 +25,7 @@ class LineIcon(
     enum class Shape {
         SEARCH, CHEVRON, UP, DOWN, SETTINGS, GEAR, LOCK, IMAGE, TORCH, WIFI, BLUETOOTH,
         BATTERY, SOUND, ALARM, INFO, TRASH, HIDE, PLUS, MINUS, CHECK, CLOSE, CALC, BOLT,
-        ENTER, WEB, HOME, BELL, LAPTOP, PLAY, PAUSE, NEXT, PREVIOUS,
+        ENTER, WEB, HOME, BELL, LAPTOP, PLAY, PAUSE, NEXT, PREVIOUS, CUP, TASKS,
     }
 
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -227,6 +227,17 @@ class LineIcon(
                     p.addCircle(12f, 12f, 8.5f, Path.Direction.CW)
                     p.addOval(RectF(8.2f, 3.5f, 15.8f, 20.5f), Path.Direction.CW)
                     p.line(3.5f, 12f, 20.5f, 12f)
+                }
+                Shape.CUP -> {
+                    p.addRoundRect(RectF(5f, 8f, 16f, 19f), 2f, 2f, Path.Direction.CW)
+                    p.addRoundRect(RectF(16f, 10.5f, 19.5f, 15f), 1.8f, 1.8f, Path.Direction.CW)
+                    p.line(8f, 3.5f, 8f, 5.5f)
+                    p.line(11.5f, 3.5f, 11.5f, 5.5f)
+                }
+                Shape.TASKS -> {
+                    p.addRoundRect(RectF(3.5f, 4.5f, 8.5f, 19.5f), 1.5f, 1.5f, Path.Direction.CW)
+                    p.addRoundRect(RectF(9.5f, 4.5f, 14.5f, 14.5f), 1.5f, 1.5f, Path.Direction.CW)
+                    p.addRoundRect(RectF(15.5f, 4.5f, 20.5f, 11.5f), 1.5f, 1.5f, Path.Direction.CW)
                 }
                 Shape.LAPTOP -> {
                     p.addRoundRect(RectF(5f, 5.5f, 19f, 15.5f), 1.5f, 1.5f, Path.Direction.CW)

@@ -165,7 +165,10 @@ class SettingsActivity : Activity() {
                 finish()
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ Glyph.pulse(Glyph.Pulse.NOTIFY) }, 700)
             }
-        }, llp(WRAP, WRAP).apply { bottomMargin = dp(10) })
+        }, llp(WRAP, WRAP).apply {
+            topMargin = dp(16)
+            bottomMargin = dp(12)
+        })
         glyphSwitch.onChange = { on ->
             prefs.glyph = on
             if (on && !Access.hasNotificationAccess(this)) Access.startFirst(this, Access.notificationAccessIntents(this))

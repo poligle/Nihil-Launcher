@@ -125,6 +125,7 @@ class LauncherActivity :
         }
         setContentView(root)
 
+        root.scrollableAt = { x, y, dy -> home.favoritesScrollAt(x, y, dy) }
         root.setOnApplyWindowInsetsListener { _, insets ->
             applyInsets(insets)
             insets
@@ -365,9 +366,6 @@ class LauncherActivity :
             point = x.toInt() to y.toInt(),
             items = listOf(
                 AppMenu.Item(LineIcon.Shape.IMAGE, getString(R.string.act_wallpaper)) { openStudio() },
-                AppMenu.Item(LineIcon.Shape.HOME, getString(R.string.menu_system_wallpaper)) {
-                    start(Intent.createChooser(Intent(Intent.ACTION_SET_WALLPAPER), getString(R.string.menu_system_wallpaper)))
-                },
                 AppMenu.Item(LineIcon.Shape.SETTINGS, getString(R.string.act_nihil)) { openSettings() },
             ),
         )
@@ -479,7 +477,7 @@ class LauncherActivity :
 
     override fun copy(text: String) {
         getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("NIHIL", text))
-        notice("${getString(R.string.calc_copied)} · $text")
+        notice("${getString(R.string.calc_copied)}: $text")
     }
 
     override fun webSearch(query: String) {
@@ -517,6 +515,16 @@ class LauncherActivity :
 
     override fun openStudio() {
         startActivity(Intent(this, WallpaperActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
+    override fun orderFavorites(keys: List<String>) {
+        prefs.favorites = keys + prefs.favorites.filter { it !in keys }
+    }
+
+    override fun closeMenu() = popup.dismiss()
+
+    override fun openTasks() {
+        start(Intent(this, TasksActivity::class.java))
     }
 
     override fun openDeck() {

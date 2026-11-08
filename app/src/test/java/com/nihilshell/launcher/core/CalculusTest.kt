@@ -36,7 +36,7 @@ class CalculusTest {
 
     @Test
     fun equations() {
-        assertEquals("x = -2 · x = 2", text("solve(x^2 = 4)"))
+        assertEquals("x = -2, x = 2", text("solve(x^2 = 4)"))
         assertEquals("x = -0.5", text("resuelve(2x + 1)"))
         assertEquals("x = 0", text("solve(x^2)"))
         assertNull(text("solve(x^2 = -1)"))

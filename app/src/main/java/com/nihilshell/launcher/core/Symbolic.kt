@@ -676,7 +676,7 @@ object Symbolic {
         val v = variableOf(f, args.getOrNull(1)?.takeIf { isName(it) })
         val roots = roots(function(f, v))
         if (roots.isEmpty()) throw Error("no real solutions")
-        return Calculator.Answer(roots.first(), roots.take(8).joinToString(" · ") { "$v = " + Calculator.format(it) })
+        return Calculator.Answer(roots.first(), roots.take(8).joinToString(", ") { "$v = " + Calculator.format(it) })
     }
 
     private fun series(args: List<String>, sum: Boolean): Calculator.Answer {

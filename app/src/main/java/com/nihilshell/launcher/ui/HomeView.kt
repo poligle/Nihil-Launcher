@@ -12,6 +12,8 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.view.ViewGroup
+import android.widget.ScrollView
 import com.nihilshell.launcher.R
 import com.nihilshell.launcher.core.AppEntry
 import com.nihilshell.launcher.core.Apps
@@ -33,6 +35,9 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         fun launch(entry: AppEntry, from: View)
         fun menu(entry: AppEntry, from: View)
         fun openShade()
+        /** The favourites in this order now (their keys), after one was moved. */
+        fun orderFavorites(keys: List<String>)
+        fun closeMenu()
     }
 
     private val fonts = Nihil.fonts(context)
@@ -55,7 +60,16 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         gravity = Gravity.CENTER_VERTICAL
     }
     private val unreadMore = context.mono(size = 11f, color = Nihil.DIM)
-    private val favorites = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+    // The favourites: a list that can be put in order by holding one, scrolling under the
+    // clock's card when there are more than fit, sitting at the bottom when there are few.
+    private val favorites = ReorderGrid(context, 1, context.dp(52))
+    private val favoritesHolder = FrameLayout(context)
+    private val favoritesScroll = ScrollView(context).apply {
+        isVerticalScrollBarEnabled = false
+        isFillViewport = true
+        overScrollMode = View.OVER_SCROLL_NEVER
+    }
+    private var shownKeys: List<String> = emptyList()
     private val empty = context.mono(context.getString(R.string.favorites_empty), 11f, Nihil.DIM)
 
     private val scrim = Paint()
@@ -101,7 +115,15 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
 
         header.addView(card, llp(MATCH, WRAP))
         addView(header, lp(MATCH, WRAP, Gravity.TOP))
-        addView(favorites, lp(MATCH, WRAP, Gravity.BOTTOM))
+        favoritesHolder.addView(favorites, lp(MATCH, WRAP, Gravity.BOTTOM))
+        favoritesScroll.addView(favoritesHolder, ViewGroup.LayoutParams(MATCH, WRAP))
+        addView(favoritesScroll, lp(MATCH, MATCH))
+        favorites.onReorder = { from, to ->
+            val keys = shownKeys.toMutableList()
+            keys.add(to, keys.removeAt(from))
+            shownKeys = keys
+            host.orderFavorites(keys)
+        }
         addView(empty, lp(MATCH, WRAP, Gravity.BOTTOM))
 
         empty.setShadowLayer(context.dp(6f), 0f, 0f, 0x99000000.toInt())
@@ -114,7 +136,7 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         bandBottom = bottom
         val side = context.dp(24)
         header.setPadding(left + context.dp(14), top + context.dp(14), right + context.dp(14), 0)
-        favorites.setPadding(left + side - context.dp(8), 0, right + side, bottom + context.dp(22))
+        favoritesHolder.setPadding(left + side - context.dp(8), 0, right + side, bottom + context.dp(22))
         empty.setPadding(left + side, 0, right + side, bottom + context.dp(34))
         invalidate()
     }
@@ -143,7 +165,7 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
     fun updateBattery(level: Int, charging: Boolean) {
         gauge.set(level, charging)
         val percent = context.getString(R.string.battery_percent, level)
-        battery.text = if (charging) "$percent · ${context.getString(R.string.battery_charging)}" else percent
+        battery.text = if (charging) "$percent, ${context.getString(R.string.battery_charging)}" else percent
         battery.setTextColor(if (gauge.low) Nihil.SIGNAL else Nihil.DIM)
     }
 
@@ -168,8 +190,24 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         unread.contentDescription = apps.joinToString { it.label }
     }
 
+    // Below the clock's card, wherever it ends: the favourites never go under it.
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        header.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
+        (favoritesScroll.layoutParams as? LayoutParams)?.topMargin = header.measuredHeight + context.dp(10)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    /** Whether a vertical drag from (rawX, rawY) scrolls the favourites rather than opening the drawer. */
+    fun favoritesScrollAt(rawX: Float, rawY: Float, dy: Float): Boolean {
+        val at = IntArray(2)
+        favoritesScroll.getLocationOnScreen(at)
+        val inside = rawX >= at[0] && rawX < at[0] + favoritesScroll.width && rawY >= at[1] && rawY < at[1] + favoritesScroll.height
+        return inside && favoritesScroll.canScrollVertically(if (dy < 0) 1 else -1)
+    }
+
     fun setFavorites(entries: List<AppEntry>, icons: Boolean, style: IconStyle) {
         favorites.removeAllViews()
+        shownKeys = entries.map { it.key }
         empty.visibility = if (entries.isEmpty()) View.VISIBLE else View.GONE
         val size = context.dp(24)
         for (entry in entries) {
@@ -182,9 +220,12 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
                 setOnClickListener { host.launch(entry, this) }
                 setOnLongClickListener {
                     host.menu(entry, this)
+                    // Moving the finger now lifts the app and closes its menu.
+                    favorites.arm(this) { host.closeMenu() }
                     true
                 }
             }
+            favorites.movable(row)
             if (icons) {
                 val icon = ImageView(context)
                 bindIcon(icon, entry, size, style)
@@ -195,7 +236,7 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
                 setShadowLayer(context.dp(8f), 0f, 0f, 0x80000000.toInt())
             }
             row.addView(label, llp(WRAP, WRAP))
-            favorites.addView(row, llp(WRAP, context.dp(52)))
+            favorites.addView(row)
         }
     }
 

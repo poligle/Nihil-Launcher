@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0 — 2026-11-08
+
+- Tasks: the desktop's kanban on the phone, synced through the deck. Each side goes on alone
+  and the next sync keeps what both did: the text written last and the column chosen last
+  win for each card, a deletion wins over anything older (`core/TaskBoard.kt`).
+- The deck: the cover of what plays; caffeine, the cup at the top, keeps the screen on; apps
+  and webs put in order by holding one and moving it; "Connected: address".
+- The home screen's favourites scroll when there are more than fit under the clock, and move
+  when held, as the deck's tiles.
+- The studio applies a wallpaper with one key, and then asks where: home screen, lock screen
+  or both.
+- Holding the home screen no longer offers the system's wallpaper.
+- Everything is written in sentence case, and nothing is set apart with "·" any more.
+- The icon is only the robot's lit dots, on black; the README and the website show it, and the
+  website uses it as its favicon.
+- More room above "Try the light".
+
 ## 0.2.0 — 2026-11-08
 
 - The Glyph light for notifications runs on the home screen even when a heads-up

@@ -126,6 +126,13 @@
             android:theme="@style/Theme.Nihil" />
 
         <activity
+            android:name=".TasksActivity"
+            android:exported="false"
+            android:label="@string/tasks_title"
+            android:theme="@style/Theme.Nihil"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".DeckShareActivity"
             android:exported="true"
             android:excludeFromRecents="true"
