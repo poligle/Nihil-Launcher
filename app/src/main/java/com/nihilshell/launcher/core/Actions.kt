@@ -33,6 +33,7 @@ interface ActionHost {
     fun lockScreen()
     fun openStudio()
     fun openSettings()
+    fun openDeck()
     fun notice(text: String)
     fun nextAlarmText(): String?
 }
@@ -48,6 +49,7 @@ object Actions {
     const val WALLPAPER = "wallpaper"
     const val NIHIL = "nihil"
     const val SYSTEM = "system"
+    const val DECK = "deck"
 
     fun all(context: Context, host: ActionHost): List<Action> {
         fun s(id: Int) = context.getString(id)
@@ -69,6 +71,9 @@ object Actions {
                 s(R.string.hint_studio)
             },
             Action(NIHIL, s(R.string.act_nihil), "nihil settings ajustes launcher", LineIcon.Shape.SETTINGS) { "" },
+            Action(DECK, s(R.string.deck_title), "deck ordenador computer pc portatil laptop escritorio desktop remote mando", LineIcon.Shape.LAPTOP) {
+                s(R.string.hint_deck)
+            },
             Action(SYSTEM, s(R.string.act_system), "settings ajustes sistema system", LineIcon.Shape.GEAR) { s(R.string.hint_system) },
         )
     }
@@ -87,6 +92,10 @@ object Actions {
         }
         WALLPAPER -> {
             host.openStudio()
+            true
+        }
+        DECK -> {
+            host.openDeck()
             true
         }
         NIHIL -> {

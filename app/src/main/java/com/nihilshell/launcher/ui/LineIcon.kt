@@ -25,7 +25,7 @@ class LineIcon(
     enum class Shape {
         SEARCH, CHEVRON, UP, DOWN, SETTINGS, GEAR, LOCK, IMAGE, TORCH, WIFI, BLUETOOTH,
         BATTERY, SOUND, ALARM, INFO, TRASH, HIDE, PLUS, MINUS, CHECK, CLOSE, CALC, BOLT,
-        ENTER, WEB, HOME, BELL,
+        ENTER, WEB, HOME, BELL, LAPTOP, PLAY, PAUSE, NEXT, PREVIOUS,
     }
 
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -227,6 +227,28 @@ class LineIcon(
                     p.addCircle(12f, 12f, 8.5f, Path.Direction.CW)
                     p.addOval(RectF(8.2f, 3.5f, 15.8f, 20.5f), Path.Direction.CW)
                     p.line(3.5f, 12f, 20.5f, 12f)
+                }
+                Shape.LAPTOP -> {
+                    p.addRoundRect(RectF(5f, 5.5f, 19f, 15.5f), 1.5f, 1.5f, Path.Direction.CW)
+                    p.line(2.5f, 19f, 21.5f, 19f)
+                }
+                Shape.PLAY -> {
+                    p.line(8.5f, 5.5f, 18.5f, 12f, 8.5f, 18.5f)
+                    p.close()
+                }
+                Shape.PAUSE -> {
+                    p.line(9f, 5.5f, 9f, 18.5f)
+                    p.line(15f, 5.5f, 15f, 18.5f)
+                }
+                Shape.NEXT -> {
+                    p.line(6f, 6f, 15f, 12f, 6f, 18f)
+                    p.close()
+                    p.line(18f, 6f, 18f, 18f)
+                }
+                Shape.PREVIOUS -> {
+                    p.line(18f, 6f, 9f, 12f, 18f, 18f)
+                    p.close()
+                    p.line(6f, 6f, 6f, 18f)
                 }
                 Shape.HOME -> {
                     p.line(4f, 11f, 12f, 4f, 20f, 11f)

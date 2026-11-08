@@ -44,6 +44,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         fun copy(text: String)
         fun webSearch(query: String)
         fun openSettings()
+        fun openDeck()
         fun hideKeyboard()
         fun showKeyboard(view: View)
     }
@@ -159,6 +160,15 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         keys.addView(hint(">", R.string.keys_actions) { start("> ") })
         keys.addView(hint("=", R.string.keys_calc) { start("= ") }, llp(WRAP, WRAP).apply { marginStart = context.dp(18) })
         keys.addView(View(context), llp(0, 1, 1f))
+        val deck = ImageView(context).apply {
+            setImageDrawable(LineIcon(LineIcon.Shape.LAPTOP, Nihil.DIM))
+            pad(context.dp(8))
+            val r = context.dp(17f)
+            background = ripple(r, rounded(Nihil.SURFACE, r, context.dp(1), Nihil.LINE))
+            contentDescription = context.getString(R.string.deck_title)
+            setOnClickListener { host.openDeck() }
+        }
+        keys.addView(deck, llp(context.dp(34), context.dp(34)).apply { marginEnd = context.dp(10) })
         val settings = ImageView(context).apply {
             setImageDrawable(LineIcon(LineIcon.Shape.SETTINGS, Nihil.DIM))
             pad(context.dp(8))

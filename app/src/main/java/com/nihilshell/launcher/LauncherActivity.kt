@@ -515,6 +515,10 @@ class LauncherActivity :
         startActivity(Intent(this, WallpaperActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
+    override fun openDeck() {
+        start(Intent(this, DeckActivity::class.java))
+    }
+
     override fun openSettings() {
         startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }

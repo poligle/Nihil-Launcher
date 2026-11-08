@@ -124,6 +124,11 @@ class SettingsActivity : Activity() {
                 startActivity(Intent(this, WallpaperActivity::class.java))
             },
         )
+        column.addView(
+            row(getString(R.string.deck_title), body(getString(R.string.deck_settings_sub)), chevron()) {
+                startActivity(Intent(this, DeckActivity::class.java))
+            },
+        )
 
         // Behaviour.
         section(R.string.section_behaviour, R.string.section_behaviour_sub)

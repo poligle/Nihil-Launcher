@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The deck's token stays on this phone: its key is in the Keystore, which
+     no backup carries, and the computer gives each phone its own. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="deck.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="deck.xml" />
+    </device-transfer>
+</data-extraction-rules>

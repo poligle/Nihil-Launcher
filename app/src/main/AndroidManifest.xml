@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- NIHIL launcher. No INTERNET permission: nothing leaves the phone. -->
+<!--
+        INTERNET only for the deck: this phone talks to the computer it was paired
+        with, on the local network, and nothing else; the webs' icons come through
+        it too. CAMERA only to read the computer's pairing QR.
+    -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Dot-matrix wallpapers made in the studio -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <!-- Swipe down on the home screen opens the notification shade -->
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
     <!-- "Uninstall" in the app menu -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
-    <!--
+    <!-- NIHIL launcher.
       Package visibility: every app with a launcher entry, plus the default
       phone, messages, camera and browser (the first favourites).
     -->
@@ -35,6 +42,7 @@
     </queries>
 
     <application
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:allowBackup="true"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
@@ -109,5 +117,22 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/lock_service" />
         </service>
+        <activity
+            android:name=".DeckActivity"
+            android:exported="true"
+            android:label="@string/deck_title"
+            android:theme="@style/Theme.Nihil">
+            <intent-filter android:label="@string/deck_open_on">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".DeckScanActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Nihil" />
     </application>
 </manifest>

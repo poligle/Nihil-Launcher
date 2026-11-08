@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- The deck: the phone as a remote for NIHIL on the computer (Nihil-Shell's docs/deck.md).
+  Pairing with the QR in the computer's Preferences, Phone, read by NIHIL's own QR reader
+  (core/QrDecoder.kt: no libraries, the camera's frames never leave the phone); HTTPS that
+  trusts only the computer's pinned key; the token encrypted with the Android Keystore and
+  kept out of backups. Its music, volume and lock; its apps with their icons and the webs
+  kept here with theirs, which the computer finds; sharing a web opens it there. From the
+  drawer's laptop key, `> computer` and Settings. Two permissions, for it alone: INTERNET,
+  only ever to the paired computer, and CAMERA, only to read its QR.
+
 - It looks like the desktop now, piece by piece from home/shell:
   - The drawer is the desktop's launcher: the apps in a grid, monochrome, the first
     result raised and in colour; the field at the bottom, on the surface with a hairline
