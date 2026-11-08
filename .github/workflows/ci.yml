@@ -40,6 +40,12 @@ jobs:
           echo "GRADLE=$home/bin/gradle" >> "$GITHUB_ENV"
       # The runner's Android SDK is used as is; Gradle installs anything missing.
       - run: $GRADLE --no-daemon test assembleDebug
+      # The debug APK of this run, to install on a phone: the run's page, Artifacts.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nihil-launcher-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
       # Android lint, as a report for now: it doesn't fail the build until what
       # it finds is fixed or put in a baseline; then drop continue-on-error.
       - name: Lint
