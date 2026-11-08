@@ -16,9 +16,9 @@
 </p>
 
 <p align="center">
-  <img src="docs/screens/home.webp" width="260" alt="The home screen: the LED clock, the date, the battery as ten LEDs, the next alarm and unread apps, and the favourites at the bottom, over a dot-matrix night sky.">&nbsp;
-  <img src="docs/screens/drawer.webp" width="260" alt="The drawer searching for ca: Camera, Calendar, Calculator and Contacts with their icons in ink, Camera ready for enter, and a web search last.">&nbsp;
-  <img src="docs/screens/menu.webp" width="260" alt="The menu of an app held on the home screen: its shortcuts, then remove from home, move up, hide, app info and uninstall in red.">
+  <img src="docs/screens/home.webp" width="260" alt="The home screen: a black card with the time in dots, the day and the date, the battery as ten LEDs, the next alarm and the apps with unread notifications, and the favourites at the bottom, over a dot-matrix night sky.">&nbsp;
+  <img src="docs/screens/drawer.webp" width="260" alt="The drawer as the desktop's launcher: the apps in a monochrome grid, the first result raised and in colour, the search field at the bottom with how many apps there are, and the keys for actions and the calculator under it.">&nbsp;
+  <img src="docs/screens/settings.webp" width="260" alt="Settings as the desktop's Preferences: NIHIL in dots, a heading for each section, each setting with its name on the left and its toggle on the right.">
 </p>
 
 NIHIL for Android is my home screen. It speaks the language of
@@ -41,25 +41,29 @@ beyond the Kotlin standard library; even the QR reader is its own.
 - **The frame.** The screen is black and the wallpaper is a rounded card set into it, the
   same frame as the desktop. The status bar and the gesture bar sit on the frame, and the
   card follows the screen's own rounded corners.
-- **The drawer is the frame growing.** Swipe up and the card's bottom edge follows your
-  finger until the whole screen is frame. The content switches on at the end, like LEDs.
-- **An LED clock.** A 25 × 7 panel where every LED is there, the unlit ones faintly, on a
-  dark module. When the minute changes it refreshes column by column.
-- **The battery as ten LEDs.** Red at 15 % when it isn't charging, the only alarm colour;
-  while charging, the next LED breathes. The next alarm sits underneath.
-- **Light on the frame.** With notification access, a run of LEDs goes round the frame for
-  every notification: twice and in red for a call or an alarm, up from the bottom when
-  the charger goes in. Apps with unread notifications show under the clock.
+- **The drawer is the frame growing, and the desktop's launcher.** Swipe up and the card's
+  bottom edge follows your finger until the whole screen is frame. The apps in a monochrome
+  grid, the first result raised and in colour, the field at the bottom by your thumb.
+- **The desktop's clock.** A black card with the time in dots, the day and the date; under a
+  hairline, the battery as ten LEDs (red at 15 % when it isn't charging), the next alarm and
+  the apps with unread notifications.
+- **The Glyph light.** With notification access, the desktop's light runs once round the
+  frame for every notification, twice and in red for a call or an alarm, and climbs from the
+  bottom when the charger goes in. With the accessibility service, round the screen's own
+  corners over any app.
+- **The deck.** Paired with NIHIL on your computer, the phone opens its apps and webs, plays
+  its music, turns its volume and locks it. [More below](#the-deck).
 - **One field.** Apps, actions and sums in a single search, accents and case ignored;
-  `>` for actions, `=` for the calculator, enter runs the first result.
+  `>` for actions, `=` for a calculator near the desktop's qalc: units, bases, percentages,
+  derivatives, integrals and equations.
 - **Wallpaper studio.** A photo becomes an LED matrix at the exact resolution of the
-  screen, with the desktop's algorithm.
+  screen, with the desktop's algorithm; a fresh install starts with NIHIL's night.
 - **Icons in one voice.** Themed icons in ink; apps without one get their foreground layer
-  in greys. Or grey, or the original colours.
-- **Spanish or English**, following the phone's language.
+  in greys. Or grey, or the original colours. NIHIL's own is the Android robot in dots, as
+  the desktop wears the NixOS snowflake.
+- **Spanish or English**, the phone's language or its own (Android 13 and later).
 
-<sub>The screens at the top are renders of the launcher's own layout (`ui/`) at a Galaxy
-A35's resolution, with generic app icons in ink and a wallpaper made with the studio's algorithm.</sub>
+<sub>Screenshots from a Galaxy A35.</sub>
 
 ---
 
@@ -131,16 +135,70 @@ In the drawer, a downward drag closes it when the list is at the top; back does 
 
 | Type           | Gets                                                                 |
 |----------------|----------------------------------------------------------------------|
-| *(empty)*      | Every app, alphabetically, under dot-matrix letters                  |
+| *(empty)*      | Every app, alphabetically, in a grid                                 |
 | `camara`       | *Cámara*: accents and case don't matter                              |
 | `settings`     | *Ajustes*, through its package name (`com.android.settings`)         |
 | `lin`          | Apps and actions together: here, the torch                           |
 | `12*7`         | A sum is recognised on its own; enter copies the result              |
+| `10 km to mi`  | So is a conversion, of units or into hex, bin and oct                |
 | `> `           | The actions: torch, Wi-Fi and sound panels, Bluetooth, battery, alarms, lock, studio, settings |
-| `= `           | The calculator: `+ − × ÷ ^ % !`, `sqrt cbrt abs ln log log2 exp sin cos tan asin acos atan round floor`, `pi`, `e`, `2pi`, `3(4+1)`, comma or point |
+| `= `           | The calculator, [below](#the-calculator)                             |
 | no match       | *Search the web for…*, in your own browser                           |
 
 Hidden apps leave the list but search still finds them, marked *hidden*.
+
+### The calculator
+
+As near the desktop's (qalc) as one Kotlin file gets, comma or point for decimals:
+
+| Type                         | Gets                                                   |
+|------------------------------|--------------------------------------------------------|
+| `2(3+4)^2`, `5!`, `2pi`      | The usual, with implicit products                      |
+| `200 + 15%`, `200 * 15%`     | 230 and 30: percentages as qalc reads them; `mod` for the remainder |
+| `sin(30°)`, `atan(1)`        | Degrees with `°`, radians otherwise                    |
+| `max(3; 4)`, `gcd(12; 18)`   | Several arguments, apart with `;` or `, `              |
+| `10 km to mi`, `100 °F a °C` | Length, mass, time, temperature, data, speed, volume, area, energy, pressure, power, angle |
+| `0xff`, `255 to hex`         | Hex, binary and octal, both ways                       |
+| `diff(x^2)`, `diff(x^3; 2)`  | 2x, and its value at 2: 12                             |
+| `integrate(x^2)`, `integrate(x^2; 0; 3)` | x^3/3 + C, and 9; bounds may be `inf`      |
+| `solve(x^2 = 4)`             | x = -2 · x = 2 (real solutions)                        |
+| `sum(i^2; i; 1; 10)`, `limit(sin(x)/x; x; 0)` | 385 and 1; `product` too          |
+
+Spanish names work too: `deriva`, `integra`, `resuelve`, `suma`, `producto`, `límite`. No
+currencies: they would need the internet.
+
+---
+
+## The deck
+
+<p align="center">
+  <img src="docs/screens/deck-music.webp" width="420" alt="The deck in landscape, its first workspace: what plays on the computer with its keys, and the volume in dots with the lock beside it.">&nbsp;
+  <img src="docs/screens/deck-apps.webp" width="420" alt="The deck's second workspace: the computer's apps with their icons, and the webs kept on the phone with their favicons.">
+</p>
+
+The phone as a remote for [NIHIL](https://github.com/poligle/Nihil-Shell) on your computer:
+it opens the computer's apps and webs, plays, pauses and skips its music, turns its volume and
+locks it. It can't run commands or read files.
+
+1. On the computer: Preferences → Phone → **Use the phone**, apply, then **Pair a phone**.
+2. On the phone: the laptop key under the drawer's field, `> computer`, or Settings →
+   Computer → **Pair**, and point the camera at the QR.
+
+The deck is landscape, on one screen, in workspaces as the desktop's: the music, the volume
+and the lock in one; the apps and the webs, each scrolling on its own, in the other. Swipe
+between them or tap their dots. The apps come with the computer's icons; the webs are kept on
+the phone (add one, or share it from the browser), with icons the computer finds for them.
+**Open on the computer** in the share sheet opens a web there.
+
+- **Only your computer.** HTTPS that trusts one certificate, the one whose key is pinned in
+  the QR, checked before anything is sent. When the computer's address changes, the phone
+  finds it again with mDNS; the pin still decides.
+- **Its own QR reader.** The camera's frames go to `core/QrDecoder.kt` and nowhere else.
+- **A token per phone**, encrypted with a key that never leaves the Android Keystore, out of
+  backups. Forget the phone in Preferences and it forgets the computer too.
+
+The protocol is [docs/deck.md](https://github.com/poligle/Nihil-Shell/blob/nihil/docs/deck.md)
+in Nihil-Shell.
 
 ---
 
@@ -177,6 +235,8 @@ Open **NIHIL** from the app list, the gear in the drawer, or hold the home scree
 | Dim the wallpaper               | off     | A dark veil over any wallpaper                                    |
 | NIHIL wallpaper                 |         | The studio                                                        |
 | Keyboard when the drawer opens  | on      | Type straight away, or browse first                               |
+| Language                        |         | Android 13 and later: English or Spanish, whatever the phone speaks |
+| Computer                        |         | The deck: pair with NIHIL on your computer                        |
 | Glyph light                     | on      | The light on the frame and the unread icons (needs notification access); over other apps too with the accessibility service |
 | Double tap to lock              | off     | Needs the accessibility service, which locks and draws the light  |
 | Hidden apps                     |         | Show them in the list again                                       |
@@ -242,28 +302,39 @@ app/src/main/java/com/nihilshell/launcher/
 ├── LauncherActivity.kt    the home screen: layers, insets, gestures, receivers
 ├── SettingsActivity.kt    settings, also "NIHIL" in the app list
 ├── WallpaperActivity.kt   the studio
+├── DeckActivity.kt        the deck: music, volume, lock, apps and webs, in workspaces
+├── DeckScanActivity.kt    pairing: the camera and the QR
+├── DeckShareActivity.kt   "Open on the computer" in the share sheet
+├── deck/
+│   ├── DeckClient.kt      HTTPS pinned to the computer, pairing, mDNS
+│   └── DeckStore.kt       the computer, its token in the Keystore, the webs
 ├── core/
 │   ├── Apps.kt            every launchable app, in every profile; icons off the main thread
 │   ├── IconRenderer.kt    mono, grey and colour icons
 │   ├── Search.kt          what the drawer shows for a query
 │   ├── Fuzzy.kt           scoring: exact, prefix, word, inside, letters in order
-│   ├── Calculator.kt      a small recursive-descent calculator
+│   ├── Calculator.kt      the calculator: sums, percentages, units, bases
+│   ├── Symbolic.kt        its calculus: derivatives, integrals, equations, series, limits
+│   ├── QrDecoder.kt       the deck's QR reader
 │   ├── Actions.kt         the "> actions"
-│   ├── LedFont.kt         the clock's 5 × 7 digits
+│   ├── LedFont.kt         5 × 7 LED digits
 │   ├── DotMatrix.kt       a photo as LEDs (pure Kotlin)
 │   ├── DotRender.kt       decoding and drawing for the studio
 │   ├── Prefs.kt           everything NIHIL remembers
 │   └── Torch.kt
 ├── ui/
-│   ├── FrameView.kt       the frame and the Glyph light
-│   ├── HomeView.kt        clock, battery, alarm, unread, favourites
+│   ├── FrameView.kt       the frame
+│   ├── Halo.kt            the Glyph light, as the desktop's
+│   ├── HomeView.kt        the clock's card, favourites
 │   ├── DrawerView.kt      the field and the results
 │   ├── RootLayout.kt      swipes, double tap, long press
-│   ├── LedClock.kt · LedGauge.kt · LineIcon.kt · AppMenu.kt · Widgets.kt
+│   ├── Workspaces.kt      the deck's pages, side by side
+│   ├── LedGauge.kt · LineIcon.kt · AppMenu.kt · Widgets.kt
 │   └── Nihil.kt           tokens, fonts, motion
 └── system/
     ├── GlyphListener.kt   notification access (optional)
-    ├── LockService.kt     accessibility, to lock (optional)
+    ├── LockService.kt     accessibility, to lock and light (optional)
+    ├── HaloOverlay.kt     the Glyph light over other apps
     ├── Glyph.kt           the bus between the two
     └── Access.kt          home role, accesses, the shade
 ```
@@ -292,8 +363,16 @@ app/src/main/java/com/nihilshell/launcher/
   letters in order, and gives actions a small handicap so apps win ties.
 - **Swipe down** uses `StatusBarManager.expandNotificationsPanel` through reflection, as
   many launchers do; if Android ever blocks it, the accessibility service opens the shade.
-- **Tests** cover the pure core on the JVM: search, calculator, LED font, dot matrix and
-  icon statistics.
+- **The QR reader** takes a camera frame's luminance through the steps of any reader: a
+  local threshold, the finder patterns measured along the code's own axes, the alignment
+  pattern, a perspective transform, format and version, Reed-Solomon, the segments.
+  Versions 1 to 15, square modules or the desktop's dots.
+- **The calculator's calculus** works on expression trees: derivatives by the rules,
+  simplified enough to read; antiderivatives where the rules reach; definite integrals,
+  equations, sums and limits numerically (adaptive Simpson, bisection).
+- **Tests** cover the pure core on the JVM: search, the calculator and its calculus, the QR
+  reader (codes drawn square and in dots, turned, small, noisy and damaged, and the
+  desktop's QR as it shows on a screen), the LED font, the dot matrix and icon statistics.
 
 ---
 
@@ -303,6 +382,10 @@ app/src/main/java/com/nihilshell/launcher/
   and [Caelestia](https://github.com/caelestia-dots/shell) for the frame-and-drawers idea.
 - [Nothing](https://nothing.tech) for the design language that inspired the look. NIHIL is a
   personal project and is not affiliated with Nothing Technology.
+- The icon's robot: the Android robot is reproduced or modified from work created and
+  shared by Google and used according to terms described in the
+  [Creative Commons 3.0 Attribution License](https://creativecommons.org/licenses/by/3.0/).
+  Android is a trademark of Google LLC.
 - Fonts: [Doto](https://github.com/oliverlalan/Doto),
   [Space Grotesk](https://github.com/floriankarsten/space-grotesk) and Space Mono, under the
   SIL Open Font License 1.1 ([`OFL.txt`](app/src/main/assets/fonts/OFL.txt)).

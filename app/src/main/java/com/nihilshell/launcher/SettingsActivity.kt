@@ -191,6 +191,7 @@ class SettingsActivity : Activity() {
         val version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull().orEmpty()
         column.addView(body(getString(R.string.about_text, version)), llp(MATCH, WRAP))
         column.addView(body(getString(R.string.about_fonts)), llp(MATCH, WRAP).apply { topMargin = dp(10) })
+        column.addView(body(getString(R.string.about_robot)), llp(MATCH, WRAP).apply { topMargin = dp(10) })
         val site = KeyButton(this, getString(R.string.about_site)).apply {
             setOnClickListener {
                 Access.startFirst(this@SettingsActivity, listOf(Intent(Intent.ACTION_VIEW, Uri.parse("https://nihilshell.com/android"))))

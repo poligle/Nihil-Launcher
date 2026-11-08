@@ -41,7 +41,8 @@ import kotlin.math.truncate
  *   gcd lcm root and log with a base, their arguments apart with ";" or ", ";
  *   conversions, "<expression> <unit> to <unit>" (also in, a, en, →): length, mass, time,
  *   temperature, data, speed, volume, area, energy, pressure, power and angle; and into
- *   hex, bin, oct or dec.
+ *   hex, bin, oct or dec; and calculus (Symbolic): diff, integrate, solve, sum, product,
+ *   limit.
  * Both "." and "," work as the decimal mark between digits; × ÷ − are read too.
  * Pure Kotlin, tested on the JVM.
  */
@@ -57,8 +58,12 @@ object Calculator {
 
     /** The value of [expression] and how to show it, or null when it can't be read. */
     fun calculate(expression: String): Answer? = try {
-        convert(expression) ?: Parser(expression).parse().takeIf { !it.isNaN() }?.let { Answer(it, format(it)) }
+        Symbolic.calculate(expression)
+            ?: convert(expression)
+            ?: Parser(expression).parse().takeIf { !it.isNaN() }?.let { Answer(it, format(it)) }
     } catch (e: Error) {
+        null
+    } catch (e: Symbolic.Error) {
         null
     } catch (e: ArithmeticException) {
         null

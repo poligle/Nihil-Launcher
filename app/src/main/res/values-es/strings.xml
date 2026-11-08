@@ -168,4 +168,5 @@
     <string name="deck_volume_title">Volumen</string>
     <string name="set_language">Idioma</string>
     <string name="set_language_sub">NIHIL habla el idioma del móvil; aquí puede tener uno propio, inglés o español.</string>
+    <string name="about_robot">El robot de Android del icono está modificado a partir de un trabajo creado y compartido por Google, con licencia Creative Commons 3.0 Atribución.</string>
 </resources>

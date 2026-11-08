@@ -171,4 +171,5 @@
     <string name="deck_volume_title">Volume</string>
     <string name="set_language">Language</string>
     <string name="set_language_sub">NIHIL speaks the phone’s language; here it can have its own, English or Spanish.</string>
+    <string name="about_robot">The Android robot of the icon is modified from work created and shared by Google, under the Creative Commons 3.0 Attribution License.</string>
 </resources>

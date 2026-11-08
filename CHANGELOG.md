@@ -15,6 +15,13 @@
 - Settings, Language (Android 13 and later): NIHIL can speak English or Spanish whatever
   the phone's language.
 - About: no more "no internet permission"; the link goes to nihilshell.com/android.
+- NIHIL's icon is the Android robot in dots over a round matrix, as the desktop wears the
+  NixOS snowflake in dots; with its monochrome layer for themed icons, and its attribution
+  (Creative Commons 3.0 BY) in About and the README.
+- Calculus in the calculator, as the desktop's qalc does it: `diff(x^2)` = 2x and its value
+  at a point, `integrate(x^2)` = x^3/3 + C where the rules reach and definite integrals to
+  `inf`, `solve(x^2 = 4)`, `sum`, `product` and `limit`; with Spanish names too.
+- README: the new look, the deck, the calculator and the icon.
 
 ## 0.2.0-rc.1 — 2026-11-08
 
