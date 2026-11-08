@@ -98,12 +98,15 @@ class QrDecoderTest {
 
     @Test
     fun theShellsQrOnAScreen() {
-        val stream = javaClass.getResourceAsStream("/qr/nihil-preferences.png")
+        // A greyscale PGM, gzipped: Android's unit tests compile without javax.imageio.
+        val stream = javaClass.getResourceAsStream("/qr/nihil-preferences.pgm.gz")
         assertTrue("the screenshot is in the test resources", stream != null)
-        val picture = javax.imageio.ImageIO.read(stream)
-        val w = picture.width
-        val h = picture.height
-        val lum = ByteArray(w * h) { (picture.getRGB(it % w, it / w) and 0xFF).toByte() }
+        val bytes = java.util.zip.GZIPInputStream(stream).use { it.readBytes() }
+        var start = 0
+        var lines = 0
+        while (lines < 3) if (bytes[start++] == '\n'.code.toByte()) lines++
+        val (w, h) = String(bytes, 0, start, Charsets.US_ASCII).lines()[1].split(' ').map { it.toInt() }
+        val lum = bytes.copyOfRange(start, start + w * h)
         assertEquals(
             "nihil-deck://pair?v=1&name=thinkpad&hosts=192.0.2.2&port=64445&code=NM3TL9BD&pin=KbMN8DhTefv-656rVKbNm3JdZgujKwRZ1Zsf3FIFIWY",
             QrDecoder.decode(lum, w, h),
