@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0-rc.1 — 2026-11-08
 
 - The deck: the phone as a remote for NIHIL on the computer (Nihil-Shell's docs/deck.md).
   Pairing with the QR in the computer's Preferences, Phone, read by NIHIL's own QR reader

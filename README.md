@@ -26,9 +26,10 @@ NIHIL for Android is my home screen. It speaks the language of
 hierarchy, dots for display, red only to interrupt, and light that runs along the edge.
 I wrote it because every launcher worth using either costs money or is full of ads.
 
-No ads, no tracking, no account, and **no internet permission**: it couldn't send
-anything anywhere even if it wanted to. It is about 4,500 lines of Kotlin on the Android
-framework alone — no AndroidX, no Compose, no libraries beyond the Kotlin standard library.
+No ads, no tracking, no account. It talks to nothing but **your own computer**, and only
+if you pair it as a deck: that is all its `INTERNET` permission is for. It is about 7,000
+lines of Kotlin on the Android framework alone — no AndroidX, no Compose, no libraries
+beyond the Kotlin standard library; even the QR reader is its own.
 
 > Made for and tested on a Galaxy A35 with One UI. Any phone with Android 12 or newer
 > should work, but that is the only one it has run on so far.
@@ -189,10 +190,14 @@ Open **NIHIL** from the app list, the gear in the drawer, or hold the home scree
 | `SET_WALLPAPER`                | The studio, and NIHIL's wallpaper the first time it is home       |
 | `EXPAND_STATUS_BAR`            | Swipe down for the notifications                                  |
 | `REQUEST_DELETE_PACKAGES`      | "Uninstall" in the app menu                                       |
+| `INTERNET`                     | The deck, only ever to the computer it was paired with            |
+| `CAMERA`                       | The deck, to read the computer's pairing QR                       |
 | Notification access, optional  | The light on the frame and the unread icons                       |
 | Accessibility, optional        | To lock the phone on a double tap, and the Glyph light over other apps |
 
-There is no `INTERNET` permission. Of a notification, NIHIL looks at which app posted it,
+`INTERNET` reaches only the paired computer, over HTTPS pinned to its key; the webs'
+icons come through it too. The camera's frames never leave the phone: NIHIL reads the QR
+itself. Of a notification, NIHIL looks at which app posted it,
 its flags and its category, never its text; silent notifications and anything Do Not
 Disturb holds back stay dark. The accessibility service reads no content and only
 listens to NIHIL's own windows; the light it draws is a window of its own that takes no

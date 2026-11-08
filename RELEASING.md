@@ -39,6 +39,9 @@ gh secret set NIHIL_KEY_PASSWORD
 
 The workflow checks that the tag matches `versionName`, runs the tests, builds
 the release APK and publishes `nihil-launcher-v0.2.0.apk` with its SHA-256.
+A tag with a dash, like `v0.2.0-rc.1` (and `versionName = "0.2.0-rc.1"`), comes out
+as a pre-release: signed with the same key, so it installs over the last release to
+be tried before the real one.
 
 ## A signed build on your machine
 

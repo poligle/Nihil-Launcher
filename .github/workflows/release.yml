@@ -100,5 +100,8 @@ jobs:
           apk="nihil-launcher-$GITHUB_REF_NAME.apk"
           cp app/build/outputs/apk/release/app-release.apk "$apk"
           sha256sum "$apk" > "$apk.sha256"
+          # A tag with a dash (v0.2.0-rc.1) is a pre-release, to try before the real one.
+          flags=()
+          case "$GITHUB_REF_NAME" in *-*) flags+=(--prerelease) ;; esac
           gh release create "$GITHUB_REF_NAME" "$apk" "$apk.sha256" \
-            --title "NIHIL for Android $GITHUB_REF_NAME" --generate-notes
+            --title "NIHIL for Android $GITHUB_REF_NAME" --generate-notes "${flags[@]}"
