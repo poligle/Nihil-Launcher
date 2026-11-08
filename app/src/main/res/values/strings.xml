@@ -52,7 +52,7 @@
     <string name="set_default">Home app</string>
     <string name="set_default_on">NIHIL is your home screen</string>
     <string name="set_default_off">Tap to make NIHIL your home screen</string>
-    <string name="section_look">look</string>
+    <string name="section_look">Look</string>
     <string name="set_icons">Icons</string>
     <string name="icons_mono">mono</string>
     <string name="icons_grey">grey</string>
@@ -62,16 +62,16 @@
     <string name="set_dim">Dim the wallpaper</string>
     <string name="set_wallpaper">NIHIL wallpaper</string>
     <string name="set_wallpaper_sub">Turn a photo into LEDs</string>
-    <string name="section_behaviour">behaviour</string>
+    <string name="section_behaviour">Behaviour</string>
     <string name="set_keyboard">Keyboard when the drawer opens</string>
     <string name="set_glyph">Glyph light</string>
     <string name="set_glyph_sub">Light around the screen and LEDs for every notification. Needs notification access; over other apps, the double tap’s accessibility service too.</string>
     <string name="set_lock">Double tap to lock</string>
     <string name="set_lock_sub">Uses an accessibility service that locks the screen and draws the Glyph light over other apps. It reads nothing.</string>
-    <string name="section_apps">apps</string>
+    <string name="section_apps">Apps</string>
     <string name="set_hidden_none">No hidden apps</string>
     <string name="set_unhide">show</string>
-    <string name="section_about">about</string>
+    <string name="section_about">About</string>
     <string name="about_text">NIHIL for Android %1$s. No ads, no tracking, no account: it talks to nothing but your own computer, and only as its deck.</string>
     <string name="about_fonts">Doto, Space Grotesk and Space Mono, under the SIL Open Font License 1.1.</string>
     <string name="about_site" translatable="false">nihilshell.com/android</string>
@@ -172,4 +172,7 @@
     <string name="set_language">Language</string>
     <string name="set_language_sub">NIHIL speaks the phone’s language; here it can have its own, English or Spanish.</string>
     <string name="about_robot">The Android robot of the icon is modified from work created and shared by Google, under the Creative Commons 3.0 Attribution License.</string>
+    <string name="glyph_try">Try the light</string>
+    <string name="glyph_listening">Listening to notifications.</string>
+    <string name="glyph_not_connected">Notification access is on, but Android hasn’t connected NIHIL to the notifications: switch the access off and on again, or restart the phone.</string>
 </resources>

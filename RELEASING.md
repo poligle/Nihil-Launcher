@@ -28,7 +28,7 @@ gh secret set NIHIL_KEY_PASSWORD
 
 ## Every release
 
-1. In `app/build.gradle.kts`, raise `versionCode` by one and set `versionName`.
+1. In `app/build.gradle.kts`, set `nihilVersion`: `versionCode` follows it.
 2. Add the changes to `CHANGELOG.md` and commit.
 3. Tag with the same version and push the tag:
 
@@ -37,9 +37,9 @@ gh secret set NIHIL_KEY_PASSWORD
    git push origin v0.2.0
    ```
 
-The workflow checks that the tag matches `versionName`, runs the tests, builds
+The workflow checks that the tag is `nihilVersion` and above the last tag, runs the tests, builds
 the release APK and publishes `nihil-launcher-v0.2.0.apk` with its SHA-256.
-A tag with a dash, like `v0.2.0-rc.1` (and `versionName = "0.2.0-rc.1"`), comes out
+A tag with a dash, like `v0.2.0-rc.1` (and `nihilVersion = "0.2.0-rc.1"`), comes out
 as a pre-release: signed with the same key, so it installs over the last release to
 be tried before the real one.
 

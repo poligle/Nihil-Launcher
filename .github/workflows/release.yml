@@ -23,24 +23,25 @@ jobs:
           java-version: "17"
           cache: gradle
 
-      - name: The tag must match versionName
+      - name: The tag must be the version
         run: |
           version="${GITHUB_REF_NAME#v}"
-          if ! grep -q "versionName = \"$version\"" app/build.gradle.kts; then
-            echo "::error::tag $GITHUB_REF_NAME, but versionName in app/build.gradle.kts is not \"$version\""
+          if ! grep -q "^val nihilVersion = \"$version\"" app/build.gradle.kts; then
+            echo "::error::tag $GITHUB_REF_NAME, but nihilVersion in app/build.gradle.kts is not \"$version\""
             exit 1
           fi
 
-      - name: versionCode must be above the last release's
+      # versionCode comes from the version (app/build.gradle.kts): a version above the
+      # last tag's is a versionCode above the last release's.
+      - name: The version must be above the last tag's
         run: |
-          current=$(grep -oP 'versionCode = \K[0-9]+' app/build.gradle.kts)
+          code() {
+            python3 -c 'import re, sys; m = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?", sys.argv[1]); print(int(m[1]) * 1000000 + int(m[2]) * 10000 + int(m[3]) * 100 + int(m[4] or 99) if m else -1)' "$1"
+          }
           previous=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
-          if [ -n "$previous" ]; then
-            before=$(git show "$previous:app/build.gradle.kts" | grep -oP 'versionCode = \K[0-9]+')
-            if [ "$current" -le "$before" ]; then
-              echo "::error::versionCode $current is not above $previous's ($before): phones and update checkers go by it"
-              exit 1
-            fi
+          if [ -n "$previous" ] && [ "$(code "$GITHUB_REF_NAME")" -le "$(code "$previous")" ]; then
+            echo "::error::$GITHUB_REF_NAME is not above $previous"
+            exit 1
           fi
 
       - name: Signing key

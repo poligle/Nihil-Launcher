@@ -15,6 +15,7 @@ import com.nihilshell.launcher.core.Apps
 import com.nihilshell.launcher.core.IconStyle
 import com.nihilshell.launcher.core.Prefs
 import com.nihilshell.launcher.system.Access
+import com.nihilshell.launcher.system.Glyph
 import com.nihilshell.launcher.ui.Toggle
 import com.nihilshell.launcher.ui.LineIcon
 import com.nihilshell.launcher.ui.MATCH
@@ -158,6 +159,13 @@ class SettingsActivity : Activity() {
             }
         })
         glyphSwitch.set(prefs.glyph)
+        // Try the light: back to the home screen, and it runs there.
+        column.addView(KeyButton(this, getString(R.string.glyph_try)).apply {
+            setOnClickListener {
+                finish()
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ Glyph.pulse(Glyph.Pulse.NOTIFY) }, 700)
+            }
+        }, llp(WRAP, WRAP).apply { bottomMargin = dp(10) })
         glyphSwitch.onChange = { on ->
             prefs.glyph = on
             if (on && !Access.hasNotificationAccess(this)) Access.startFirst(this, Access.notificationAccessIntents(this))
@@ -206,10 +214,12 @@ class SettingsActivity : Activity() {
         homeLed.background = rounded(if (isHome) Nihil.INK else Nihil.OFF, dp(5f))
 
         val notifications = Access.hasNotificationAccess(this)
-        glyphSub.text = if (prefs.glyph && !notifications) {
-            getString(R.string.glyph_needs_access) + "\n" + getString(R.string.restricted_hint)
-        } else {
-            getString(R.string.set_glyph_sub)
+        glyphSub.text = when {
+            prefs.glyph && !notifications -> getString(R.string.glyph_needs_access) + "\n" + getString(R.string.restricted_hint)
+            // Granted, but Android hasn't bound the listener: no notification reaches NIHIL.
+            prefs.glyph && !Glyph.connected -> getString(R.string.glyph_not_connected)
+            prefs.glyph -> getString(R.string.set_glyph_sub) + "\n" + getString(R.string.glyph_listening)
+            else -> getString(R.string.set_glyph_sub)
         }
         val lock = Access.hasLockService(this)
         lockSub.text = if (prefs.doubleTapLock && !lock) {

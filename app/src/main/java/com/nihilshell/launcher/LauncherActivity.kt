@@ -192,9 +192,13 @@ class LauncherActivity :
         updateHomeShowing()
     }
 
-    /** Whether the home card is what the light runs round now, or the screen's edge (Glyph.homeShowing). */
+    /**
+     * Whether the home card is what the light runs round now, or the screen's edge
+     * (Glyph.homeShowing). Not window focus: a heads-up notification takes it on
+     * some phones (One UI) just as its light should run.
+     */
     private fun updateHomeShowing() {
-        Glyph.homeShowing = resumed && hasWindowFocus() && drawerProgress == 0f
+        Glyph.homeShowing = resumed && drawerProgress == 0f
     }
 
     override fun onStop() {

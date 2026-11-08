@@ -171,11 +171,6 @@ currencies: they would need the internet.
 
 ## The deck
 
-<p align="center">
-  <img src="docs/screens/deck-music.webp" width="420" alt="The deck in landscape, its first workspace: what plays on the computer with its keys, and the volume in dots with the lock beside it.">&nbsp;
-  <img src="docs/screens/deck-apps.webp" width="420" alt="The deck's second workspace: the computer's apps with their icons, and the webs kept on the phone with their favicons.">
-</p>
-
 The phone as a remote for [NIHIL](https://github.com/poligle/Nihil-Shell) on your computer:
 it opens the computer's apps and webs, plays, pauses and skips its music, turns its volume and
 locks it. It can't run commands or read files.

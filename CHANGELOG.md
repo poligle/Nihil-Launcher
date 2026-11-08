@@ -1,7 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-11-08
 
+- The Glyph light for notifications runs on the home screen even when a heads-up
+  notification takes the focus (One UI did, and the light never ran). Settings says whether
+  Android has connected NIHIL to the notifications, and **Try the light** runs it.
+- The battery charging is the desktop's: a light scans from the level to the end, an LED
+  every 160 ms, each one fading in and out.
+- Settings' headings are written as the desktop's: Look, Behaviour, Apps, About.
+- The version is one line (`nihilVersion`); Android's versionCode comes from it, so every
+  release and pre-release goes up on its own.
 - The deck is landscape and fits one screen, in workspaces as the desktop's: the music,
   the volume and the lock in one; the apps and the webs, each scrolling on its own, in the
   other. Swipe between them or tap their dots. Forgetting the computer is the bin at the top.
@@ -22,8 +30,6 @@
   at a point, `integrate(x^2)` = x^3/3 + C where the rules reach and definite integrals to
   `inf`, `solve(x^2 = 4)`, `sum`, `product` and `limit`; with Spanish names too.
 - README: the new look, the deck, the calculator and the icon.
-
-## 0.2.0-rc.1 — 2026-11-08
 
 - The deck: the phone as a remote for NIHIL on the computer (Nihil-Shell's docs/deck.md).
   Pairing with the QR in the computer's Preferences, Phone, read by NIHIL's own QR reader

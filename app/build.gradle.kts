@@ -10,6 +10,18 @@ plugins {
 // enough for your own phone.
 val releaseKeystore = System.getenv("NIHIL_KEYSTORE")?.let { file(it) }?.takeIf { it.isFile }
 
+// The version, the one thing to change for a release: MAJOR.MINOR.PATCH, or with -rc.N
+// for a pre-release. Android's versionCode comes from it, so it always goes up:
+// 0.2.0-rc.3 is 20003, 0.2.0 is 20099, 0.2.1-rc.1 is 20101.
+val nihilVersion = "0.2.0"
+
+fun versionCodeOf(name: String): Int {
+    val match = Regex("""(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?""").matchEntire(name)
+        ?: error("nihilVersion must be MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-rc.N, not $name")
+    val (major, minor, patch, rc) = match.destructured
+    return major.toInt() * 1_000_000 + minor.toInt() * 10_000 + patch.toInt() * 100 + (rc.toIntOrNull() ?: 99)
+}
+
 android {
     namespace = "com.nihilshell.launcher"
     compileSdk = 35
@@ -20,8 +32,8 @@ android {
         applicationId = "com.nihilshell.launcher"
         minSdk = 31
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2.0-rc.3"
+        versionCode = versionCodeOf(nihilVersion)
+        versionName = nihilVersion
     }
 
     signingConfigs {
