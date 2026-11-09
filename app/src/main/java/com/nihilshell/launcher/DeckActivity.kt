@@ -37,6 +37,7 @@ import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
 import com.nihilshell.launcher.ui.Notice
 import com.nihilshell.launcher.ui.PageDots
+import com.nihilshell.launcher.ui.Wordmark
 import com.nihilshell.launcher.ui.Workspaces
 import com.nihilshell.launcher.ui.WRAP
 import com.nihilshell.launcher.ui.dp
@@ -56,12 +57,13 @@ import java.util.concurrent.Executors
 
 /**
  * The deck: this phone as a remote for NIHIL on the computer (docs/deck.md
- * in Nihil-Shell). Its music and volume, its lock, and its apps and the webs
- * kept here, each with its icon: the apps' from the computer's icon theme,
- * the webs' found by the computer, so the phone talks to no one else.
+ * in Nihil-Shell). Its music and volume; its caffeine, night light and lock,
+ * at the top with the desktop's own icons; and its apps and the webs kept
+ * here, each with its icon: the apps' from the computer's icon theme, the
+ * webs' found by the computer, so the phone talks to no one else.
  * In landscape, on one screen without scrolling, in workspaces as the
- * desktop's: the music, the volume and the lock in one; the apps and the webs,
- * each scrolling on its own, in the other. Sharing a web to "Open on the
+ * desktop's: the music and the volume in one; the apps and the webs, each
+ * scrolling on its own, in the other. Sharing a web to "Open on the
  * computer" is DeckShareActivity.
  */
 class DeckActivity : Activity() {
@@ -84,7 +86,8 @@ class DeckActivity : Activity() {
     private var websGrid: LinearLayout? = null
     private var workspaces: Workspaces? = null
     private var playing = false
-    private var keepOn: ImageView? = null
+    private var caffeineKey: ImageView? = null
+    private var nightKey: ImageView? = null
     private var cover: ImageView? = null
     private var coverShown = ""
     private val popup by lazy { AppMenu(this) }
@@ -117,16 +120,10 @@ class DeckActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        caffeine(store.keepScreenOn)
+        // Settings, "Screen on in the deck": this phone's screen, not the computer's.
+        if (store.keepScreenOn) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         refresh()
-    }
-
-    /** The desktop's caffeine, on the deck: the screen stays on while it is open. */
-    private fun caffeine(on: Boolean) {
-        if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        val r = dp(20f)
-        keepOn?.setImageDrawable(LineIcon(LineIcon.Shape.CUP, if (on) Nihil.VOID else Nihil.DIM))
-        keepOn?.background = ripple(r, if (on) rounded(Nihil.INK, r) else rounded(Nihil.SURFACE, r, dp(1), Nihil.LINE))
     }
 
     override fun onDestroy() {
@@ -146,8 +143,8 @@ class DeckActivity : Activity() {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_HORIZONTAL
             }
-            column.addView(text(getString(R.string.app_name), 40f, Nihil.INK, fonts.dot))
-            column.addView(text(getString(R.string.deck_pair_title), 22f, Nihil.INK), llp(WRAP, WRAP).apply { topMargin = dp(18) })
+            column.addView(Wordmark(this, dp(36)), llp(WRAP, WRAP))
+            column.addView(text(getString(R.string.deck_pair_title), 22f, Nihil.INK), llp(WRAP, WRAP).apply { topMargin = dp(22) })
             column.addView(text(getString(R.string.deck_unpaired_sub), 13f, Nihil.DIM).apply {
                 gravity = Gravity.CENTER
                 setLineSpacing(dp(2f), 1f)
@@ -169,19 +166,21 @@ class DeckActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        header.addView(text(getString(R.string.app_name), 22f, Nihil.INK, fonts.dot))
         val names = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         names.addView(text(computer.name, 16f, Nihil.INK))
         status = mono(getString(R.string.deck_looking, computer.name), 11f, Nihil.MUTED)
         names.addView(status, llp(WRAP, WRAP).apply { topMargin = dp(2) })
-        header.addView(names, llp(0, WRAP, 1f).apply { marginStart = dp(16) })
-        keepOn = circle(LineIcon.Shape.CUP, R.string.deck_caffeine) {
-            store.keepScreenOn = !store.keepScreenOn
-            caffeine(store.keepScreenOn)
-            notice.show(getString(if (store.keepScreenOn) R.string.deck_caffeine_on else R.string.deck_caffeine_off))
+        header.addView(names, llp(0, WRAP, 1f))
+        // The computer's own keys, as its quick settings: lit while on.
+        caffeineKey = key(R.drawable.mdi_coffee, R.string.deck_caffeine) {
+            toggle("caffeine", caffeineKey, R.string.deck_caffeine_on, R.string.deck_caffeine_off)
         }
-        header.addView(keepOn, llp(dp(40), dp(40)).apply { marginEnd = dp(10) })
-        caffeine(store.keepScreenOn)
+        header.addView(caffeineKey, llp(dp(40), dp(40)).apply { marginEnd = dp(10) })
+        nightKey = key(R.drawable.mdi_night, R.string.deck_night) {
+            toggle("night", nightKey, R.string.deck_night_on, R.string.deck_night_off)
+        }
+        header.addView(nightKey, llp(dp(40), dp(40)).apply { marginEnd = dp(10) })
+        header.addView(key(R.drawable.mdi_lock, R.string.deck_lock) { lock() }, llp(dp(40), dp(40)).apply { marginEnd = dp(22) })
         header.addView(circle(LineIcon.Shape.TRASH, R.string.deck_forget) { forget(computer) })
         screen.addView(header, llp(MATCH, WRAP))
 
@@ -197,7 +196,7 @@ class DeckActivity : Activity() {
         showWebs()
     }
 
-    /** The first workspace: what plays, with its keys, and the volume and the lock beside it. */
+    /** The first workspace: what plays, with its keys, and the volume beside it. */
     private fun musicPage(): View {
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -212,6 +211,8 @@ class DeckActivity : Activity() {
             scaleType = ImageView.ScaleType.CENTER_CROP
             clipToOutline = true
             background = rounded(Nihil.SURFACE, dp(14f), dp(1), Nihil.LINE)
+            // In greys, as everything else here.
+            colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(0f) })
             contentDescription = getString(R.string.deck_cover)
         }
         playingRow.addView(cover, llp(dp(104), dp(104)).apply { marginEnd = dp(18) })
@@ -265,8 +266,6 @@ class DeckActivity : Activity() {
         turn.addView(circle(LineIcon.Shape.MINUS, R.string.deck_volume_down, size = 52) { turn("down") })
         turn.addView(circle(LineIcon.Shape.PLUS, R.string.deck_volume_up, size = 52) { turn("up") }, llp(dp(52), dp(52)).apply { marginStart = dp(14) })
         sound.addView(turn, llp(WRAP, WRAP).apply { topMargin = dp(6) })
-        sound.addView(View(this), llp(MATCH, 0, 1f))
-        sound.addView(KeyButton(this, getString(R.string.deck_lock)).apply { setOnClickListener { lock() } }, llp(MATCH, WRAP))
         page.addView(sound, llp(0, MATCH, 2f))
         return page
     }
@@ -339,6 +338,9 @@ class DeckActivity : Activity() {
         showCover(media?.optString("cover").orEmpty())
         play?.setImageDrawable(LineIcon(if (playing) LineIcon.Shape.PAUSE else LineIcon.Shape.PLAY, Nihil.VOID))
         showVolume(state.optJSONObject("volume"))
+        // A computer with an older NIHIL says nothing of these: they stay unlit.
+        lit(caffeineKey, state.optBoolean("caffeine"))
+        lit(nightKey, state.optBoolean("night"))
     }
 
     /** The cover of what plays, asked for again only when the computer says it changed. */
@@ -525,8 +527,17 @@ class DeckActivity : Activity() {
 
     private fun lock() = send("/v1/lock", JSONObject()) { computer, _ -> getString(R.string.deck_locked, computer.name) }
 
-    /** A request in the background; [done] says what to tell when it went well. */
-    private fun send(path: String, body: JSONObject, done: (Computer, DeckClient.Reply) -> String?) {
+    /** The computer's caffeine or night light, turned over; the key shows what it says now. */
+    private fun toggle(kind: String, view: ImageView?, on: Int, off: Int) =
+        send("/v1/$kind", JSONObject().put("action", "toggle"), missing = true) { computer, reply ->
+            val now = reply.json?.optBoolean("on") == true
+            lit(view, now)
+            getString(if (now) on else off, computer.name)
+        }
+
+    /** A request in the background; [done] says what to tell when it went well.
+     *  With [missing], a 404 means the computer's NIHIL is older than this. */
+    private fun send(path: String, body: JSONObject, missing: Boolean = false, done: (Computer, DeckClient.Reply) -> String?) {
         val computer = store.computer ?: return
         val client = DeckClient(computer, store.token())
         pool.execute {
@@ -538,6 +549,7 @@ class DeckActivity : Activity() {
                     reply == null -> notice.show(getString(R.string.deck_unreachable_status, computer.name))
                     reply.status == 401 -> unpaired(computer)
                     reply.status == 200 -> done(computer, reply)?.let { notice.show(it) }
+                    missing && reply.status == 404 -> notice.show(getString(R.string.deck_older, computer.name))
                     else -> notice.show(message(reply, computer, ""))
                 }
             }
@@ -620,6 +632,23 @@ class DeckActivity : Activity() {
             setOnClickListener { onTap() }
             layoutParams = llp(dp(size), dp(size))
         }
+
+    /** A key with the desktop's own glyph for it (Material Design Icons, as its Nerd Font has them). */
+    private fun key(icon: Int, description: Int, onTap: () -> Unit): ImageView = ImageView(this).apply {
+        tag = icon
+        pad(dp(10))
+        contentDescription = getString(description)
+        setOnClickListener { onTap() }
+        lit(this, false)
+    }
+
+    /** Lit as the desktop's toggles while on: ink, the glyph in black. */
+    private fun lit(view: ImageView?, on: Boolean) {
+        view ?: return
+        val r = dp(20f)
+        view.setImageDrawable(getDrawable(view.tag as Int)?.mutate()?.apply { setTint(if (on) Nihil.VOID else Nihil.DIM) })
+        view.background = ripple(r, if (on) rounded(Nihil.INK, r) else rounded(Nihil.SURFACE, r, dp(1), Nihil.LINE))
+    }
 
     private fun sha(text: String): String =
         MessageDigest.getInstance("SHA-256").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }.take(32)

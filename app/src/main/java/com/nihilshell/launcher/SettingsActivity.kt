@@ -14,6 +14,7 @@ import android.widget.TextView
 import com.nihilshell.launcher.core.Apps
 import com.nihilshell.launcher.core.IconStyle
 import com.nihilshell.launcher.core.Prefs
+import com.nihilshell.launcher.deck.DeckStore
 import com.nihilshell.launcher.system.Access
 import com.nihilshell.launcher.system.Glyph
 import com.nihilshell.launcher.ui.Toggle
@@ -23,6 +24,7 @@ import com.nihilshell.launcher.ui.Nihil
 import com.nihilshell.launcher.ui.KeyButton
 import com.nihilshell.launcher.ui.Choice
 import com.nihilshell.launcher.ui.WRAP
+import com.nihilshell.launcher.ui.Wordmark
 import com.nihilshell.launcher.ui.dp
 import com.nihilshell.launcher.ui.llp
 import com.nihilshell.launcher.ui.mono
@@ -93,7 +95,7 @@ class SettingsActivity : Activity() {
 
     private fun build() {
         // The desktop's Preferences: NIHIL in dots, and what this is.
-        column.addView(text(getString(R.string.app_name), 44f, Nihil.INK, fonts.dot), llp(WRAP, WRAP))
+        column.addView(Wordmark(this, dp(30)), llp(WRAP, WRAP))
         column.addView(mono(getString(R.string.prefs_title), 11f, Nihil.MUTED), llp(WRAP, WRAP).apply { topMargin = dp(6) })
 
         // Home app.
@@ -130,6 +132,8 @@ class SettingsActivity : Activity() {
                 startActivity(Intent(this, DeckActivity::class.java))
             },
         )
+        val deck = DeckStore.get(this)
+        column.addView(switchRow(getString(R.string.set_deck_screen), getString(R.string.set_deck_screen_sub), deck.keepScreenOn) { deck.keepScreenOn = it })
 
         // Behaviour.
         section(R.string.section_behaviour, R.string.section_behaviour_sub)
@@ -203,6 +207,7 @@ class SettingsActivity : Activity() {
         column.addView(body(getString(R.string.about_text, version)), llp(MATCH, WRAP))
         column.addView(body(getString(R.string.about_fonts)), llp(MATCH, WRAP).apply { topMargin = dp(10) })
         column.addView(body(getString(R.string.about_robot)), llp(MATCH, WRAP).apply { topMargin = dp(10) })
+        column.addView(body(getString(R.string.about_icons)), llp(MATCH, WRAP).apply { topMargin = dp(10) })
         val site = KeyButton(this, getString(R.string.about_site)).apply {
             setOnClickListener {
                 Access.startFirst(this@SettingsActivity, listOf(Intent(Intent.ACTION_VIEW, Uri.parse("https://nihilshell.com/android"))))

@@ -186,9 +186,16 @@
     <string name="tasks_offline">%1$s no responde: los cambios irán cuando vuelva</string>
     <string name="tasks_local">Sin emparejar: solo en este móvil</string>
     <string name="deck_caffeine">Cafeína</string>
-    <string name="deck_caffeine_on">La pantalla no se apaga</string>
-    <string name="deck_caffeine_off">La pantalla se apaga como siempre</string>
+    <string name="deck_caffeine_on">Cafeína encendida: %1$s no se dormirá</string>
+    <string name="deck_caffeine_off">Cafeína apagada en %1$s</string>
     <string name="deck_cover">Portada</string>
     <string name="studio_apply_button">Aplicar</string>
     <string name="studio_where">¿Dónde?</string>
+    <string name="deck_night">Luz nocturna</string>
+    <string name="deck_night_on">Luz nocturna encendida en %1$s</string>
+    <string name="deck_night_off">Luz nocturna apagada en %1$s</string>
+    <string name="deck_older">El NIHIL de %1$s aún no sabe hacer esto: actualízalo</string>
+    <string name="set_deck_screen">Pantalla encendida en el deck</string>
+    <string name="set_deck_screen_sub">La pantalla del móvil no se apaga mientras el deck está abierto</string>
+    <string name="about_icons">La cafeína, la luz nocturna y el bloqueo del deck son los del escritorio, de Material Design Icons, con la Pictogrammers Free License.</string>
 </resources>

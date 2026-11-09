@@ -182,15 +182,16 @@ locks it. It can't run commands or read files.
    Computer → **Pair**, and point the camera at the QR.
 
 <p align="center">
-  <img src="docs/screens/deck-music.webp" width="420" alt="The deck in landscape, its first workspace: the cover of what plays on the computer, its keys, and the volume in dots with the lock beside it.">&nbsp;
+  <img src="docs/screens/deck-music.webp" width="420" alt="The deck in landscape, its first workspace: the cover of what plays on the computer, its keys, and the volume in dots beside it.">&nbsp;
   <img src="docs/screens/deck-apps.webp" width="420" alt="The deck's second workspace: the computer's apps with their icons, and the webs kept on the phone with their favicons.">
 </p>
 
 The deck is landscape, on one screen, in workspaces as the desktop's: the music with its
-cover, the volume and the lock in one; the apps and the webs, each scrolling on its own, in
+cover, in greys, and the volume in one; the apps and the webs, each scrolling on its own, in
 the other. Swipe between them or tap their dots. Hold an app or a web and move it to put
-them in order. The cup at the top keeps the screen on while the deck is open, as the
-desktop's caffeine. The apps come with the computer's icons; the webs are kept on the phone
+them in order. At the top, the computer's caffeine, night light and lock, with the desktop's
+own icons and lit while on. **Screen on in the deck**, in Settings, keeps this phone's screen
+on while it is open. The apps come with the computer's icons; the webs are kept on the phone
 (add one, or share it from the browser), with icons the computer finds for them.
 **Open on the computer** in the share sheet opens a web there.
 
@@ -250,6 +251,7 @@ Open **NIHIL** from the app list, the gear in the drawer, or hold the home scree
 | Keyboard when the drawer opens  | On      | Type straight away, or browse first                               |
 | Language                        |         | Android 13 and later: English or Spanish, whatever the phone speaks |
 | Computer                        |         | The deck: pair with NIHIL on your computer                        |
+| Screen on in the deck           | Off     | This phone's screen doesn't turn off while the deck is open       |
 | Glyph light                     | On      | The light on the frame and the unread icons (needs notification access); over other apps too with the accessibility service |
 | Double tap to lock              | Off     | Needs the accessibility service, which locks and draws the light  |
 | Hidden apps                     |         | Show them in the list again                                       |
@@ -315,7 +317,7 @@ app/src/main/java/com/nihilshell/launcher/
 ├── LauncherActivity.kt    the home screen: layers, insets, gestures, receivers
 ├── SettingsActivity.kt    settings, also "NIHIL" in the app list
 ├── WallpaperActivity.kt   the studio
-├── DeckActivity.kt        the deck: music, volume, lock, apps and webs, in workspaces
+├── DeckActivity.kt        the deck: music, volume, caffeine, night light, lock, apps and webs
 ├── DeckScanActivity.kt    pairing: the camera and the QR
 ├── DeckShareActivity.kt   "Open on the computer" in the share sheet
 ├── TasksActivity.kt       the desktop's kanban
@@ -403,6 +405,9 @@ app/src/main/java/com/nihilshell/launcher/
   shared by Google and used according to terms described in the
   [Creative Commons 3.0 Attribution License](https://creativecommons.org/licenses/by/3.0/).
   Android is a trademark of Google LLC.
+- The deck's caffeine, night light and lock: the desktop's own glyphs, from
+  [Material Design Icons](https://pictogrammers.com/library/mdi/), under the
+  [Pictogrammers Free License](https://github.com/Templarian/MaterialDesign/blob/master/LICENSE).
 - Fonts: [Doto](https://github.com/oliverlalan/Doto),
   [Space Grotesk](https://github.com/floriankarsten/space-grotesk) and Space Mono, under the
   SIL Open Font License 1.1 ([`OFL.txt`](app/src/main/assets/fonts/OFL.txt)).

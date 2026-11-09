@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.2 — 2026-11-09
+
+- The deck's top has the computer's caffeine, night light and lock, with the desktop's own
+  icons, lit while on (NIHIL on the computer from this day on). The lock is no longer under
+  the volume.
+- The phone's screen staying on in the deck is a setting now: Settings, Screen on in the deck.
+- The cover of what plays is in greys, as everything else.
+- No NIHIL over the deck and the tasks; in Settings, and on the deck before pairing, NIHIL is
+  the logo's own dots, with its one-column I.
+
 ## 0.3.1 — 2026-11-09
 
 - The README and nihilshell.com/android wear the launcher's own logo, the Android robot in

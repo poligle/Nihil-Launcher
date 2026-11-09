@@ -62,8 +62,7 @@ class TasksActivity : Activity() {
         window.isNavigationBarContrastEnforced = false
         val fonts = Nihil.fonts(this)
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        column.addView(text(getString(R.string.app_name), 40f, Nihil.INK, fonts.dot), llp(WRAP, WRAP))
-        column.addView(text(getString(R.string.tasks_title), 22f, Nihil.INK), llp(MATCH, WRAP).apply { topMargin = dp(22) })
+        column.addView(text(getString(R.string.tasks_title), 22f, Nihil.INK), llp(MATCH, WRAP))
         status = mono("", 11f, Nihil.MUTED)
         column.addView(status, llp(MATCH, WRAP).apply { topMargin = dp(6) })
         tabs = Choice(this, titles(), 0) { show(it) }

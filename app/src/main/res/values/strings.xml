@@ -189,9 +189,16 @@
     <string name="tasks_offline">%1$s doesn’t answer: the changes go when it does</string>
     <string name="tasks_local">Not paired: on this phone only</string>
     <string name="deck_caffeine">Caffeine</string>
-    <string name="deck_caffeine_on">The screen stays on</string>
-    <string name="deck_caffeine_off">The screen turns off as usual</string>
+    <string name="deck_caffeine_on">Caffeine on: %1$s stays awake</string>
+    <string name="deck_caffeine_off">Caffeine off on %1$s</string>
     <string name="deck_cover">Cover</string>
     <string name="studio_apply_button">Apply</string>
     <string name="studio_where">Where</string>
+    <string name="deck_night">Night light</string>
+    <string name="deck_night_on">Night light on in %1$s</string>
+    <string name="deck_night_off">Night light off in %1$s</string>
+    <string name="deck_older">%1$s\'s NIHIL doesn\'t know this yet: update it</string>
+    <string name="set_deck_screen">Screen on in the deck</string>
+    <string name="set_deck_screen_sub">This phone\'s screen doesn\'t turn off while the deck is open</string>
+    <string name="about_icons">The deck\'s caffeine, night light and lock are the desktop\'s own, from Material Design Icons, under the Pictogrammers Free License.</string>
 </resources>
