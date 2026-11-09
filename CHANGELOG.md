@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.1 — 2026-11-09
 
 - The README and nihilshell.com/android wear the launcher's own logo, the Android robot in
   dots before NIHIL, instead of the old ring and the desktop's snowflake; the website has
