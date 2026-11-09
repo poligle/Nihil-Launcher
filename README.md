@@ -1,9 +1,7 @@
-<p align="center"><img src="docs/icon.svg" width="88" alt="NIHIL Launcher's icon: the Android robot in white dots on black."></p>
-
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/brand/nihil-logo-dark.svg">
-    <img alt="NIHIL" src="docs/brand/nihil-logo-light.svg" width="420">
+    <img alt="NIHIL" src="docs/brand/nihil-logo-light.svg" width="470">
   </picture>
 </p>
 
@@ -147,7 +145,7 @@ In the drawer, a downward drag closes it when the list is at the top; back does 
 | `10 km to mi`  | So is a conversion, of units or into hex, bin and oct                |
 | `> `           | The actions: torch, Wi-Fi and sound panels, Bluetooth, battery, alarms, lock, studio, settings |
 | `= `           | The calculator, [below](#the-calculator)                             |
-| no match       | *Search the web for…*, in your own browser                           |
+| No match       | *Search the web for…*, in your own browser                           |
 
 Hidden apps leave the list but search still finds them, marked *hidden*.
 
@@ -190,10 +188,10 @@ locks it. It can't run commands or read files.
 
 The deck is landscape, on one screen, in workspaces as the desktop's: the music with its
 cover, the volume and the lock in one; the apps and the webs, each scrolling on its own, in
-the other. Hold an app or a web and move it to put them in order; the cup keeps the screen on,
-as the desktop's caffeine. Swipe
-between them or tap their dots. The apps come with the computer's icons; the webs are kept on
-the phone (add one, or share it from the browser), with icons the computer finds for them.
+the other. Swipe between them or tap their dots. Hold an app or a web and move it to put
+them in order. The cup at the top keeps the screen on while the deck is open, as the
+desktop's caffeine. The apps come with the computer's icons; the webs are kept on the phone
+(add one, or share it from the browser), with icons the computer finds for them.
 **Open on the computer** in the share sheet opens a web there.
 
 - **Only your computer.** HTTPS that trusts one certificate, the one whose key is pinned in
@@ -205,6 +203,15 @@ the phone (add one, or share it from the browser), with icons the computer finds
 
 The protocol is [docs/deck.md](https://github.com/poligle/Nihil-Shell/blob/nihil/docs/deck.md)
 in Nihil-Shell.
+
+### Tasks
+
+The desktop's kanban, on the phone: the key beside the computer's under the drawer's field,
+or `> tasks`. To do, doing and done, the same cards. Every change stays on the phone at once
+and goes to the computer when it answers; apart for a while, each side goes on, and the next
+sync keeps what both did: for each card, the text written last and the column chosen last, and
+a deletion over anything older (`core/TaskBoard.kt`, as `Tasks.qml` and `TaskMerge.js` on the
+desktop).
 
 ---
 
@@ -236,24 +243,15 @@ Open **NIHIL** from the app list, the gear in the drawer, or hold the home scree
 | Setting                         | Default | What it does                                                      |
 |---------------------------------|---------|-------------------------------------------------------------------|
 | Home app                        |         | Makes NIHIL the home screen                                       |
-| Icons                           | mono    | `mono` themed icons in ink, `grey`, or `colour`                   |
-| Icons in favourites             | on      | Icons next to the favourites, or names alone                      |
-| Dim the wallpaper               | off     | A dark veil over any wallpaper                                    |
+| Icons                           | Mono    | `mono` themed icons in ink, `grey`, or `colour`                   |
+| Icons in favourites             | On      | Icons next to the favourites, or names alone                      |
+| Dim the wallpaper               | Off     | A dark veil over any wallpaper                                    |
 | NIHIL wallpaper                 |         | The studio                                                        |
-| Keyboard when the drawer opens  | on      | Type straight away, or browse first                               |
+| Keyboard when the drawer opens  | On      | Type straight away, or browse first                               |
 | Language                        |         | Android 13 and later: English or Spanish, whatever the phone speaks |
 | Computer                        |         | The deck: pair with NIHIL on your computer                        |
-
-### Tasks
-
-The desktop's kanban, on the phone: the key beside the computer's under the drawer's field,
-or `> tasks`. To do, doing and done, the same cards. Every change stays on the phone at once
-and goes to the computer when it answers; apart for a while, each side goes on, and the next
-sync keeps what both did: for each card, the text written last and the column chosen last, and
-a deletion over anything older (`core/TaskBoard.kt`, as `Tasks.qml` and `TaskMerge.js` on the
-desktop).
-| Glyph light                     | on      | The light on the frame and the unread icons (needs notification access); over other apps too with the accessibility service |
-| Double tap to lock              | off     | Needs the accessibility service, which locks and draws the light  |
+| Glyph light                     | On      | The light on the frame and the unread icons (needs notification access); over other apps too with the accessibility service |
+| Double tap to lock              | Off     | Needs the accessibility service, which locks and draws the light  |
 | Hidden apps                     |         | Show them in the list again                                       |
 
 ---
@@ -401,7 +399,7 @@ app/src/main/java/com/nihilshell/launcher/
   and [Caelestia](https://github.com/caelestia-dots/shell) for the frame-and-drawers idea.
 - [Nothing](https://nothing.tech) for the design language that inspired the look. NIHIL is a
   personal project and is not affiliated with Nothing Technology.
-- The icon's robot: the Android robot is reproduced or modified from work created and
+- The robot of the icon and the logo: the Android robot is reproduced or modified from work created and
   shared by Google and used according to terms described in the
   [Creative Commons 3.0 Attribution License](https://creativecommons.org/licenses/by/3.0/).
   Android is a trademark of Google LLC.

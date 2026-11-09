@@ -38,7 +38,7 @@
 
         shellHook = ''
           export PATH="${sdk}/platform-tools:$PATH"
-          echo "NIHIL for Android · ./gradlew installDebug  (phone with USB or wireless debugging)"
+          echo "NIHIL for Android: ./gradlew installDebug, with the phone on USB or wireless debugging"
         '';
       };
     };
