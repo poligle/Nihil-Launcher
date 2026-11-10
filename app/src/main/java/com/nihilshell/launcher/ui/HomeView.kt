@@ -214,6 +214,23 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         return inside && favoritesScroll.canScrollVertically(if (dy < 0) 1 else -1)
     }
 
+    /**
+     * Whether a touch at (raw) [x], [y] lands on the home screen's own ground, where the
+     * double tap and the long press are: not on the clock's card nor on a favourite.
+     */
+    fun backgroundAt(x: Float, y: Float): Boolean {
+        if (contains(header, x, y)) return false
+        for (i in 0 until favorites.childCount) if (contains(favorites.getChildAt(i), x, y)) return false
+        return true
+    }
+
+    private fun contains(view: View, x: Float, y: Float): Boolean {
+        if (!view.isShown) return false
+        val at = IntArray(2)
+        view.getLocationOnScreen(at)
+        return x >= at[0] && x < at[0] + view.width && y >= at[1] && y < at[1] + view.height
+    }
+
     fun setFavorites(entries: List<Entry>, icons: Boolean, style: IconStyle) {
         favorites.removeAllViews()
         shownKeys = entries.map { it.key }

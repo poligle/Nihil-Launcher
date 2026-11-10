@@ -14,7 +14,9 @@ import kotlin.math.abs
  *   swipe down    the notification shade (or, with the drawer open and its
  *                 list at the top, the drawer closes)
  *   double tap    lock, if enabled
- *   long press    the home menu (wallpaper, settings)
+ *   long press    the home menu (wallpaper, a web, settings)
+ * Those two on the home screen's own ground ([backgroundAt]): not on the clock's
+ * card nor on a favourite, but also where the favourites' list only scrolls.
  * A touch during the drawer's animation catches it mid-way.
  */
 class RootLayout(context: Context, private val listener: Listener) : FrameLayout(context) {
@@ -62,6 +64,18 @@ class RootLayout(context: Context, private val listener: Listener) : FrameLayout
     /** Minimum fling speed, in px/s, for a release to decide the direction. */
     val flingVelocity: Float get() = fling
 
+    /** Whether a touch at (raw) x, y lands on the home screen's own ground. */
+    var backgroundAt: ((Float, Float) -> Boolean)? = null
+    private var ground = false
+
+    // The double tap and the long press watch every touch on the ground, whatever else
+    // gets it there: the favourites' list, which fills the height, takes them all.
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.actionMasked == MotionEvent.ACTION_DOWN) ground = backgroundAt?.invoke(ev.rawX, ev.rawY) == true
+        if (ground && listener.progress <= 0.001f && !dragging && !spent) detector.onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
+    }
+
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         track(ev)
         when (ev.actionMasked) {
@@ -82,7 +96,7 @@ class RootLayout(context: Context, private val listener: Listener) : FrameLayout
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         track(ev)
         val onHome = listener.progress <= 0.001f
-        if (onHome && !dragging && !spent) detector.onTouchEvent(ev)
+        if (onHome && !dragging && !spent && backgroundAt == null) detector.onTouchEvent(ev)
         when (ev.actionMasked) {
             // Already dragging if the down caught an animation in onInterceptTouchEvent.
             MotionEvent.ACTION_DOWN -> if (!dragging) begin(ev)

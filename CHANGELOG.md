@@ -18,6 +18,9 @@
   two fingers right-click and scroll, three middle-click, a pinch zooms, and the desktop's
   gestures run). LEDs light up under the fingers. It needs NIHIL on the computer from this
   day on.
+- Holding the home screen opens its menu again, and a double tap locks it again: the
+  favourites' list, which fills the height since it starts at the bottom, kept the
+  touches.
 
 ## 0.3.2 — 2026-11-09
 

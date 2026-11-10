@@ -132,6 +132,7 @@ class LauncherActivity :
         setContentView(root)
 
         root.scrollableAt = { x, y, dy -> home.favoritesScrollAt(x, y, dy) }
+        root.backgroundAt = { x, y -> home.backgroundAt(x, y) }
         root.setOnApplyWindowInsetsListener { _, insets ->
             applyInsets(insets)
             insets
