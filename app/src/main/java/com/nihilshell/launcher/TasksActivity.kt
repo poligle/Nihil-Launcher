@@ -8,11 +8,13 @@ import android.os.Looper
 import android.text.InputType
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -26,11 +28,13 @@ import com.nihilshell.launcher.ui.KeyButton
 import com.nihilshell.launcher.ui.LineIcon
 import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
+import com.nihilshell.launcher.ui.ReorderList
 import com.nihilshell.launcher.ui.WRAP
 import com.nihilshell.launcher.ui.dp
 import com.nihilshell.launcher.ui.llp
 import com.nihilshell.launcher.ui.lp
 import com.nihilshell.launcher.ui.mono
+import com.nihilshell.launcher.ui.pad
 import com.nihilshell.launcher.ui.rounded
 import com.nihilshell.launcher.ui.ripple
 import com.nihilshell.launcher.ui.text
@@ -132,23 +136,33 @@ class TasksActivity : Activity() {
         if (cards.isEmpty()) {
             list.addView(text(getString(R.string.tasks_empty), 14f, Nihil.MUTED), llp(MATCH, WRAP).apply { topMargin = dp(16) })
         }
-        for (card in cards) list.addView(row(card), llp(MATCH, WRAP).apply { bottomMargin = dp(8) })
+        // Held and moved, a card goes where it is let go, and so it is on the desktop.
+        val rows = ReorderList(this, dp(8))
+        rows.onReorder = { from, to ->
+            tasks.place(cards[from].id, index, to)
+            changed()
+        }
+        for (card in cards) rows.addView(row(card, rows))
+        list.addView(rows, llp(MATCH, WRAP))
         if (index == TaskBoard.COLUMNS - 1 && cards.isNotEmpty()) {
             list.addView(KeyButton(this, getString(R.string.tasks_clear_done)).apply {
                 setOnClickListener {
                     tasks.remove(cards.map { it.id })
                     changed()
                 }
-            }, llp(WRAP, WRAP).apply { topMargin = dp(8) })
+            }, llp(WRAP, WRAP).apply { topMargin = dp(16) })
         }
     }
 
-    /** A card as the desktop's: its dot (hollow to do, lit doing, dim done) and its text. */
-    private fun row(card: TaskBoard.Card): View = LinearLayout(this).apply {
+    /**
+     * A card as the desktop's: its dot (hollow to do, lit doing, dim done), its text and the
+     * pencil. Tapped, its menu; held and moved, another place in its column.
+     */
+    private fun row(card: TaskBoard.Card, rows: ReorderList): View = LinearLayout(this).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
         minimumHeight = dp(48)
-        setPadding(dp(14), dp(10), dp(14), dp(10))
+        setPadding(dp(14), dp(6), dp(6), dp(6))
         val r = dp(10f)
         background = ripple(r, rounded(Nihil.VOID, r, dp(1), Nihil.LINE))
         val dot = View(this@TasksActivity).apply {
@@ -159,8 +173,23 @@ class TasksActivity : Activity() {
             }
         }
         addView(dot, llp(dp(8), dp(8)).apply { marginEnd = dp(12) })
-        addView(text(card.text, 15f, if (card.column == 2) Nihil.MUTED else Nihil.INK), llp(0, WRAP, 1f))
+        addView(text(card.text, 15f, if (card.column == 2) Nihil.MUTED else Nihil.INK).apply {
+            setPadding(0, dp(4), 0, dp(4))
+        }, llp(0, WRAP, 1f))
+        addView(ImageView(this@TasksActivity).apply {
+            setImageDrawable(LineIcon(LineIcon.Shape.PENCIL, Nihil.MUTED))
+            pad(dp(9))
+            background = ripple(dp(17f))
+            contentDescription = getString(R.string.tasks_edit)
+            setOnClickListener { edit(card) }
+        }, llp(dp(36), dp(36)).apply { marginStart = dp(6) })
         setOnClickListener { menu(card, this) }
+        rows.movable(this)
+        setOnLongClickListener {
+            rows.arm(it)
+            it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            true
+        }
     }
 
     private fun menu(card: TaskBoard.Card, from: View) {
@@ -173,7 +202,7 @@ class TasksActivity : Activity() {
                 changed()
             }
         }
-        items += AppMenu.Item(LineIcon.Shape.INFO, getString(R.string.tasks_edit)) { edit(card) }
+        items += AppMenu.Item(LineIcon.Shape.PENCIL, getString(R.string.tasks_edit)) { edit(card) }
         items += AppMenu.Item(LineIcon.Shape.TRASH, getString(R.string.tasks_delete), danger = true) {
             tasks.remove(listOf(card.id))
             changed()

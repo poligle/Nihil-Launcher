@@ -10,6 +10,9 @@
   apps do, and open in Chrome (or the phone's browser without it), each in its own tab.
   Their icons come from the paired computer, as the deck's webs' do; without it, their
   letter.
+- Tasks: held and moved, a card goes to another place in its column, and the desktop has
+  the same order (each card has a rank there, as the desktop's: `core/TaskBoard.kt`). A
+  pencil on each card writes it again. A side from before doesn't undo an order.
 
 ## 0.3.2 — 2026-11-09
 

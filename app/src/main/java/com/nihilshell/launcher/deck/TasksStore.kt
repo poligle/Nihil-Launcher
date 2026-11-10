@@ -36,12 +36,17 @@ class TasksStore private constructor(context: Context) {
         if (clean.isEmpty()) return
         val s = stamp()
         val id = java.lang.Long.toString(s, 36) + java.lang.Long.toString((Math.random() * 46656).toLong(), 36)
-        change(Board(board.cards + Card(id, clean, 0, s, s), board.removed))
+        val todo = TaskBoard.ordered(board.cards.filter { it.column == 0 })
+        change(Board(board.cards + Card(id, clean, 0, s, s, TaskBoard.rankAt(todo, todo.size, s)), board.removed))
     }
 
-    fun move(id: String, column: Int) {
-        val s = stamp()
-        change(Board(board.cards.map { if (it.id == id) it.copy(column = column.coerceIn(0, TaskBoard.COLUMNS - 1), placeStamp = s) else it }, board.removed))
+    /** To the end of another column. */
+    fun move(id: String, column: Int) = place(id, column, Int.MAX_VALUE)
+
+    /** Where it is put: at [index] of [column], counted without it. */
+    fun place(id: String, column: Int, index: Int) {
+        val next = TaskBoard.place(board, id, column.coerceIn(0, TaskBoard.COLUMNS - 1), index, stamp())
+        if (next !== board) change(next)
     }
 
     fun edit(id: String, text: String) {
@@ -76,8 +81,10 @@ class TasksStore private constructor(context: Context) {
     fun json(): JSONObject {
         val cards = JSONArray()
         board.cards.forEach {
-            cards.put(JSONObject().put("id", it.id).put("text", it.text).put("column", it.column)
-                .put("textStamp", it.textStamp).put("placeStamp", it.placeStamp))
+            val card = JSONObject().put("id", it.id).put("text", it.text).put("column", it.column)
+                .put("textStamp", it.textStamp).put("placeStamp", it.placeStamp)
+            it.rank?.let { rank -> card.put("rank", rank) }
+            cards.put(card)
         }
         val removed = JSONObject()
         board.removed.forEach { (id, at) -> removed.put(id, at) }
@@ -92,7 +99,7 @@ class TasksStore private constructor(context: Context) {
             val text = c.optString("text").trim()
             if (id.isEmpty() || text.isEmpty()) return@mapNotNull null
             Card(id, text.take(TaskBoard.MAX_TEXT), c.optInt("column").coerceIn(0, TaskBoard.COLUMNS - 1),
-                c.optLong("textStamp"), c.optLong("placeStamp"))
+                c.optLong("textStamp"), c.optLong("placeStamp"), if (c.has("rank")) TaskBoard.rank(c.optDouble("rank")) else null)
         }
         val removed = HashMap<String, Long>()
         o.optJSONObject("removed")?.let { r -> r.keys().forEach { removed[it] = r.optLong(it) } }

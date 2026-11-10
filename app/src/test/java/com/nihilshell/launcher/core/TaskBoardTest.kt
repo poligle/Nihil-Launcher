@@ -3,6 +3,7 @@ package com.nihilshell.launcher.core
 import com.nihilshell.launcher.core.TaskBoard.Board
 import com.nihilshell.launcher.core.TaskBoard.Card
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -51,6 +52,39 @@ class TaskBoardTest {
         val removed = Board(emptyList(), mapOf("a" to now))
         assertEquals(mapOf("a" to now), TaskBoard.merge(removed, Board(), now + 1000).removed)
         assertTrue(TaskBoard.merge(removed, Board(), now + TaskBoard.KEEP_REMOVED + 1).removed.isEmpty())
+    }
+
+    @Test
+    fun putWhereItIsDroppedInItsColumnOrAnother() {
+        var board = Board(listOf(card("a", "A", 0, 1), card("b", "B", 0, 2), card("c", "C", 0, 3), card("d", "D", 1, 4)))
+        board = TaskBoard.place(board, "c", 0, 0, now + 10)
+        assertEquals(listOf("c", "a", "b", "d"), board.cards.map { it.id })
+        board = TaskBoard.place(board, "a", 0, 2, now + 11)
+        assertEquals(listOf("c", "b", "a", "d"), board.cards.map { it.id })
+        board = TaskBoard.place(board, "d", 0, 1, now + 12)
+        assertEquals(listOf("c", "d", "b", "a"), board.cards.map { it.id })
+        assertSame(board, TaskBoard.place(board, "d", 0, 1, now + 13))
+        assertEquals(now + 12, board.cards.first { it.id == "d" }.placeStamp)
+    }
+
+    @Test
+    fun anOrderKeptByTheOtherSideAndByOneFromBeforeRanks() {
+        val desktop = TaskBoard.place(Board(listOf(card("a", "A", 0, 1), card("b", "B", 0, 2))), "b", 0, 0, now + 5)
+        val older = Board(desktop.cards.map { it.copy(rank = null) })
+        assertEquals(listOf("b", "a"), TaskBoard.merge(desktop, older, now + 9).cards.map { it.id })
+        assertEquals(TaskBoard.merge(desktop, older, now + 9), TaskBoard.merge(older, desktop, now + 9))
+        val moved = Board(listOf(card("a", "A", 1, 1, 7), card("b", "B", 0, 2, 5)))
+        assertEquals(listOf("b" to 0, "a" to 1), TaskBoard.merge(desktop, moved, now + 9).cards.map { it.id to it.column })
+    }
+
+    @Test
+    fun noRoomBetweenTwoRanksTheColumnAgain() {
+        val tight = Board(listOf(card("a", "A", 0, 1).copy(rank = 1.0), card("b", "B", 0, 2).copy(rank = 1.0 + Math.ulp(1.0)), card("c", "C", 0, 3)))
+        val placed = TaskBoard.place(tight, "c", 0, 1, now + 10)
+        assertEquals(listOf("a", "c", "b"), placed.cards.map { it.id })
+        assertEquals(listOf(now + 10.0, now + 11.0, now + 12.0), placed.cards.map { it.rank })
+        assertTrue(placed.cards.all { it.placeStamp == now + 10 })
+        assertEquals((now + 3).toDouble(), TaskBoard.rankAt(emptyList(), 0, now + 3))
     }
 
     @Test
