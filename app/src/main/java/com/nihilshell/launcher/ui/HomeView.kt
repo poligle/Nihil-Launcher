@@ -199,10 +199,28 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         unread.contentDescription = apps.joinToString { it.label }
     }
 
-    // Below the clock's card, wherever it ends: the favourites never go under it.
+    // Upright, the favourites below the clock's card, wherever it ends: they never go under
+    // it. On its side (a phone turned, a tablet), the card on the left and the favourites on
+    // the right, each in half. The card is never wider than on a big phone.
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        header.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
-        (favoritesScroll.layoutParams as? LayoutParams)?.topMargin = header.measuredHeight + context.dp(10)
+        val w = MeasureSpec.getSize(widthMeasureSpec)
+        val wide = w > MeasureSpec.getSize(heightMeasureSpec)
+        val half = (w - context.dp(16)) / 2
+        val cardWidth = minOf(if (wide) half else w, context.dp(560))
+        (header.layoutParams as? LayoutParams)?.apply {
+            width = cardWidth
+            gravity = if (wide) Gravity.TOP or Gravity.START else Gravity.TOP or Gravity.CENTER_HORIZONTAL
+        }
+        header.measure(MeasureSpec.makeMeasureSpec(cardWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
+        (favoritesScroll.layoutParams as? LayoutParams)?.apply {
+            width = if (wide) half else LayoutParams.MATCH_PARENT
+            gravity = if (wide) Gravity.TOP or Gravity.END else Gravity.TOP or Gravity.START
+            topMargin = if (wide) 0 else header.measuredHeight + context.dp(10)
+        }
+        (empty.layoutParams as? LayoutParams)?.apply {
+            width = if (wide) half else LayoutParams.MATCH_PARENT
+            gravity = if (wide) Gravity.BOTTOM or Gravity.END else Gravity.BOTTOM
+        }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 

@@ -60,7 +60,7 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:resumeWhilePausing="true"
-            android:screenOrientation="portrait"
+            android:screenOrientation="user"
             android:stateNotNeeded="true"
             android:theme="@style/Theme.Nihil.Home"
             android:windowSoftInputMode="adjustNothing">
