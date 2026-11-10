@@ -82,3 +82,4 @@ dependencies {
     // Tests only (the pure Kotlin core). The app itself has no libraries.
     testImplementation("junit:junit:4.13.2")
 }
+
