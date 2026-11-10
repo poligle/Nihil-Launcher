@@ -13,7 +13,7 @@ val releaseKeystore = System.getenv("NIHIL_KEYSTORE")?.let { file(it) }?.takeIf 
 // The version, the one thing to change for a release: MAJOR.MINOR.PATCH, or with -rc.N
 // for a pre-release. Android's versionCode comes from it, so it always goes up:
 // 0.2.0-rc.3 is 20003, 0.2.0 is 20099, 0.2.1-rc.1 is 20101.
-val nihilVersion = "0.3.3"
+val nihilVersion = "0.3.4"
 
 fun versionCodeOf(name: String): Int {
     val match = Regex("""(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?""").matchEntire(name)
