@@ -23,6 +23,8 @@
   touches.
 - Settings: Double tap to lock is Accessibility now, the setting for both things its service
   does: the double tap, and the Glyph light over other apps. Off, neither.
+- Tasks: the done ones are struck through, as on the desktop, and cleared with its broom,
+  the one its notifications have, instead of a word.
 
 ## 0.3.2 — 2026-11-09
 

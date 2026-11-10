@@ -2,6 +2,7 @@ package com.nihilshell.launcher
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.graphics.Paint
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -24,7 +25,6 @@ import com.nihilshell.launcher.deck.DeckStore
 import com.nihilshell.launcher.deck.TasksStore
 import com.nihilshell.launcher.ui.AppMenu
 import com.nihilshell.launcher.ui.Choice
-import com.nihilshell.launcher.ui.KeyButton
 import com.nihilshell.launcher.ui.LineIcon
 import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
@@ -145,12 +145,21 @@ class TasksActivity : Activity() {
         for (card in cards) rows.addView(row(card, rows))
         list.addView(rows, llp(MATCH, WRAP))
         if (index == TaskBoard.COLUMNS - 1 && cards.isNotEmpty()) {
-            list.addView(KeyButton(this, getString(R.string.tasks_clear_done)).apply {
+            // The done ones away, with the desktop's broom (its notifications have it too).
+            val r = dp(22f)
+            list.addView(ImageView(this).apply {
+                setImageDrawable(getDrawable(R.drawable.mdi_broom)?.mutate()?.apply { setTint(Nihil.DIM) })
+                pad(dp(11))
+                background = ripple(r, rounded(Nihil.SURFACE, r, dp(1), Nihil.LINE))
+                contentDescription = getString(R.string.tasks_clear_done)
                 setOnClickListener {
                     tasks.remove(cards.map { it.id })
                     changed()
                 }
-            }, llp(WRAP, WRAP).apply { topMargin = dp(16) })
+            }, llp(dp(44), dp(44)).apply {
+                topMargin = dp(16)
+                gravity = Gravity.END
+            })
         }
     }
 
@@ -173,8 +182,10 @@ class TasksActivity : Activity() {
             }
         }
         addView(dot, llp(dp(8), dp(8)).apply { marginEnd = dp(12) })
+        // Done, struck through as on the desktop.
         addView(text(card.text, 15f, if (card.column == 2) Nihil.MUTED else Nihil.INK).apply {
             setPadding(0, dp(4), 0, dp(4))
+            if (card.column == 2) paintFlags = paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
         }, llp(0, WRAP, 1f))
         addView(ImageView(this@TasksActivity).apply {
             setImageDrawable(LineIcon(LineIcon.Shape.PENCIL, Nihil.MUTED))
