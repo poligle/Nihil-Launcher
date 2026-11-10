@@ -21,6 +21,8 @@
 - Holding the home screen opens its menu again, and a double tap locks it again: the
   favourites' list, which fills the height since it starts at the bottom, kept the
   touches.
+- Settings: Double tap to lock is Accessibility now, the setting for both things its service
+  does: the double tap, and the Glyph light over other apps. Off, neither.
 
 ## 0.3.2 — 2026-11-09
 

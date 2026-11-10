@@ -62,9 +62,9 @@
     <string name="section_behaviour">Comportamiento</string>
     <string name="set_keyboard">Teclado al abrir el cajón</string>
     <string name="set_glyph">Luz Glyph</string>
-    <string name="set_glyph_sub">Luz alrededor de la pantalla y LEDs con cada notificación. Necesita acceso a las notificaciones; sobre otras apps, también el servicio de accesibilidad del doble toque.</string>
-    <string name="set_lock">Doble toque para bloquear</string>
-    <string name="set_lock_sub">Usa un servicio de accesibilidad que bloquea la pantalla y dibuja la luz Glyph sobre otras apps. No lee nada.</string>
+    <string name="set_glyph_sub">Luz alrededor de la pantalla y LEDs con cada notificación. Necesita acceso a las notificaciones; sobre otras apps, también Accesibilidad.</string>
+    <string name="set_lock">Accesibilidad</string>
+    <string name="set_lock_sub">Bloquear la pantalla con un doble toque en el inicio, y la luz Glyph sobre otras apps. Usa un servicio de accesibilidad que no lee nada.</string>
     <string name="section_apps">Apps</string>
     <string name="set_hidden_none">No hay apps ocultas</string>
     <string name="set_unhide">Mostrar</string>

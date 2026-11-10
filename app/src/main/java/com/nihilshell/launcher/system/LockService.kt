@@ -65,7 +65,9 @@ class LockService : AccessibilityService(), Glyph.Listener {
     override fun onUnread(packages: List<String>) = Unit
 
     override fun onPulse(pulse: Glyph.Pulse) {
-        if (Glyph.homeShowing || !Prefs.get(this).glyph) return
+        // Over other apps only with Accessibility on in NIHIL's settings, as the double tap.
+        val prefs = Prefs.get(this)
+        if (Glyph.homeShowing || !prefs.glyph || !prefs.doubleTapLock) return
         // With the screen off there is nothing to light.
         if (getSystemService(PowerManager::class.java)?.isInteractive != true) return
         (overlay ?: HaloOverlay(this).also { overlay = it }).show(pulse)

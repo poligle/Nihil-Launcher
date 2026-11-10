@@ -65,9 +65,9 @@
     <string name="section_behaviour">Behaviour</string>
     <string name="set_keyboard">Keyboard when the drawer opens</string>
     <string name="set_glyph">Glyph light</string>
-    <string name="set_glyph_sub">Light around the screen and LEDs for every notification. Needs notification access; over other apps, the double tap’s accessibility service too.</string>
-    <string name="set_lock">Double tap to lock</string>
-    <string name="set_lock_sub">Uses an accessibility service that locks the screen and draws the Glyph light over other apps. It reads nothing.</string>
+    <string name="set_glyph_sub">Light around the screen and LEDs for every notification. Needs notification access; over other apps, Accessibility too.</string>
+    <string name="set_lock">Accessibility</string>
+    <string name="set_lock_sub">Lock the screen with a double tap on the home screen, and the Glyph light over other apps. It uses an accessibility service that reads nothing.</string>
     <string name="section_apps">Apps</string>
     <string name="set_hidden_none">No hidden apps</string>
     <string name="set_unhide">Show</string>
