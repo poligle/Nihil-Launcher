@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -16,8 +17,10 @@ import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
 import android.view.WindowInsets
+import com.nihilshell.launcher.ui.LedGauge
 import com.nihilshell.launcher.ui.ReorderGrid
 import com.nihilshell.launcher.ui.AppMenu
+import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -39,6 +42,7 @@ import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
 import com.nihilshell.launcher.ui.Notice
 import com.nihilshell.launcher.ui.PageDots
+import com.nihilshell.launcher.ui.SwipeBar
 import com.nihilshell.launcher.ui.Trackpad
 import com.nihilshell.launcher.ui.Wordmark
 import com.nihilshell.launcher.ui.Workspaces
@@ -96,9 +100,20 @@ class DeckActivity : Activity() {
     private var websColumns = 4
     private var trackpad: Trackpad? = null
     private var trackpadStatus: TextView? = null
-    private var trackpadHint: TextView? = null
     private val link by lazy { TrackpadLink(store) { showTrackpad(it) } }
     private var onScreen = false
+    private var deckHeader: View? = null
+    private var deckDots: View? = null
+    private var meter: LedGauge? = null
+    private var fullKey: ImageView? = null
+    private var full = false
+    private var asking = false
+    private val poll = object : Runnable {
+        override fun run() {
+            refreshState()
+            main.postDelayed(this, POLL)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,7 +129,9 @@ class DeckActivity : Activity() {
         setContentView(root)
         root.setOnApplyWindowInsetsListener { _, insets ->
             val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
-            content.setPadding(bars.left + dp(20), bars.top + dp(14), bars.right + dp(20), bars.bottom + dp(8))
+            // In full screen the trackpad takes nearly all of it.
+            val side = dp(if (full) 8 else 20)
+            content.setPadding(bars.left + side, bars.top + dp(if (full) 8 else 14), bars.right + side, bars.bottom + dp(8))
             (notice.layoutParams as FrameLayout.LayoutParams).bottomMargin = bars.bottom + dp(20)
             insets
         }
@@ -132,15 +149,20 @@ class DeckActivity : Activity() {
         onScreen = true
         refresh()
         trackpadOn()
+        if (full) bars(false)
+        main.removeCallbacks(poll)
+        main.postDelayed(poll, POLL)
     }
 
     override fun onPause() {
         onScreen = false
         link.stop()
+        main.removeCallbacks(poll)
         super.onPause()
     }
 
     override fun onDestroy() {
+        main.removeCallbacks(poll)
         link.stop()
         pool.shutdownNow()
         super.onDestroy()
@@ -154,8 +176,12 @@ class DeckActivity : Activity() {
         workspaces = null
         trackpad = null
         trackpadStatus = null
-        trackpadHint = null
         link.stop()
+        if (full) setFull(false)
+        deckHeader = null
+        deckDots = null
+        meter = null
+        fullKey = null
         val computer = store.computer
         if (computer == null) {
             val column = LinearLayout(this).apply {
@@ -181,10 +207,12 @@ class DeckActivity : Activity() {
         websColumns = ((wide * 0.4f - 40) / 84).toInt().coerceIn(3, 6)
 
         val screen = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        val header = LinearLayout(this).apply {
+        // Swiped, the header changes workspace from any of them, the trackpad too.
+        val header = SwipeBar(this) { workspaces }.apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
+        deckHeader = header
         val names = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         names.addView(text(computer.name, 16f, Nihil.INK))
         status = mono(getString(R.string.deck_looking, computer.name), 11f, Nihil.MUTED)
@@ -211,6 +239,7 @@ class DeckActivity : Activity() {
         screen.addView(pages, llp(MATCH, 0, 1f).apply { topMargin = dp(10) })
         val titles = listOf(getString(R.string.deck_music), getString(R.string.deck_apps_webs), getString(R.string.deck_trackpad))
         val dots = PageDots(this, titles) { pages.show(it) }
+        deckDots = dots
         pages.onPage = {
             dots.select(it)
             trackpadOn()
@@ -229,28 +258,89 @@ class DeckActivity : Activity() {
             isMotionEventSplittingEnabled = false
         }
         val pad = Trackpad(this).apply { contentDescription = getString(R.string.deck_trackpad) }
-        pad.onFrame = { time, count, ids, xs, ys ->
-            trackpadHint?.visibility = View.GONE
-            link.frame(time, count, ids, xs, ys)
-        }
+        pad.onFrame = { time, count, ids, xs, ys -> link.frame(time, count, ids, xs, ys) }
         pad.onSize = { trackpadOn() }
         card.addView(pad, lp(MATCH, MATCH))
-        card.addView(mono(getString(R.string.deck_trackpad), 11f, Nihil.MUTED), lp(WRAP, WRAP, Gravity.TOP or Gravity.START).apply {
+        // Words only when it isn't working: connecting, or why not.
+        trackpadStatus = mono("", 11f, Nihil.MUTED).apply { maxWidth = dp(360) }
+        card.addView(trackpadStatus, lp(WRAP, WRAP, Gravity.TOP or Gravity.START).apply {
             leftMargin = dp(20)
-            topMargin = dp(16)
+            topMargin = dp(18)
         })
-        trackpadStatus = mono("", 11f, Nihil.MUTED).apply {
-            gravity = Gravity.END
-            maxWidth = dp(360)
+        // Full screen and back, in its corner.
+        fullKey = ImageView(this).apply {
+            setImageDrawable(LineIcon(LineIcon.Shape.EXPAND, Nihil.MUTED))
+            pad(dp(9))
+            background = ripple(dp(18f))
+            contentDescription = getString(R.string.deck_full_screen)
+            setOnClickListener { setFull(!full) }
         }
-        card.addView(trackpadStatus, lp(WRAP, WRAP, Gravity.TOP or Gravity.END).apply {
-            rightMargin = dp(20)
-            topMargin = dp(16)
+        card.addView(fullKey, lp(dp(36), dp(36), Gravity.TOP or Gravity.END).apply {
+            rightMargin = dp(10)
+            topMargin = dp(10)
         })
-        trackpadHint = mono(getString(R.string.deck_trackpad_hint), 11f, Nihil.MUTED).apply { gravity = Gravity.CENTER }
-        card.addView(trackpadHint, lp(WRAP, WRAP, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply { bottomMargin = dp(16) })
         trackpad = pad
         return card
+    }
+
+    /** The trackpad on the whole screen, or back among the workspaces. */
+    private fun setFull(on: Boolean) {
+        if (full == on) return
+        full = on
+        deckHeader?.visibility = if (on) View.GONE else View.VISIBLE
+        deckDots?.visibility = if (on) View.GONE else View.VISIBLE
+        fullKey?.setImageDrawable(LineIcon(if (on) LineIcon.Shape.COLLAPSE else LineIcon.Shape.EXPAND, Nihil.MUTED))
+        fullKey?.contentDescription = getString(if (on) R.string.deck_full_screen_leave else R.string.deck_full_screen)
+        bars(!on)
+        watchBack(on)
+        content.requestApplyInsets()
+    }
+
+    /** The system's bars, shown or out of the way (a swipe from an edge brings them back a moment). */
+    private fun bars(shown: Boolean) {
+        val controller = window.insetsController ?: return
+        if (shown) {
+            controller.show(WindowInsets.Type.systemBars())
+        } else {
+            controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsets.Type.systemBars())
+        }
+    }
+
+    // Back, in full screen, leaves it first: Android 13 and later ask for a callback;
+    // before, onBackPressed.
+    private var backCallback: Any? = null
+
+    private fun watchBack(on: Boolean) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (on && backCallback == null) {
+            val callback = android.window.OnBackInvokedCallback { setFull(false) }
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, callback)
+            backCallback = callback
+        } else if (!on) {
+            (backCallback as? android.window.OnBackInvokedCallback)?.let { onBackInvokedDispatcher.unregisterOnBackInvokedCallback(it) }
+            backCallback = null
+        }
+    }
+
+    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
+    override fun onBackPressed() {
+        if (full) setFull(false) else super.onBackPressed()
+    }
+
+    /** What plays, the volume and the keys again: every few seconds while the deck shows. */
+    private fun refreshState() {
+        val computer = store.computer ?: return
+        if (asking || !onScreen) return
+        asking = true
+        val client = DeckClient(computer, store.token())
+        pool.execute {
+            val state = client.call("GET", "/v1/state")
+            main.post {
+                asking = false
+                if (!isDestroyed && state?.status == 200) state.json?.let { showState(it) }
+            }
+        }
     }
 
     /** The stream while the trackpad is the workspace on screen; none otherwise. */
@@ -260,7 +350,6 @@ class DeckActivity : Activity() {
             link.start(TrackpadLink.Size(pad.widthUnits, pad.heightUnits, Trackpad.RESOLUTION))
         } else {
             link.stop()
-            trackpadHint?.visibility = View.VISIBLE
         }
     }
 
@@ -326,28 +415,35 @@ class DeckActivity : Activity() {
         music.addView(transport, llp(MATCH, WRAP))
         page.addView(music, llp(0, MATCH, 3f).apply { marginEnd = dp(14) })
 
+        // The volume, narrower and filling its height: its number and its LEDs in the middle,
+        // its keys at the music's.
         val sound = card()
         sound.addView(mono(getString(R.string.deck_volume_title), 11f, Nihil.MUTED))
+        sound.addView(View(this), llp(MATCH, 0, 1f))
         val level = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.BOTTOM
         }
-        volume = text("--", 56f, Nihil.INK, fonts.dot)
+        volume = text("--", 64f, Nihil.INK, fonts.dot)
         level.addView(volume)
         volumeUnit = mono("%", 13f, Nihil.MUTED)
         level.addView(volumeUnit, llp(WRAP, WRAP).apply {
             marginStart = dp(6)
-            bottomMargin = dp(12)
+            bottomMargin = dp(14)
         })
-        sound.addView(level, llp(WRAP, WRAP).apply { topMargin = dp(4) })
+        sound.addView(level, llp(WRAP, WRAP))
+        meter = LedGauge(this, warns = false)
+        sound.addView(meter, llp(WRAP, WRAP).apply { topMargin = dp(12) })
+        sound.addView(View(this), llp(MATCH, 0, 1f))
         val turn = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
         turn.addView(circle(LineIcon.Shape.MINUS, R.string.deck_volume_down, size = 52) { turn("down") })
         turn.addView(circle(LineIcon.Shape.PLUS, R.string.deck_volume_up, size = 52) { turn("up") }, llp(dp(52), dp(52)).apply { marginStart = dp(14) })
-        sound.addView(turn, llp(WRAP, WRAP).apply { topMargin = dp(6) })
-        page.addView(sound, llp(0, MATCH, 2f))
+        // Level with the previous and next keys' middle (the play key is taller).
+        sound.addView(turn, llp(WRAP, WRAP).apply { bottomMargin = dp(8) })
+        page.addView(sound, llp(0, MATCH, 1.4f))
         return page
     }
 
@@ -447,6 +543,7 @@ class DeckActivity : Activity() {
     private fun showVolume(level: JSONObject?) {
         volume?.text = if (level == null) "--" else level.optInt("level").toString()
         volumeUnit?.text = if (level?.optBoolean("muted") == true) getString(R.string.deck_muted) else "%"
+        meter?.set(if (level == null || level.optBoolean("muted")) 0 else level.optInt("level"), false)
     }
 
     // --- Tiles ---------------------------------------------------------------------
@@ -731,5 +828,6 @@ class DeckActivity : Activity() {
     companion object {
         const val EXTRA_PAIRED = "paired"
         private const val TRACKPAD = 2
+        private const val POLL = 2500L
     }
 }

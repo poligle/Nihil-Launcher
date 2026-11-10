@@ -25,6 +25,11 @@
   does: the double tap, and the Glyph light over other apps. Off, neither.
 - Tasks: the done ones are struck through, as on the desktop, and cleared with its broom,
   the one its notifications have, instead of a word.
+- The deck: the volume's card is narrower and fills its height, its level in LEDs too,
+  and its keys at the music's. Swiping the header changes workspace from any of them,
+  the trackpad too, which goes full screen from its corner and says nothing but why it
+  doesn't work, when it doesn't. What plays on the computer shows as it changes, not only
+  after a key.
 
 ## 0.3.2 — 2026-11-09
 

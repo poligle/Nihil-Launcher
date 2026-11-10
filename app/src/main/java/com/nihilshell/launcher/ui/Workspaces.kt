@@ -64,6 +64,29 @@ class Workspaces(context: Context) : ViewGroup(context) {
         if (changed) onPage?.invoke(target)
     }
 
+    /** A drag that began elsewhere ([SwipeBar]): the workspaces follow it as one on them. */
+    fun beginDrag() {
+        animator?.cancel()
+        animator = null
+        startScroll = scrollX
+    }
+
+    fun dragTo(dx: Float) {
+        val max = (childCount - 1).coerceAtLeast(0) * width
+        scrollTo((startScroll - dx).roundToInt().coerceIn(0, max), 0)
+    }
+
+    fun endDrag(velocityX: Float) {
+        val nearest = if (width > 0) (scrollX.toFloat() / width).roundToInt() else page
+        show(
+            when {
+                velocityX < -fling -> page + 1
+                velocityX > fling -> page - 1
+                else -> nearest
+            },
+        )
+    }
+
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
@@ -183,6 +206,60 @@ class PageDots(context: Context, names: List<String>, private val onPick: (Int) 
                 override fun getOpacity(): Int = android.graphics.PixelFormat.TRANSLUCENT
             }
             dot.isSelected = i == index
+        }
+    }
+}
+
+/**
+ * A strip that swipes [pages] as a drag on them would: the deck's header, for when the
+ * workspace on screen keeps its own swipes (the trackpad). A tap still reaches its keys.
+ */
+class SwipeBar(context: Context, private val pages: () -> Workspaces?) : android.widget.LinearLayout(context) {
+    private val slop = ViewConfiguration.get(context).scaledTouchSlop
+    private var downX = 0f
+    private var downY = 0f
+    private var dragging = false
+    private var tracker: VelocityTracker? = null
+
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        follow(ev)
+        return dragging
+    }
+
+    override fun onTouchEvent(ev: MotionEvent): Boolean {
+        follow(ev)
+        return true
+    }
+
+    private fun follow(ev: MotionEvent) {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                downX = ev.rawX
+                downY = ev.rawY
+                dragging = false
+                tracker?.recycle()
+                tracker = VelocityTracker.obtain().also { it.addMovement(ev) }
+            }
+            MotionEvent.ACTION_MOVE -> {
+                tracker?.addMovement(ev)
+                val dx = ev.rawX - downX
+                if (!dragging && abs(dx) > slop && abs(dx) > abs(ev.rawY - downY)) {
+                    dragging = true
+                    downX = ev.rawX
+                    pages()?.beginDrag()
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                }
+                if (dragging) pages()?.dragTo(ev.rawX - downX)
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (dragging) {
+                    tracker?.computeCurrentVelocity(1000)
+                    pages()?.endDrag(tracker?.xVelocity ?: 0f)
+                }
+                dragging = false
+                tracker?.recycle()
+                tracker = null
+            }
         }
     }
 }

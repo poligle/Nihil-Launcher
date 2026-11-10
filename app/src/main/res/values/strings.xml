@@ -208,8 +208,9 @@
     <string name="web_added">Added: %1$s</string>
     <string name="web_share">Add to NIHIL</string>
     <string name="deck_trackpad">Trackpad</string>
-    <string name="deck_trackpad_hint">Tap to click, with two fingers for the right button and three for the middle one</string>
     <string name="deck_trackpad_connecting">Connecting…</string>
     <string name="deck_trackpad_access">Log out and back in on %1$s to use the trackpad</string>
     <string name="deck_trackpad_refused">%1$s can’t take the trackpad right now</string>
+    <string name="deck_full_screen">Full screen</string>
+    <string name="deck_full_screen_leave">Leave full screen</string>
 </resources>

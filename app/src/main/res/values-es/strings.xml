@@ -205,8 +205,9 @@
     <string name="web_added">Añadida: %1$s</string>
     <string name="web_share">Añadir a NIHIL</string>
     <string name="deck_trackpad">Trackpad</string>
-    <string name="deck_trackpad_hint">Toca para hacer clic, con dos dedos para el botón derecho y con tres para el central</string>
     <string name="deck_trackpad_connecting">Conectando…</string>
     <string name="deck_trackpad_access">Cierra sesión en %1$s y vuelve a entrar para usar el trackpad</string>
     <string name="deck_trackpad_refused">%1$s no puede usar el trackpad ahora mismo</string>
+    <string name="deck_full_screen">Pantalla completa</string>
+    <string name="deck_full_screen_leave">Salir de pantalla completa</string>
 </resources>

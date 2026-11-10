@@ -11,9 +11,10 @@ import kotlin.math.roundToInt
  * A level as a row of LEDs (the battery on the home screen), as the desktop's
  * BatteryGauge and DotMeter: low and not charging, the LEDs turn red, the only
  * alarm colour; charging, a light scans from the level to the end, one LED
- * every 160 ms, each one fading in and out as the desktop's colours do.
+ * every 160 ms, each one fading in and out as the desktop's colours do. Without [warns]
+ * (the deck's volume) it is a meter, never red.
  */
-class LedGauge(context: Context, private val count: Int = 10) : View(context) {
+class LedGauge(context: Context, private val count: Int = 10, private val warns: Boolean = true) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val size = context.dp(5f)
     private val gap = context.dp(3.5f)
@@ -41,7 +42,7 @@ class LedGauge(context: Context, private val count: Int = 10) : View(context) {
 
     private val lit: Int get() = if (level <= 0) 0 else (level / (100f / count)).roundToInt().coerceIn(1, count)
 
-    val low: Boolean get() = !charging && level <= 15
+    val low: Boolean get() = warns && !charging && level <= 15
 
     private val scanning: Boolean get() = charging && lit < count
 
