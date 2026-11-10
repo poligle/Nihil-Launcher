@@ -146,10 +146,12 @@ class Workspaces(context: Context) : ViewGroup(context) {
     }
 }
 
-/** The dots under the workspaces, as the desktop's bar shows them: the current one lit. */
-class PageDots(context: Context, private val names: List<String>, private val onPick: (Int) -> Unit) : android.widget.LinearLayout(context) {
+/**
+ * The dots under the workspaces, as the desktop's bar shows them: the current one lit.
+ * Their names are for TalkBack only.
+ */
+class PageDots(context: Context, names: List<String>, private val onPick: (Int) -> Unit) : android.widget.LinearLayout(context) {
     private val dots = ArrayList<View>()
-    private val label = context.mono(size = 11f, color = Nihil.MUTED)
 
     init {
         orientation = HORIZONTAL
@@ -162,7 +164,6 @@ class PageDots(context: Context, private val names: List<String>, private val on
             dots += dot
             addView(dot, llp(context.dp(22), context.dp(22)))
         }
-        addView(label, llp(WRAP, WRAP).apply { marginStart = context.dp(10) })
         select(0)
     }
 
@@ -183,6 +184,5 @@ class PageDots(context: Context, private val names: List<String>, private val on
             }
             dot.isSelected = i == index
         }
-        label.text = names.getOrNull(index).orEmpty()
     }
 }

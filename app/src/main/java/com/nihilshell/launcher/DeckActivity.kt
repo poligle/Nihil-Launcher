@@ -181,7 +181,7 @@ class DeckActivity : Activity() {
         }
         header.addView(nightKey, llp(dp(40), dp(40)).apply { marginEnd = dp(10) })
         header.addView(key(R.drawable.mdi_lock, R.string.deck_lock) { lock() }, llp(dp(40), dp(40)).apply { marginEnd = dp(22) })
-        header.addView(circle(LineIcon.Shape.TRASH, R.string.deck_forget) { forget(computer) })
+        header.addView(circle(LineIcon.Shape.CLOSE, R.string.deck_forget) { forget(computer) })
         screen.addView(header, llp(MATCH, WRAP))
 
         val pages = Workspaces(this)

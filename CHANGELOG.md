@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- The deck forgets the computer with a cross instead of a bin, and its dots have no names
+  beside them.
+- The home screen's favourites fade where they meet the clock, instead of going over it.
+
 ## 0.3.2 — 2026-11-09
 
 - The deck's top has the computer's caffeine, night light and lock, with the desktop's own

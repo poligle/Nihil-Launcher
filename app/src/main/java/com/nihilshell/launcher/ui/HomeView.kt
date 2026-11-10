@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import android.widget.ScrollView
 import com.nihilshell.launcher.R
 import com.nihilshell.launcher.core.AppEntry
@@ -64,10 +65,18 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
     // clock's card when there are more than fit, sitting at the bottom when there are few.
     private val favorites = ReorderGrid(context, 1, context.dp(52))
     private val favoritesHolder = FrameLayout(context)
-    private val favoritesScroll = ScrollView(context).apply {
+    // They fade where they meet the card, and only there. The home screen lets the clock's
+    // module reach beyond its bounds; the list stays in its own, so it never goes over it.
+    private val favoritesScroll = object : ScrollView(context) {
+        override fun getBottomFadingEdgeStrength(): Float = 0f
+    }.apply {
         isVerticalScrollBarEnabled = false
         isFillViewport = true
         overScrollMode = View.OVER_SCROLL_NEVER
+        isVerticalFadingEdgeEnabled = true
+        setFadingEdgeLength(context.dp(56))
+        outlineProvider = ViewOutlineProvider.BOUNDS
+        clipToOutline = true
     }
     private var shownKeys: List<String> = emptyList()
     private val empty = context.mono(context.getString(R.string.favorites_empty), 11f, Nihil.DIM)
