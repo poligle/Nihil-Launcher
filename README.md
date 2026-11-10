@@ -29,7 +29,7 @@ hierarchy, dots for display, red only to interrupt, and light that runs along th
 I wrote it because every launcher worth using either costs money or is full of ads.
 
 No ads, no tracking, no account. It talks to nothing but **your own computer**, and only
-if you pair it as a deck: that is all its `INTERNET` permission is for. It is about 7,000
+if you pair it as a deck: that is all its `INTERNET` permission is for. It is about 11,000
 lines of Kotlin on the Android framework alone — no AndroidX, no Compose, no libraries
 beyond the Kotlin standard library; even the QR reader is its own.
 
@@ -54,7 +54,11 @@ beyond the Kotlin standard library; even the QR reader is its own.
   bottom when the charger goes in. With the accessibility service, round the screen's own
   corners over any app.
 - **The deck.** Paired with NIHIL on your computer, the phone opens its apps and webs, plays
-  its music, turns its volume and locks it. [More below](#the-deck).
+  its music, turns its volume, locks it and is its trackpad, with the desktop's own gestures.
+  The desktop's kanban comes along, in sync. [More below](#the-deck).
+- **Webs, as apps.** Add one from the home screen's menu or a browser's share sheet: it
+  waits in the drawer among the apps, goes on the home screen like them, and opens in Chrome
+  in a tab of its own. [More below](#webs).
 - **One field.** Apps, actions and sums in a single search, accents and case ignored;
   `>` for actions, `=` for a calculator near the desktop's qalc: units, bases, percentages,
   derivatives, integrals and equations.
@@ -125,8 +129,9 @@ To build it yourself, see [Build](#build).
 | Swipe up           | The drawer, following your finger                          |
 | Swipe down         | The notification shade                                     |
 | Double tap         | Locks the phone (optional)                                 |
-| Hold empty space   | NIHIL wallpaper, NIHIL settings                            |
+| Hold empty space   | NIHIL wallpaper, Add a web, NIHIL settings                 |
 | Hold an app        | Its shortcuts, add to home, move, hide, app info, uninstall; on the home screen, move it to put the favourites in order |
+| Hold a web         | Add to home, move, edit it with the pencil, remove         |
 | Home button        | Closes the drawer or a menu                                |
 
 In the drawer, a downward drag closes it when the list is at the top; back does the same.
@@ -137,8 +142,9 @@ In the drawer, a downward drag closes it when the list is at the top; back does 
 
 | Type           | Gets                                                                 |
 |----------------|----------------------------------------------------------------------|
-| *(empty)*      | Every app, alphabetically, in a grid                                 |
+| *(empty)*      | Every app and web, alphabetically, in a grid                         |
 | `camara`       | *Cámara*: accents and case don't matter                              |
+| `yout`         | A web kept on the phone, by its name or by its address               |
 | `settings`     | *Ajustes*, through its package name (`com.android.settings`)         |
 | `lin`          | Apps and actions together: here, the torch                           |
 | `12*7`         | A sum is recognised on its own; enter copies the result              |
@@ -169,13 +175,29 @@ As near the desktop's (qalc) as one Kotlin file gets, comma or point for decimal
 Spanish names work too: `deriva`, `integra`, `resuelve`, `suma`, `producto`, `límite`. No
 currencies: they would need the internet.
 
+### Webs
+
+<img align="right" src="docs/screens/menu.webp" width="220" alt="The home screen held: over the clock's card, the menu with NIHIL wallpaper, Add a web and NIHIL settings, each with its icon.">
+
+Hold the home screen → **Add a web**, or share a page from a browser to **Add to NIHIL**:
+its address and, if you like, a name. A web waits in the drawer among the apps, by its name,
+and search finds it by its name or by its address. Hold it to put it on the home screen, to
+write it again with the pencil or to remove it.
+
+It opens in Chrome, or in the phone's browser without it, each web in a tab of its own that
+opening it again goes back to. Its icon comes from your computer when the phone is paired
+as a deck, as the deck's webs' do, so the phone still talks to no one else; without one, it
+has its letter.
+
+<br clear="right">
+
 ---
 
 ## The deck
 
 The phone as a remote for [NIHIL](https://github.com/poligle/Nihil-Shell) on your computer:
-it opens the computer's apps and webs, plays, pauses and skips its music, turns its volume and
-locks it. It can't run commands or read files.
+it opens the computer's apps and webs, plays, pauses and skips its music, turns its volume,
+locks it and is its trackpad. It can't run commands or read files.
 
 1. On the computer: Preferences → Phone → **Use the phone**, apply, then **Pair a phone**.
 2. On the phone: the laptop key under the drawer's field, `> computer`, or Settings →
@@ -187,11 +209,13 @@ locks it. It can't run commands or read files.
 </p>
 
 The deck is landscape, on one screen, in workspaces as the desktop's: the music with its
-cover, in greys, and the volume in one; the apps and the webs, each scrolling on its own, in
-the other. Swipe between them or tap their dots. Hold an app or a web and move it to put
-them in order. At the top, the computer's caffeine, night light and lock, with the desktop's
-own icons and lit while on. **Screen on in the deck**, in Settings, keeps this phone's screen
-on while it is open. The apps come with the computer's icons; the webs are kept on the phone
+cover, in greys, and the volume with its LEDs in the first; the apps and the webs, each
+scrolling on its own, in the second; the trackpad in the third. Swipe the header or tap the
+dots to go from one to another; on the first two, a swipe anywhere does it too. Hold an app
+or a web and move it to put them in order. In the header, the computer's caffeine, night
+light and lock, with the desktop's own icons and lit while on. What plays on the computer
+shows as it changes. **Screen on in the deck**, in Settings, keeps this phone's screen on
+while it is open. The apps come with the computer's icons; the webs are kept on the phone
 (add one, or share it from the browser), with icons the computer finds for them.
 **Open on the computer** in the share sheet opens a web there.
 
@@ -205,14 +229,37 @@ on while it is open. The apps come with the computer's icons; the webs are kept 
 The protocol is [docs/deck.md](https://github.com/poligle/Nihil-Shell/blob/nihil/docs/deck.md)
 in Nihil-Shell.
 
+### The trackpad
+
+<p align="center">
+  <img src="docs/screens/deck-trackpad.webp" width="640" alt="The deck's trackpad full screen: a field of dim dots from edge to edge, lit white around a finger, and the key to leave full screen in its corner.">
+</p>
+
+The third workspace is your computer's touchpad. The fingers go as they are, every sample the
+screen takes with its time, to a touchpad NIHIL makes on the computer at the size of the
+phone's screen; the computer's own driver reads it as the laptop's, with its settings. A tap
+clicks and two taps double-click, two fingers right-click and scroll, three middle-click, a
+pinch zooms, and the desktop's gestures run: switching workspaces, closing a window, the
+launcher. The dots light up under your fingers. The key in its corner takes it full screen,
+the header, the dots and the system's bars out of the way; the same key, or back, brings
+them again. It needs NIHIL on the computer from 10 November 2026 on; an older one says
+so.
+
 ### Tasks
 
+<img align="right" src="docs/screens/tasks.webp" width="220" alt="Tasks on the phone, synced with the computer: To do, Doing and Done as tabs with how many cards each has, two cards to do with a pencil each, and the field for a new task at the bottom.">
+
 The desktop's kanban, on the phone: the key beside the computer's under the drawer's field,
-or `> tasks`. To do, doing and done, the same cards. Every change stays on the phone at once
-and goes to the computer when it answers; apart for a while, each side goes on, and the next
-sync keeps what both did: for each card, the text written last and the column chosen last, and
-a deletion over anything older (`core/TaskBoard.kt`, as `Tasks.qml` and `TaskMerge.js` on the
-desktop).
+or `> tasks`. To do, doing and done, the same cards in the same order. Tap a card to move it
+to another column or delete it; hold it and move it to put its column in order; its pencil
+writes it again. Done ones are struck through, as on the desktop, and its broom clears them.
+
+Every change stays on the phone at once and goes to the computer when it answers; apart for
+a while, each side goes on, and the next sync keeps what both did: for each card, the text
+written last and the place chosen last, its column and where in it, and a deletion over
+anything older (`core/TaskBoard.kt`, as `Tasks.qml` and `TaskMerge.js` on the desktop).
+
+<br clear="right">
 
 ---
 
@@ -252,8 +299,8 @@ Open **NIHIL** from the app list, the gear in the drawer, or hold the home scree
 | Language                        |         | Android 13 and later: English or Spanish, whatever the phone speaks |
 | Computer                        |         | The deck: pair with NIHIL on your computer                        |
 | Screen on in the deck           | Off     | This phone's screen doesn't turn off while the deck is open       |
-| Glyph light                     | On      | The light on the frame and the unread icons (needs notification access); over other apps too with the accessibility service |
-| Double tap to lock              | Off     | Needs the accessibility service, which locks and draws the light  |
+| Glyph light                     | On      | The light on the frame and the unread icons (needs notification access); over other apps too with Accessibility |
+| Accessibility                   | Off     | The double tap to lock, and the Glyph light over other apps: NIHIL's accessibility service, which reads nothing |
 | Hidden apps                     |         | Show them in the list again                                       |
 
 ---
@@ -317,16 +364,20 @@ app/src/main/java/com/nihilshell/launcher/
 ├── LauncherActivity.kt    the home screen: layers, insets, gestures, receivers
 ├── SettingsActivity.kt    settings, also "NIHIL" in the app list
 ├── WallpaperActivity.kt   the studio
-├── DeckActivity.kt        the deck: music, volume, caffeine, night light, lock, apps and webs
+├── DeckActivity.kt        the deck: music, volume, caffeine, night light, lock, apps and webs, trackpad
 ├── DeckScanActivity.kt    pairing: the camera and the QR
 ├── DeckShareActivity.kt   "Open on the computer" in the share sheet
+├── WebShareActivity.kt    "Add to NIHIL" in the share sheet
 ├── TasksActivity.kt       the desktop's kanban
 ├── deck/
 │   ├── DeckClient.kt      HTTPS pinned to the computer, pairing, mDNS
 │   ├── DeckStore.kt       the computer, its token in the Keystore, the webs
+│   ├── DeckCache.kt       the icons the computer gives, kept a week
+│   ├── TrackpadLink.kt    the trackpad's stream to the computer
 │   └── TasksStore.kt      the kanban on the phone, its clock and its sync
 ├── core/
 │   ├── Apps.kt            every launchable app, in every profile; icons off the main thread
+│   ├── Webs.kt            the webs kept on the phone, opened in Chrome
 │   ├── IconRenderer.kt    mono, grey and colour icons
 │   ├── Search.kt          what the drawer shows for a query
 │   ├── Fuzzy.kt           scoring: exact, prefix, word, inside, letters in order
@@ -348,7 +399,9 @@ app/src/main/java/com/nihilshell/launcher/
 │   ├── RootLayout.kt      swipes, double tap, long press
 │   ├── Workspaces.kt      the deck's pages, side by side
 │   ├── ReorderGrid.kt     cells put in order by holding one
-│   ├── LedGauge.kt, LineIcon.kt, AppMenu.kt, Widgets.kt
+│   ├── ReorderList.kt     rows put in order the same way: the tasks
+│   ├── Trackpad.kt        the deck's trackpad, its LEDs under the fingers
+│   ├── LedGauge.kt, LineIcon.kt, AppMenu.kt, WebDialog.kt, EntryIcon.kt, Widgets.kt
 │   └── Nihil.kt           tokens, fonts, motion
 └── system/
     ├── GlyphListener.kt   notification access (optional)
@@ -378,6 +431,13 @@ app/src/main/java/com/nihilshell/launcher/
 - **Icons**: Android 13's monochrome layer tinted ink. Without one, the foreground layer is
   clipped to the icon's circle, turned to greys and inverted when it's mostly dark; a
   foreground that fills the icon falls back to grey. Rendered on two threads, cached.
+- **The trackpad** sends fingers, not gestures: each frame says which fingers touch and
+  where, in twentieths of a millimetre, with the screen's own time for every sample. On the
+  computer they become a uinput touchpad as large as the phone's screen, so libinput's taps,
+  scrolling and pinches and Hyprland's gestures behave as on the laptop. The frames keep the
+  phone's spacing there, 25 ms late: libinput reads speed from their times.
+- **Webs** open with an app id each (`Browser.EXTRA_APPLICATION_ID`), so Chrome goes back to
+  the tab it opened for that web instead of opening another.
 - **Search** strips accents (NFD), scores exact, prefix, start of a word, inside and
   letters in order, and gives actions a small handicap so apps win ties.
 - **Swipe down** uses `StatusBarManager.expandNotificationsPanel` through reflection, as
@@ -405,7 +465,7 @@ app/src/main/java/com/nihilshell/launcher/
   shared by Google and used according to terms described in the
   [Creative Commons 3.0 Attribution License](https://creativecommons.org/licenses/by/3.0/).
   Android is a trademark of Google LLC.
-- The deck's caffeine, night light and lock: the desktop's own glyphs, from
+- The deck's caffeine, night light and lock, and the tasks' broom: the desktop's own glyphs, from
   [Material Design Icons](https://pictogrammers.com/library/mdi/), under the
   [Pictogrammers Free License](https://github.com/Templarian/MaterialDesign/blob/master/LICENSE).
 - Fonts: [Doto](https://github.com/oliverlalan/Doto),
