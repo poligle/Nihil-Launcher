@@ -131,7 +131,7 @@
     <string name="deck_error_expired">El código ha caducado: muestra un QR nuevo en %1$s.</string>
     <string name="deck_error_wait">Demasiados intentos: espera un minuto.</string>
     <string name="deck_error_unreachable">%1$s no responde: ¿estáis en la misma red?</string>
-    <string name="deck_unpaired_sub">Empareja este móvil con NIHIL en tu ordenador para abrir sus apps y webs, poner su música, subir y bajar el volumen y bloquearlo desde aquí.</string>
+    <string name="deck_unpaired_sub">Empareja este móvil con NIHIL en tu ordenador para abrir sus apps y webs, poner su música, subir y bajar el volumen, bloquearlo y hacerle de trackpad desde aquí.</string>
     <string name="deck_pair">Emparejar</string>
     <string name="deck_connected">Conectado: %1$s</string>
     <string name="deck_looking">Buscando %1$s…</string>
@@ -204,4 +204,9 @@
     <string name="web_invalid">Eso no es una dirección web</string>
     <string name="web_added">Añadida: %1$s</string>
     <string name="web_share">Añadir a NIHIL</string>
+    <string name="deck_trackpad">Trackpad</string>
+    <string name="deck_trackpad_hint">Toca para hacer clic, con dos dedos para el botón derecho y con tres para el central</string>
+    <string name="deck_trackpad_connecting">Conectando…</string>
+    <string name="deck_trackpad_access">Cierra sesión en %1$s y vuelve a entrar para usar el trackpad</string>
+    <string name="deck_trackpad_refused">%1$s no puede usar el trackpad ahora mismo</string>
 </resources>

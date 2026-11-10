@@ -5,6 +5,10 @@ import android.net.Uri
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import org.json.JSONObject
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.InetSocketAddress
 import java.net.URL
 import java.security.MessageDigest
 import java.security.cert.CertificateException
@@ -15,6 +19,7 @@ import java.util.concurrent.TimeUnit
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocket
 import javax.net.ssl.X509TrustManager
 
 /**
@@ -55,6 +60,90 @@ class DeckClient(private val computer: Computer, private val token: String?) {
             }
         }
         return null
+    }
+
+    /** A connection the computer turned into a stream: it answered 101 to an upgrade. */
+    class Stream(val socket: SSLSocket) {
+        val input: InputStream = socket.inputStream
+        val output: OutputStream = socket.outputStream
+
+        fun close() {
+            runCatching { socket.close() }
+        }
+    }
+
+    /**
+     * [path] as a stream that speaks [protocol], at the address that answered last or the
+     * others from the QR: the stream, or the computer's answer when it said no; neither
+     * when no address answered.
+     */
+    fun upgrade(path: String, protocol: String): Pair<Stream?, Reply?> {
+        for (host in (listOfNotNull(computer.last) + computer.hosts).distinct()) {
+            val socket = runCatching {
+                (tls(computer.pin).socketFactory.createSocket() as SSLSocket).apply {
+                    connect(InetSocketAddress(host, computer.port), 2500)
+                    soTimeout = 9000
+                    tcpNoDelay = true
+                    startHandshake()
+                }
+            }.getOrNull() ?: continue
+            val answer = runCatching { ask(socket, host, path, protocol) }.getOrNull()
+            if (answer == null) {
+                runCatching { socket.close() }
+                continue
+            }
+            computer.last = host
+            if (answer.status == 101) return Stream(socket) to null
+            runCatching { socket.close() }
+            return null to answer
+        }
+        return null to null
+    }
+
+    /** The upgrade asked for, and the answer's head read a byte at a time: the stream after it stays. */
+    private fun ask(socket: SSLSocket, host: String, path: String, protocol: String): Reply {
+        val address = if (host.contains(':')) "[$host]" else host
+        val head = StringBuilder()
+            .append("GET ").append(path).append(" HTTP/1.1\r\n")
+            .append("Host: ").append(address).append(':').append(computer.port).append("\r\n")
+            .apply { if (token != null) append("Authorization: Bearer ").append(token).append("\r\n") }
+            .append("Connection: Upgrade\r\nUpgrade: ").append(protocol).append("\r\n\r\n")
+            .toString()
+        socket.outputStream.apply {
+            write(head.toByteArray(Charsets.US_ASCII))
+            flush()
+        }
+        val input = socket.inputStream
+        val lines = ArrayList<String>()
+        val line = StringBuilder()
+        while (true) {
+            val c = input.read()
+            if (c < 0) throw IOException("closed")
+            if (c == '\n'.code) {
+                val text = line.toString().trimEnd('\r')
+                if (text.isEmpty()) break
+                lines += text
+                line.setLength(0)
+                if (lines.size > 64) throw IOException("too long")
+            } else {
+                line.append(c.toChar())
+                if (line.length > 8192) throw IOException("too long")
+            }
+        }
+        val status = lines.firstOrNull()?.split(' ')?.getOrNull(1)?.toIntOrNull() ?: throw IOException("not HTTP")
+        if (status == 101) return Reply(status, null, ByteArray(0))
+        val headers = lines.drop(1).mapNotNull { header ->
+            header.split(':', limit = 2).takeIf { it.size == 2 }?.let { it[0].trim().lowercase() to it[1].trim() }
+        }.toMap()
+        val length = headers["content-length"]?.toIntOrNull()?.coerceIn(0, 65536) ?: 0
+        val body = ByteArray(length)
+        var read = 0
+        while (read < length) {
+            val n = input.read(body, read, length - read)
+            if (n < 0) break
+            read += n
+        }
+        return Reply(status, headers["content-type"], body.copyOf(read))
     }
 
     /** What the computer's QR holds (nihil-deck://pair?…). */

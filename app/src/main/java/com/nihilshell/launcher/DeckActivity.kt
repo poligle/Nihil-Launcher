@@ -31,6 +31,7 @@ import com.nihilshell.launcher.deck.Computer
 import com.nihilshell.launcher.deck.DeckCache
 import com.nihilshell.launcher.deck.DeckClient
 import com.nihilshell.launcher.deck.DeckStore
+import com.nihilshell.launcher.deck.TrackpadLink
 import com.nihilshell.launcher.deck.Web
 import com.nihilshell.launcher.ui.KeyButton
 import com.nihilshell.launcher.ui.LineIcon
@@ -38,6 +39,7 @@ import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
 import com.nihilshell.launcher.ui.Notice
 import com.nihilshell.launcher.ui.PageDots
+import com.nihilshell.launcher.ui.Trackpad
 import com.nihilshell.launcher.ui.Wordmark
 import com.nihilshell.launcher.ui.Workspaces
 import com.nihilshell.launcher.ui.WRAP
@@ -62,8 +64,8 @@ import java.util.concurrent.Executors
  * webs' found by the computer, so the phone talks to no one else.
  * In landscape, on one screen without scrolling, in workspaces as the
  * desktop's: the music and the volume in one; the apps and the webs, each
- * scrolling on its own, in the other. Sharing a web to "Open on the
- * computer" is DeckShareActivity.
+ * scrolling on its own, in the next; and the computer's trackpad in the
+ * last. Sharing a web to "Open on the computer" is DeckShareActivity.
  */
 class DeckActivity : Activity() {
 
@@ -92,6 +94,11 @@ class DeckActivity : Activity() {
     private val popup by lazy { AppMenu(this) }
     private var appsColumns = 6
     private var websColumns = 4
+    private var trackpad: Trackpad? = null
+    private var trackpadStatus: TextView? = null
+    private var trackpadHint: TextView? = null
+    private val link by lazy { TrackpadLink(store) { showTrackpad(it) } }
+    private var onScreen = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,10 +129,19 @@ class DeckActivity : Activity() {
         // Settings, "Screen on in the deck": this phone's screen, not the computer's.
         if (store.keepScreenOn) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onScreen = true
         refresh()
+        trackpadOn()
+    }
+
+    override fun onPause() {
+        onScreen = false
+        link.stop()
+        super.onPause()
     }
 
     override fun onDestroy() {
+        link.stop()
         pool.shutdownNow()
         super.onDestroy()
     }
@@ -136,6 +152,10 @@ class DeckActivity : Activity() {
         content.removeAllViews()
         status = null
         workspaces = null
+        trackpad = null
+        trackpadStatus = null
+        trackpadHint = null
+        link.stop()
         val computer = store.computer
         if (computer == null) {
             val column = LinearLayout(this).apply {
@@ -186,13 +206,75 @@ class DeckActivity : Activity() {
         val pages = Workspaces(this)
         pages.addView(musicPage())
         pages.addView(appsPage())
+        pages.addView(trackpadPage())
         workspaces = pages
         screen.addView(pages, llp(MATCH, 0, 1f).apply { topMargin = dp(10) })
-        val dots = PageDots(this, listOf(getString(R.string.deck_music), getString(R.string.deck_apps_webs))) { pages.show(it) }
-        pages.onPage = { dots.select(it) }
+        val titles = listOf(getString(R.string.deck_music), getString(R.string.deck_apps_webs), getString(R.string.deck_trackpad))
+        val dots = PageDots(this, titles) { pages.show(it) }
+        pages.onPage = {
+            dots.select(it)
+            trackpadOn()
+        }
         screen.addView(dots, llp(MATCH, dp(28)))
         content.addView(screen, lp(MATCH, MATCH))
         showWebs()
+    }
+
+    /** The third workspace: this screen as the computer's touchpad, while it shows. */
+    private fun trackpadPage(): View {
+        val card = FrameLayout(this).apply {
+            background = rounded(Nihil.VOID, dp(22f), dp(1), Nihil.LINE)
+            clipToOutline = true
+            // Every finger to the trackpad, wherever it lands.
+            isMotionEventSplittingEnabled = false
+        }
+        val pad = Trackpad(this).apply { contentDescription = getString(R.string.deck_trackpad) }
+        pad.onFrame = { time, count, ids, xs, ys ->
+            trackpadHint?.visibility = View.GONE
+            link.frame(time, count, ids, xs, ys)
+        }
+        pad.onSize = { trackpadOn() }
+        card.addView(pad, lp(MATCH, MATCH))
+        card.addView(mono(getString(R.string.deck_trackpad), 11f, Nihil.MUTED), lp(WRAP, WRAP, Gravity.TOP or Gravity.START).apply {
+            leftMargin = dp(20)
+            topMargin = dp(16)
+        })
+        trackpadStatus = mono("", 11f, Nihil.MUTED).apply {
+            gravity = Gravity.END
+            maxWidth = dp(360)
+        }
+        card.addView(trackpadStatus, lp(WRAP, WRAP, Gravity.TOP or Gravity.END).apply {
+            rightMargin = dp(20)
+            topMargin = dp(16)
+        })
+        trackpadHint = mono(getString(R.string.deck_trackpad_hint), 11f, Nihil.MUTED).apply { gravity = Gravity.CENTER }
+        card.addView(trackpadHint, lp(WRAP, WRAP, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply { bottomMargin = dp(16) })
+        trackpad = pad
+        return card
+    }
+
+    /** The stream while the trackpad is the workspace on screen; none otherwise. */
+    private fun trackpadOn() {
+        val pad = trackpad
+        if (onScreen && pad != null && pad.width > 0 && workspaces?.page == TRACKPAD && store.computer != null) {
+            link.start(TrackpadLink.Size(pad.widthUnits, pad.heightUnits, Trackpad.RESOLUTION))
+        } else {
+            link.stop()
+            trackpadHint?.visibility = View.VISIBLE
+        }
+    }
+
+    private fun showTrackpad(state: TrackpadLink.State) {
+        val name = store.computer?.name.orEmpty()
+        trackpadStatus?.text = when (state) {
+            TrackpadLink.State.CONNECTING -> getString(R.string.deck_trackpad_connecting)
+            TrackpadLink.State.READY -> ""
+            TrackpadLink.State.OLDER -> getString(R.string.deck_older, name)
+            TrackpadLink.State.ACCESS -> getString(R.string.deck_trackpad_access, name)
+            TrackpadLink.State.REFUSED -> getString(R.string.deck_trackpad_refused, name)
+            TrackpadLink.State.UNREACHABLE -> getString(R.string.deck_unreachable_status, name)
+            TrackpadLink.State.FORGOTTEN -> getString(R.string.deck_forgotten, name)
+        }
     }
 
     /** The first workspace: what plays, with its keys, and the volume beside it. */
@@ -648,5 +730,6 @@ class DeckActivity : Activity() {
 
     companion object {
         const val EXTRA_PAIRED = "paired"
+        private const val TRACKPAD = 2
     }
 }

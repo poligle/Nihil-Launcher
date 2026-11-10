@@ -13,6 +13,11 @@
 - Tasks: held and moved, a card goes to another place in its column, and the desktop has
   the same order (each card has a rank there, as the desktop's: `core/TaskBoard.kt`). A
   pencil on each card writes it again. A side from before doesn't undo an order.
+- The deck's third workspace is the computer's trackpad: the fingers go to a touchpad
+  there, and its own driver makes of them what the laptop's touchpad does (a tap clicks,
+  two fingers right-click and scroll, three middle-click, a pinch zooms, and the desktop's
+  gestures run). LEDs light up under the fingers. It needs NIHIL on the computer from this
+  day on.
 
 ## 0.3.2 — 2026-11-09
 
