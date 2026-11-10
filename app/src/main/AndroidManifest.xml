@@ -146,6 +146,22 @@
             </intent-filter>
         </activity>
 
+        <!-- "Add to NIHIL": a web shared from a browser, to the drawer -->
+        <activity
+            android:name=".WebShareActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/web_share"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter android:label="@string/web_share">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".DeckScanActivity"
             android:exported="false"

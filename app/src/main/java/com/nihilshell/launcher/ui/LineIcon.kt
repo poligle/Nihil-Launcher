@@ -25,7 +25,7 @@ class LineIcon(
     enum class Shape {
         SEARCH, CHEVRON, UP, DOWN, SETTINGS, GEAR, LOCK, IMAGE, TORCH, WIFI, BLUETOOTH,
         BATTERY, SOUND, ALARM, INFO, TRASH, HIDE, PLUS, MINUS, CHECK, CLOSE, CALC, BOLT,
-        ENTER, WEB, HOME, BELL, LAPTOP, PLAY, PAUSE, NEXT, PREVIOUS, TASKS,
+        ENTER, WEB, HOME, BELL, LAPTOP, PLAY, PAUSE, NEXT, PREVIOUS, TASKS, PENCIL,
     }
 
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -232,6 +232,11 @@ class LineIcon(
                     p.addRoundRect(RectF(3.5f, 4.5f, 8.5f, 19.5f), 1.5f, 1.5f, Path.Direction.CW)
                     p.addRoundRect(RectF(9.5f, 4.5f, 14.5f, 14.5f), 1.5f, 1.5f, Path.Direction.CW)
                     p.addRoundRect(RectF(15.5f, 4.5f, 20.5f, 11.5f), 1.5f, 1.5f, Path.Direction.CW)
+                }
+                Shape.PENCIL -> {
+                    p.line(15.2f, 4.8f, 19.2f, 8.8f, 8.6f, 19.4f, 4f, 20f, 4.6f, 15.4f)
+                    p.close()
+                    p.line(12.9f, 7.1f, 16.9f, 11.1f)
                 }
                 Shape.LAPTOP -> {
                     p.addRoundRect(RectF(5f, 5.5f, 19f, 15.5f), 1.5f, 1.5f, Path.Direction.CW)

@@ -2,6 +2,7 @@ package com.nihilshell.launcher.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -34,6 +35,19 @@ class LauncherLogicTest {
         assertEquals(-1, Search.packageScore("com.android.settings", "and"))
         assertEquals(-1, Search.packageScore("com.whatsapp", "wh"))
         assertEquals(300, Search.packageScore("org.mozilla.firefox", "fire"))
+    }
+
+    @Test
+    fun webAddresses() {
+        assertEquals("https://nihilshell.com", WebAddress.normalize(" nihilshell.com "))
+        assertEquals("http://192.168.1.20:8080/a?b=c", WebAddress.normalize("http://192.168.1.20:8080/a?b=c"))
+        assertNull(WebAddress.normalize("ftp://nihilshell.com"))
+        assertNull(WebAddress.normalize("two words"))
+        assertNull(WebAddress.normalize("nihil"))
+        assertEquals("youtube.com", WebAddress.title("https://www.youtube.com/watch?v=1"))
+        assertEquals("https://nixos.org/download", WebAddress.find("NixOS https://nixos.org/download "))
+        assertEquals(300, Search.hostScore("www.youtube.com", "yout"))
+        assertEquals(-1, Search.hostScore("youtube.com", "com"))
     }
 
     @Test

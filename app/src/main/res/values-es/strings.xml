@@ -198,4 +198,10 @@
     <string name="set_deck_screen">Pantalla encendida en el deck</string>
     <string name="set_deck_screen_sub">La pantalla del móvil no se apaga mientras el deck está abierto</string>
     <string name="about_icons">La cafeína, la luz nocturna y el bloqueo del deck son los del escritorio, de Material Design Icons, con la Pictogrammers Free License.</string>
+    <string name="web_add">Añadir web</string>
+    <string name="web_edit">Editar la web</string>
+    <string name="web_name_hint">Nombre (opcional)</string>
+    <string name="web_invalid">Eso no es una dirección web</string>
+    <string name="web_added">Añadida: %1$s</string>
+    <string name="web_share">Añadir a NIHIL</string>
 </resources>

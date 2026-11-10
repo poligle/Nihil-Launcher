@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.app.ActivityOptions
+import android.app.AlertDialog
 import android.app.AlarmManager
 import android.app.SearchManager
 import android.app.WallpaperManager
@@ -38,10 +39,13 @@ import com.nihilshell.launcher.core.Action
 import com.nihilshell.launcher.core.ActionHost
 import com.nihilshell.launcher.core.Actions
 import com.nihilshell.launcher.core.AppEntry
+import com.nihilshell.launcher.core.Entry
 import com.nihilshell.launcher.core.DotRender
 import com.nihilshell.launcher.core.Apps
 import com.nihilshell.launcher.core.Prefs
 import com.nihilshell.launcher.core.Torch
+import com.nihilshell.launcher.core.WebEntry
+import com.nihilshell.launcher.core.Webs
 import com.nihilshell.launcher.system.Access
 import com.nihilshell.launcher.system.Glyph
 import com.nihilshell.launcher.system.LockService
@@ -55,10 +59,12 @@ import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
 import com.nihilshell.launcher.ui.Notice
 import com.nihilshell.launcher.ui.RootLayout
+import com.nihilshell.launcher.ui.WebDialog
 import com.nihilshell.launcher.ui.WRAP
 import com.nihilshell.launcher.ui.dp
 import com.nihilshell.launcher.ui.lp
 import java.net.URLEncoder
+import java.text.Collator
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.math.abs
@@ -139,6 +145,7 @@ class LauncherActivity :
 
         actions = Actions.all(this, this)
         Apps.listen(appsChanged)
+        Webs.listen(websChanged)
         prefs.listen(prefsChanged)
         Torch.listen(torchChanged)
 
@@ -179,6 +186,7 @@ class LauncherActivity :
         updateHomeShowing()
         home.updateClock(animate = false)
         updateAlarm()
+        Webs.fetchIcons(this, prefs.webs)
         if (!prefs.wallpaperSeeded && Access.isDefaultHome(this)) seedWallpaper()
     }
 
@@ -216,6 +224,7 @@ class LauncherActivity :
 
     override fun onDestroy() {
         Apps.unlisten(appsChanged)
+        Webs.unlisten(websChanged)
         prefs.unlisten(prefsChanged)
         Torch.unlisten(torchChanged)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -366,6 +375,7 @@ class LauncherActivity :
             point = x.toInt() to y.toInt(),
             items = listOf(
                 AppMenu.Item(LineIcon.Shape.IMAGE, getString(R.string.act_wallpaper)) { openStudio() },
+                AppMenu.Item(LineIcon.Shape.WEB, getString(R.string.web_add)) { addWeb() },
                 AppMenu.Item(LineIcon.Shape.SETTINGS, getString(R.string.act_nihil)) { openSettings() },
             ),
         )
@@ -375,16 +385,23 @@ class LauncherActivity :
 
     private val appsChanged: () -> Unit = { refreshApps() }
 
-    private val torchChanged: (Boolean) -> Unit = { drawer.setContent(Apps.all, prefs.hidden, actions, prefs.iconStyle) }
+    private val websChanged: () -> Unit = { refreshApps() }
+
+    private val torchChanged: (Boolean) -> Unit = { drawer.setContent(entries(), prefs.hidden, actions, prefs.iconStyle) }
 
     private val prefsChanged = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
             Prefs.ICONS -> {
                 Apps.clearIcons()
+                Webs.clearIcons()
                 refreshApps()
                 onUnread(Glyph.unread)
             }
             Prefs.FAVORITES, Prefs.FAVORITE_ICONS, Prefs.HIDDEN -> refreshApps()
+            Prefs.WEBS -> {
+                refreshApps()
+                Webs.fetchIcons(this, prefs.webs)
+            }
             Prefs.DIM -> home.setDim(prefs.dimWallpaper)
             Prefs.GLYPH -> onUnread(Glyph.unread)
         }
@@ -392,9 +409,17 @@ class LauncherActivity :
 
     private fun refreshApps() {
         if (Apps.loaded && !prefs.favoritesChosen) prefs.favorites = defaultFavorites()
-        val favorites = prefs.favorites.mapNotNull { Apps.find(it) }
+        val webs = prefs.webs
+        val favorites = prefs.favorites.mapNotNull { key -> Apps.find(key) ?: webs.firstOrNull { it.key == key } }
         home.setFavorites(favorites, prefs.favoriteIcons, prefs.iconStyle)
-        drawer.setContent(Apps.all, prefs.hidden, actions, prefs.iconStyle)
+        drawer.setContent(entries(webs), prefs.hidden, actions, prefs.iconStyle)
+    }
+
+    /** The apps and the webs, by name, as the drawer lists them. */
+    private fun entries(webs: List<WebEntry> = prefs.webs): List<Entry> {
+        if (webs.isEmpty()) return Apps.all
+        val collator = Collator.getInstance()
+        return (Apps.all + webs).sortedWith { a, b -> collator.compare(a.label, b.label) }
     }
 
     /** First run: phone, messages, camera and browser, if they're there. */
@@ -419,20 +444,54 @@ class LauncherActivity :
             .onFailure { notice(getString(R.string.launch_failed, entry.label)) }
     }
 
-    private fun showAppMenu(entry: AppEntry, from: View) {
-        from.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+    /** On the home screen or not, and where there: how every menu of an app or a web starts. */
+    private fun homeItems(key: String): ArrayList<AppMenu.Item> {
         val favorites = prefs.favorites
-        val index = favorites.indexOf(entry.key)
+        val index = favorites.indexOf(key)
         val items = ArrayList<AppMenu.Item>()
         if (index >= 0) {
-            items += AppMenu.Item(LineIcon.Shape.MINUS, getString(R.string.menu_remove_home)) { prefs.removeFavorite(entry.key) }
-            if (index > 0) items += AppMenu.Item(LineIcon.Shape.UP, getString(R.string.menu_move_up)) { prefs.moveFavorite(entry.key, -1) }
+            items += AppMenu.Item(LineIcon.Shape.MINUS, getString(R.string.menu_remove_home)) { prefs.removeFavorite(key) }
+            if (index > 0) items += AppMenu.Item(LineIcon.Shape.UP, getString(R.string.menu_move_up)) { prefs.moveFavorite(key, -1) }
             if (index < favorites.size - 1) {
-                items += AppMenu.Item(LineIcon.Shape.DOWN, getString(R.string.menu_move_down)) { prefs.moveFavorite(entry.key, 1) }
+                items += AppMenu.Item(LineIcon.Shape.DOWN, getString(R.string.menu_move_down)) { prefs.moveFavorite(key, 1) }
             }
         } else {
-            items += AppMenu.Item(LineIcon.Shape.PLUS, getString(R.string.menu_add_home)) { prefs.addFavorite(entry.key) }
+            items += AppMenu.Item(LineIcon.Shape.PLUS, getString(R.string.menu_add_home)) { prefs.addFavorite(key) }
         }
+        return items
+    }
+
+    private fun showWebMenu(web: WebEntry, from: View) {
+        from.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+        val items = homeItems(web.key)
+        items += AppMenu.Item(LineIcon.Shape.PENCIL, getString(R.string.web_edit)) {
+            WebDialog.show(this, web) { prefs.saveWeb(it, replacing = web.url) }
+        }
+        items += AppMenu.Item(LineIcon.Shape.TRASH, getString(R.string.deck_remove), danger = true) { removeWeb(web) }
+        popup.show(anchor = from, title = web.label, items = items)
+    }
+
+    private fun removeWeb(web: WebEntry) {
+        AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setMessage(getString(R.string.deck_remove_web, web.label))
+            .setPositiveButton(R.string.deck_remove) { _, _ -> prefs.removeWeb(web.url) }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun addWeb() = WebDialog.show(this, null) { web ->
+        prefs.saveWeb(web)
+        notice(getString(R.string.web_added, web.label))
+    }
+
+    private fun openWeb(web: WebEntry, from: View) {
+        val options = ActivityOptions.makeClipRevealAnimation(from, 0, 0, from.width, from.height).toBundle()
+        if (!Webs.open(this, web, options)) notice(getString(R.string.open_failed))
+    }
+
+    private fun showAppMenu(entry: AppEntry, from: View) {
+        from.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+        val items = homeItems(entry.key)
         if (entry.key in prefs.hidden) {
             items += AppMenu.Item(LineIcon.Shape.CHECK, getString(R.string.menu_unhide)) { prefs.unhide(entry.key) }
         } else {
@@ -462,9 +521,15 @@ class LauncherActivity :
 
     // HomeView.Host and DrawerView.Host
 
-    override fun launch(entry: AppEntry, from: View) = launchApp(entry, from)
+    override fun launch(entry: Entry, from: View) = when (entry) {
+        is AppEntry -> launchApp(entry, from)
+        is WebEntry -> openWeb(entry, from)
+    }
 
-    override fun menu(entry: AppEntry, from: View) = showAppMenu(entry, from)
+    override fun menu(entry: Entry, from: View) = when (entry) {
+        is AppEntry -> showAppMenu(entry, from)
+        is WebEntry -> showWebMenu(entry, from)
+    }
 
     override fun openShade() {
         if (!Access.expandNotifications(this)) notice(getString(R.string.shade_failed))

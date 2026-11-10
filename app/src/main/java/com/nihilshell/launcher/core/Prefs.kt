@@ -2,6 +2,8 @@ package com.nihilshell.launcher.core
 
 import android.content.Context
 import android.content.SharedPreferences
+import org.json.JSONArray
+import org.json.JSONObject
 
 enum class IconStyle {
     /** The app's themed (monochrome) icon in ink; desaturated when there is none. */
@@ -19,7 +21,7 @@ enum class IconStyle {
 class Prefs private constructor(context: Context) {
     private val sp: SharedPreferences = context.getSharedPreferences("nihil", Context.MODE_PRIVATE)
 
-    /** App keys (see [AppEntry.key]) on the home screen, in order. */
+    /** The keys of the apps and webs on the home screen (see [Entry.key]), in order. */
     var favorites: List<String>
         get() = sp.getString(FAVORITES, null)?.split('\n')?.filter { it.isNotBlank() } ?: emptyList()
         set(value) = sp.edit().putString(FAVORITES, value.joinToString("\n")).apply()
@@ -65,6 +67,35 @@ class Prefs private constructor(context: Context) {
         get() = sp.getInt(PITCH, 20)
         set(value) = sp.edit().putInt(PITCH, value).apply()
 
+    /** The webs kept here (Webs), in the order they were added. */
+    var webs: List<WebEntry>
+        get() = runCatching {
+            val list = JSONArray(sp.getString(WEBS, "[]"))
+            List(list.length()) { list.getJSONObject(it).let { o -> WebEntry(o.getString("url"), o.optString("title")) } }
+        }.getOrDefault(emptyList())
+        set(value) {
+            val list = JSONArray()
+            value.forEach { list.put(JSONObject().put("url", it.url).put("title", it.label)) }
+            sp.edit().putString(WEBS, list.toString()).apply()
+        }
+
+    /** Adds [web], or puts it where the one at [replacing] was, on the home screen too. */
+    fun saveWeb(web: WebEntry, replacing: String? = null) {
+        val list = webs.toMutableList()
+        val at = list.indexOfFirst { it.url == (replacing ?: web.url) }
+        list.removeAll { it.url == web.url || it.url == replacing }
+        list.add(if (at >= 0) at.coerceAtMost(list.size) else list.size, web)
+        webs = list
+        if (replacing != null && replacing != web.url) {
+            favorites = favorites.map { if (it == WebEntry.KEY + replacing) web.key else it }.distinct()
+        }
+    }
+
+    fun removeWeb(url: String) {
+        webs = webs.filter { it.url != url }
+        removeFavorite(WebEntry.KEY + url)
+    }
+
     fun addFavorite(key: String) {
         if (key !in favorites) favorites = favorites + key
     }
@@ -109,6 +140,7 @@ class Prefs private constructor(context: Context) {
         const val DOUBLE_TAP = "double_tap"
         const val PITCH = "pitch"
         const val SEEDED = "wallpaper_seeded"
+        const val WEBS = "webs"
 
         @Volatile
         private var instance: Prefs? = null

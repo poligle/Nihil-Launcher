@@ -22,7 +22,7 @@ import android.widget.TextView
 import com.nihilshell.launcher.R
 import com.nihilshell.launcher.core.Action
 import com.nihilshell.launcher.core.AppEntry
-import com.nihilshell.launcher.core.Apps
+import com.nihilshell.launcher.core.Entry
 import com.nihilshell.launcher.core.Calculator
 import com.nihilshell.launcher.core.IconStyle
 import com.nihilshell.launcher.core.Search
@@ -38,8 +38,8 @@ import com.nihilshell.launcher.core.Search
 class DrawerView(context: Context, private val host: Host) : FrameLayout(context) {
 
     interface Host {
-        fun launch(entry: AppEntry, from: View)
-        fun menu(entry: AppEntry, from: View)
+        fun launch(entry: Entry, from: View)
+        fun menu(entry: Entry, from: View)
         fun run(action: Action)
         fun copy(text: String)
         fun webSearch(query: String)
@@ -52,7 +52,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
 
     /** What the list shows: a row of app tiles, or one result across. */
     private sealed class Item {
-        class Tiles(val entries: List<AppEntry>, val first: Int) : Item()
+        class Tiles(val entries: List<Entry>, val first: Int) : Item()
         class Single(val row: Search.Row, val index: Int) : Item()
     }
 
@@ -65,7 +65,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
     private val clear = ImageView(context)
     private val adapter = Rows()
 
-    private var apps: List<AppEntry> = emptyList()
+    private var apps: List<Entry> = emptyList()
     private var hidden: Set<String> = emptySet()
     private var actions: List<Action> = emptyList()
     private var style = IconStyle.MONO
@@ -225,7 +225,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         column.setPadding(0, top, 0, bottom)
     }
 
-    fun setContent(apps: List<AppEntry>, hidden: Set<String>, actions: List<Action>, style: IconStyle) {
+    fun setContent(apps: List<Entry>, hidden: Set<String>, actions: List<Action>, style: IconStyle) {
         this.apps = apps
         this.hidden = hidden
         this.actions = actions
@@ -272,7 +272,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         val result = Search.run(q, apps, hidden, actions)
         rows = result.rows
         count.text = when (result.mode) {
-            Search.Mode.APPS -> context.getString(R.string.apps_count, apps.count { it.key !in hidden })
+            Search.Mode.APPS -> context.getString(R.string.apps_count, apps.count { it is AppEntry && it.key !in hidden })
             Search.Mode.ACTIONS -> context.getString(R.string.mode_actions)
             Search.Mode.CALCULATOR -> context.getString(R.string.mode_calculator)
             Search.Mode.SEARCH -> context.resources.getQuantityString(R.plurals.results, result.matches, result.matches)
@@ -285,7 +285,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
     /** Consecutive apps in rows of [columns] tiles; everything else across. The letters go: the grid is in order. */
     private fun group(rows: List<Search.Row>): List<Item> {
         val out = ArrayList<Item>()
-        var run = ArrayList<AppEntry>()
+        var run = ArrayList<Entry>()
         var runStart = 0
         fun flush() {
             run.chunked(columns).forEachIndexed { i, chunk -> out += Item.Tiles(chunk, runStart + i * columns) }
@@ -450,7 +450,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
             setOnLongClickListener(null)
         }
 
-        fun bind(entry: AppEntry, selected: Boolean) {
+        fun bind(entry: Entry, selected: Boolean) {
             visibility = View.VISIBLE
             val wanted = if (selected) raised else plain
             if (background !== wanted) background = wanted
@@ -458,10 +458,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
             name.setTextColor(if (selected) Nihil.INK else Nihil.MUTED)
             contentDescription = entry.label
             key = entry.key
-            icon.setImageDrawable(null)
-            val look = if (selected) IconStyle.COLOR else style
-            val cached = Apps.icon(entry, iconSize, look) { bitmap -> if (key == entry.key) icon.setImageBitmap(bitmap) }
-            if (cached != null) icon.setImageBitmap(cached)
+            icon.bindIcon(entry, iconSize, if (selected) IconStyle.COLOR else style)
             setOnClickListener { host.launch(entry, this) }
             setOnLongClickListener {
                 host.menu(entry, this)
@@ -499,16 +496,14 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
             label.setTextColor(if (first) Nihil.INK else Nihil.DIM)
         }
 
-        fun bindApp(entry: AppEntry, first: Boolean): LineView {
+        fun bindApp(entry: Entry, first: Boolean): LineView {
             frame(first)
             label.text = entry.label
             hint.text = if (entry.key in hidden) context.getString(R.string.hint_hidden) else ""
             hint.visibility = if (hint.text.isEmpty()) View.GONE else View.VISIBLE
             key = entry.key
             icon.setPadding(0, 0, 0, 0)
-            icon.setImageDrawable(null)
-            val cached = Apps.icon(entry, iconSize, style) { bitmap -> if (key == entry.key) icon.setImageBitmap(bitmap) }
-            if (cached != null) icon.setImageBitmap(cached)
+            icon.bindIcon(entry, iconSize, style)
             return this
         }
 
@@ -517,6 +512,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
             key = null
             label.text = action.label
             hint.text = action.hint()
+            icon.tag = null
             hint.visibility = if (hint.text.isEmpty()) View.GONE else View.VISIBLE
             icon.setImageDrawable(LineIcon(action.icon, if (first) Nihil.INK else Nihil.DIM))
             icon.setPadding(context.dp(1), context.dp(1), context.dp(1), context.dp(1))
@@ -527,6 +523,7 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
             frame(first)
             key = null
             label.text = context.getString(R.string.web_search, query.trim())
+            icon.tag = null
             hint.visibility = View.GONE
             icon.setImageDrawable(LineIcon(LineIcon.Shape.WEB, if (first) Nihil.INK else Nihil.DIM))
             icon.setPadding(context.dp(1), context.dp(1), context.dp(1), context.dp(1))

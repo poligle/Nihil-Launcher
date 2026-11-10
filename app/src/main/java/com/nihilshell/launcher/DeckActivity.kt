@@ -28,6 +28,7 @@ import android.widget.TextView
 import com.nihilshell.launcher.core.IconStyle
 import com.nihilshell.launcher.core.Prefs
 import com.nihilshell.launcher.deck.Computer
+import com.nihilshell.launcher.deck.DeckCache
 import com.nihilshell.launcher.deck.DeckClient
 import com.nihilshell.launcher.deck.DeckStore
 import com.nihilshell.launcher.deck.Web
@@ -50,9 +51,7 @@ import com.nihilshell.launcher.ui.rounded
 import com.nihilshell.launcher.ui.rule
 import com.nihilshell.launcher.ui.text
 import org.json.JSONObject
-import java.io.File
 import java.net.URLEncoder
-import java.security.MessageDigest
 import java.util.concurrent.Executors
 
 /**
@@ -492,15 +491,12 @@ class DeckActivity : Activity() {
     /** An icon: kept in memory, then on disk (the computer's change rarely), then asked for. */
     private fun picture(key: String, path: String, computer: Computer, ready: (Bitmap) -> Unit) {
         pictures[key]?.let { return ready(it) }
-        val file = File(File(cacheDir, "deck"), sha(key))
+        val file = DeckCache.file(this, key)
         val token = store.token()
         pool.execute {
-            val bytes = file.takeIf { it.isFile && System.currentTimeMillis() - it.lastModified() < WEEK }?.readBytes()
+            val bytes = file.takeIf { !DeckCache.stale(this, key) }?.readBytes()
                 ?: DeckClient(computer, token).call("GET", path)?.takeIf { it.status == 200 }?.bytes?.also { fetched ->
-                    runCatching {
-                        file.parentFile?.mkdirs()
-                        file.writeBytes(fetched)
-                    }
+                    DeckCache.keep(this, key, fetched)
                 }
             val bitmap = bytes?.let { runCatching { BitmapFactory.decodeByteArray(it, 0, it.size) }.getOrNull() } ?: return@execute
             main.post {
@@ -578,7 +574,7 @@ class DeckActivity : Activity() {
                 val client = DeckClient(computer, store.token())
                 pool.execute { client.call("POST", "/v1/unpair", JSONObject()) }
                 store.forget()
-                File(cacheDir, "deck").deleteRecursively()
+                DeckCache.dir(this).deleteRecursively()
                 pictures.clear()
                 build()
             }
@@ -650,11 +646,7 @@ class DeckActivity : Activity() {
         view.background = ripple(r, if (on) rounded(Nihil.INK, r) else rounded(Nihil.SURFACE, r, dp(1), Nihil.LINE))
     }
 
-    private fun sha(text: String): String =
-        MessageDigest.getInstance("SHA-256").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }.take(32)
-
     companion object {
         const val EXTRA_PAIRED = "paired"
-        private const val WEEK = 7L * 24 * 60 * 60 * 1000
     }
 }

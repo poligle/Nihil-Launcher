@@ -5,10 +5,10 @@ import com.nihilshell.launcher.R
 /**
  * What the drawer shows for a query.
  *
- *   ""        every visible app, alphabetically, under letters
+ *   ""        every visible app and web, alphabetically, under letters
  *   "= 2+2"   the calculator
  *   "> wi"    actions only
- *   "lin"     apps (hidden ones too) and actions, best first; a sum when the
+ *   "lin"     apps (hidden ones too), webs and actions, best first; a sum when the
  *             query is one ("12*7"); "search the web" at the end
  */
 object Search {
@@ -16,7 +16,8 @@ object Search {
     enum class Mode { APPS, SEARCH, ACTIONS, CALCULATOR }
 
     sealed class Row {
-        class App(val entry: AppEntry) : Row()
+        /** An app or a web, in the grid. */
+        class App(val entry: Entry) : Row()
         class Act(val action: Action) : Row()
         class Calc(val expression: String, val value: Double, val text: String) : Row()
         class Web(val query: String) : Row()
@@ -28,7 +29,7 @@ object Search {
 
     private const val LIMIT = 60
 
-    fun run(query: String, apps: List<AppEntry>, hidden: Set<String>, actions: List<Action>): Result {
+    fun run(query: String, apps: List<Entry>, hidden: Set<String>, actions: List<Action>): Result {
         val raw = query.trim()
         return when {
             raw.isEmpty() -> everything(apps, hidden)
@@ -38,7 +39,7 @@ object Search {
         }
     }
 
-    private fun everything(apps: List<AppEntry>, hidden: Set<String>): Result {
+    private fun everything(apps: List<Entry>, hidden: Set<String>): Result {
         val rows = ArrayList<Row>(apps.size + 27)
         var last: String? = null
         var count = 0
@@ -74,11 +75,15 @@ object Search {
         return Result(Mode.ACTIONS, rows.ifEmpty { listOf(Row.Message(R.string.no_results)) }, list.size)
     }
 
-    private fun search(raw: String, apps: List<AppEntry>, actions: List<Action>): Result {
+    private fun search(raw: String, apps: List<Entry>, actions: List<Action>): Result {
         val q = Fuzzy.normalize(raw)
         val scored = ArrayList<Pair<Row, Int>>()
         for (app in apps) {
-            val s = maxOf(Fuzzy.score(app.searchLabel, q), packageScore(app.packageName, q))
+            val other = when (app) {
+                is AppEntry -> packageScore(app.packageName, q)
+                is WebEntry -> hostScore(app.host, q)
+            }
+            val s = maxOf(Fuzzy.score(app.searchLabel, q), other)
             if (s >= 0) scored += Row.App(app) to s
         }
         // Apps win ties: an action needs a clearly better match to go first.
@@ -124,6 +129,16 @@ object Search {
     fun packageScore(packageName: String, q: String): Int {
         if (q.length < 3) return -1
         val words = packageName.lowercase().split('.', '_').filter { it.isNotEmpty() && it !in COMMON }
+        return if (words.any { it.startsWith(q) }) 300 else -1
+    }
+
+    /**
+     * A word of a web's address (not its ending) that starts with the query, so "yout" finds
+     * youtube.com whatever it is called. Weaker than any label match.
+     */
+    fun hostScore(host: String, q: String): Int {
+        if (q.length < 2) return -1
+        val words = host.lowercase().removePrefix("www.").split('.').filter { it.isNotEmpty() }.dropLast(1)
         return if (words.any { it.startsWith(q) }) 300 else -1
     }
 }

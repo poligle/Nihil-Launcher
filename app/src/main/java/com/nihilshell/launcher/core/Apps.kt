@@ -23,18 +23,27 @@ import android.util.LruCache
 import java.text.Collator
 import java.util.concurrent.Executors
 
+/** What the drawer and the home screen list: an app, or a web kept here (Webs). */
+sealed interface Entry {
+    /** Stable id, as the favourites keep it. */
+    val key: String
+    val label: String
+
+    /** Normalised label for [Fuzzy]. */
+    val searchLabel: String
+}
+
 /** One launchable activity, in one user profile (personal, work, Secure Folder...). */
-class AppEntry(val info: LauncherActivityInfo, serial: Long, val paused: Boolean = false) {
+class AppEntry(val info: LauncherActivityInfo, serial: Long, val paused: Boolean = false) : Entry {
     val component: ComponentName = info.componentName
     val packageName: String = component.packageName
     val user: UserHandle = info.user
-    val label: String = info.label?.toString()?.trim().orEmpty().ifEmpty { packageName }
+    override val label: String = info.label?.toString()?.trim().orEmpty().ifEmpty { packageName }
 
     /** Stable id: "package/.Activity#userSerial". */
-    val key: String = "${component.flattenToShortString()}#$serial"
+    override val key: String = "${component.flattenToShortString()}#$serial"
 
-    /** Normalised label for [Fuzzy]. */
-    val searchLabel: String = Fuzzy.normalize(label)
+    override val searchLabel: String = Fuzzy.normalize(label)
 
     val isPersonal: Boolean = user == Process.myUserHandle()
 

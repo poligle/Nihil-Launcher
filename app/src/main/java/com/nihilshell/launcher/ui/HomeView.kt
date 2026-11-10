@@ -16,7 +16,7 @@ import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.ScrollView
 import com.nihilshell.launcher.R
-import com.nihilshell.launcher.core.AppEntry
+import com.nihilshell.launcher.core.Entry
 import com.nihilshell.launcher.core.Apps
 import com.nihilshell.launcher.core.IconStyle
 import java.text.SimpleDateFormat
@@ -33,8 +33,8 @@ import java.util.Locale
 class HomeView(context: Context, private val host: Host) : FrameLayout(context) {
 
     interface Host {
-        fun launch(entry: AppEntry, from: View)
-        fun menu(entry: AppEntry, from: View)
+        fun launch(entry: Entry, from: View)
+        fun menu(entry: Entry, from: View)
         fun openShade()
         /** The favourites in this order now (their keys), after one was moved. */
         fun orderFavorites(keys: List<String>)
@@ -189,7 +189,7 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         val size = context.dp(18)
         apps.take(MAX_UNREAD).forEachIndexed { index, entry ->
             val icon = ImageView(context)
-            bindIcon(icon, entry, size, if (style == IconStyle.COLOR) IconStyle.COLOR else IconStyle.MONO)
+            icon.bindIcon(entry, size, if (style == IconStyle.COLOR) IconStyle.COLOR else IconStyle.MONO)
             unread.addView(icon, index, llp(size, size).apply { marginEnd = context.dp(10) })
         }
         val extra = apps.size - MAX_UNREAD
@@ -214,7 +214,7 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         return inside && favoritesScroll.canScrollVertically(if (dy < 0) 1 else -1)
     }
 
-    fun setFavorites(entries: List<AppEntry>, icons: Boolean, style: IconStyle) {
+    fun setFavorites(entries: List<Entry>, icons: Boolean, style: IconStyle) {
         favorites.removeAllViews()
         shownKeys = entries.map { it.key }
         empty.visibility = if (entries.isEmpty()) View.VISIBLE else View.GONE
@@ -237,7 +237,7 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
             favorites.movable(row)
             if (icons) {
                 val icon = ImageView(context)
-                bindIcon(icon, entry, size, style)
+                icon.bindIcon(entry, size, style)
                 row.addView(icon, llp(size, size).apply { marginEnd = context.dp(16) })
             }
             val label = context.text(entry.label, 24f, Nihil.INK, fonts.sans, -0.01f).apply {
@@ -267,14 +267,6 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         }
         scrim.shader = bottomShade
         canvas.drawRect(0f, bottomStart, w, h, scrim)
-    }
-
-    private fun bindIcon(view: ImageView, entry: AppEntry, size: Int, style: IconStyle) {
-        view.tag = entry.key
-        val cached = Apps.icon(entry, size, style) { bitmap ->
-            if (view.tag == entry.key) view.setImageBitmap(bitmap)
-        }
-        if (cached != null) view.setImageBitmap(cached)
     }
 
     private companion object {

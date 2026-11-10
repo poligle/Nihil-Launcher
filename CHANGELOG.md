@@ -5,6 +5,11 @@
 - The deck forgets the computer with a cross instead of a bin, and its dots have no names
   beside them.
 - The home screen's favourites fade where they meet the clock, instead of going over it.
+- Webs on the phone too: Add a web, holding the home screen, or Add to NIHIL from a
+  browser's share sheet. They are in the drawer among the apps, go on the home screen as
+  apps do, and open in Chrome (or the phone's browser without it), each in its own tab.
+  Their icons come from the paired computer, as the deck's webs' do; without it, their
+  letter.
 
 ## 0.3.2 — 2026-11-09
 

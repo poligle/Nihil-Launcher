@@ -201,4 +201,10 @@
     <string name="set_deck_screen">Screen on in the deck</string>
     <string name="set_deck_screen_sub">This phone\'s screen doesn\'t turn off while the deck is open</string>
     <string name="about_icons">The deck\'s caffeine, night light and lock are the desktop\'s own, from Material Design Icons, under the Pictogrammers Free License.</string>
+    <string name="web_add">Add a web</string>
+    <string name="web_edit">Edit the web</string>
+    <string name="web_name_hint">Name (optional)</string>
+    <string name="web_invalid">That isn’t a web address</string>
+    <string name="web_added">Added: %1$s</string>
+    <string name="web_share">Add to NIHIL</string>
 </resources>

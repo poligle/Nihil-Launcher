@@ -8,6 +8,8 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.graphics.RectF
+import android.graphics.Typeface
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
@@ -44,6 +46,55 @@ object IconRenderer {
         if (paused) canvas.restore()
         if (badge) drawBadge(canvas, size)
         return bitmap
+    }
+
+    /**
+     * A web's icon: its site's own on the surface the deck gives a web, in greys (in mono,
+     * inverted when it is dark, so it reads on black), or its letter without one.
+     */
+    fun renderWeb(favicon: Bitmap?, label: String, size: Int, style: IconStyle, face: Typeface): Bitmap {
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val edge = (size / 46f).coerceAtLeast(1f)
+        val box = RectF(edge, edge, size - edge, size - edge)
+        val radius = size * 0.3f
+        paint.color = Nihil.SURFACE
+        canvas.drawRoundRect(box, radius, radius, paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = edge
+        paint.color = Nihil.LINE
+        canvas.drawRoundRect(box, radius, radius, paint)
+        paint.style = Paint.Style.FILL
+        if (favicon != null) {
+            val inner = size * 0.56f
+            val at = (size - inner) / 2
+            val draw = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+            if (style != IconStyle.COLOR) draw.colorFilter = ColorMatrixColorFilter(webMatrix(favicon, style))
+            canvas.drawBitmap(favicon, null, RectF(at, at, at + inner, at + inner), draw)
+        } else {
+            paint.color = Nihil.DIM
+            paint.typeface = face
+            paint.textSize = size * 0.42f
+            paint.textAlign = Paint.Align.CENTER
+            val letter = label.trim().take(1).uppercase()
+            canvas.drawText(letter, size / 2f, size / 2f - (paint.descent() + paint.ascent()) / 2, paint)
+        }
+        return bitmap
+    }
+
+    /** Greys; in mono, a dark icon inverted, as the apps' auto-mono does. */
+    private fun webMatrix(favicon: Bitmap, style: IconStyle): ColorMatrix {
+        val matrix = ColorMatrix(LUMINANCE)
+        if (style == IconStyle.MONO) {
+            val small = Bitmap.createScaledBitmap(favicon, 24, 24, true)
+            val pixels = IntArray(24 * 24)
+            small.getPixels(pixels, 0, 24, 0, 0, 24, 24)
+            if (LayerStats.of(pixels, circleArea = 24.0 * 24).mean < 0.40) matrix.postConcat(ColorMatrix(INVERT))
+        } else {
+            matrix.postConcat(ColorMatrix().apply { setScale(0.82f, 0.82f, 0.82f, 1f) })
+        }
+        return matrix
     }
 
     /** Android 13 themed icon: the monochrome layer, tinted ink. */
