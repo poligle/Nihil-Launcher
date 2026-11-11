@@ -10,7 +10,6 @@
 <p align="center">A monochrome, dot-matrix launcher for Android</p>
 
 <p align="center">
-  <a href="https://github.com/poligle/Nihil-Launcher/releases/latest">Download</a> &nbsp;&nbsp;&nbsp;
   <a href="https://nihilshell.com/android/">Website</a> &nbsp;&nbsp;&nbsp;
   <a href="#install">Install</a> &nbsp;&nbsp;&nbsp;
   <a href="#permissions">Permissions</a> &nbsp;&nbsp;&nbsp;
@@ -37,8 +36,7 @@ if you pair it as a deck: that is all its `INTERNET` permission is for. It is ab
 lines of Kotlin on the Android framework alone — no AndroidX, no Compose, no libraries
 beyond the Kotlin standard library; even the QR reader is its own.
 
-> Made for and tested on a Galaxy A35 with One UI. Any phone with Android 12 or newer
-> should work, but that is the only one it has run on so far.
+> Any phone with Android 12 or newer should work.
 
 ---
 
@@ -73,7 +71,6 @@ beyond the Kotlin standard library; even the QR reader is its own.
   the desktop wears the NixOS snowflake.
 - **Spanish or English**, the phone's language or its own (Android 13 and later).
 
-<sub>Screenshots from a Galaxy A35.</sub>
 
 ---
 
