@@ -14,7 +14,8 @@
   <a href="https://nihilshell.com/android/">Website</a> &nbsp;&nbsp;&nbsp;
   <a href="#install">Install</a> &nbsp;&nbsp;&nbsp;
   <a href="#permissions">Permissions</a> &nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/poligle/Nihil-Shell">Desktop for NixOS</a>
+  <a href="https://github.com/poligle/Nihil-Shell">Desktop for NixOS</a> &nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/poligle/Nihil-Wear">Watch for Wear OS</a>
 </p>
 
 <p align="center">
@@ -27,6 +28,9 @@ NIHIL for Android is my home screen. It speaks the language of
 [NIHIL](https://github.com/poligle/Nihil-Shell), my NixOS desktop: black, greys for
 hierarchy, dots for display, red only to interrupt, and light that runs along the edge.
 I wrote it because every launcher worth using either costs money or is full of ads.
+
+Its sibling on the wrist is [NIHIL for Wear OS](https://github.com/poligle/Nihil-Wear): a watch face in dots
+and the watch as one more deck of the same computer.
 
 No ads, no tracking, no account. It talks to nothing but **your own computer**, and only
 if you pair it as a deck: that is all its `INTERNET` permission is for. It is about 11,000
