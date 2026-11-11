@@ -124,7 +124,7 @@
     <string name="section_about_sub">NIHIL on the phone, as on the desktop.</string>
     <string name="deck_title">Computer</string>
     <string name="deck_pair_title">Pair with the computer</string>
-    <string name="deck_scan_hint">On the computer: Preferences → Phone → Pair a phone. Point the camera at its QR.</string>
+    <string name="deck_scan_hint">On the computer: Preferences → Devices → Pair a device. Point the camera at its QR.</string>
     <string name="deck_scan_waiting">Looking for the QR…</string>
     <string name="deck_camera_denied">Without the camera NIHIL can’t read the QR.</string>
     <string name="deck_camera_none">The camera isn’t available.</string>

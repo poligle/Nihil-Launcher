@@ -203,7 +203,7 @@ The phone as a remote for [NIHIL](https://github.com/poligle/Nihil-Shell) on you
 it opens the computer's apps and webs, plays, pauses and skips its music, turns its volume,
 locks it and is its trackpad. It can't run commands or read files.
 
-1. On the computer: Preferences → Phone → **Use the phone**, apply, then **Pair a phone**.
+1. On the computer: Preferences → Devices → **Use devices**, apply, then **Pair a device**.
 2. On the phone: the laptop key under the drawer's field, `> computer`, or Settings →
    Computer → **Pair**, and point the camera at the QR.
 

@@ -121,7 +121,7 @@
     <string name="section_about_sub">NIHIL en el móvil, como en el escritorio.</string>
     <string name="deck_title">Ordenador</string>
     <string name="deck_pair_title">Emparejar con el ordenador</string>
-    <string name="deck_scan_hint">En el ordenador: Preferencias → Móvil → Emparejar un móvil. Apunta la cámara a su QR.</string>
+    <string name="deck_scan_hint">En el ordenador: Preferencias → Dispositivos → Emparejar un dispositivo. Apunta la cámara a su QR.</string>
     <string name="deck_scan_waiting">Buscando el QR…</string>
     <string name="deck_camera_denied">Sin la cámara, NIHIL no puede leer el QR.</string>
     <string name="deck_camera_none">La cámara no está disponible.</string>
