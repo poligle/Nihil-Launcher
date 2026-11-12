@@ -256,10 +256,21 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
 
     val query: String get() = search.text.toString()
 
+    // No wider than the desktop's launcher (home/shell/frame/Frame.qml, launcherW), and in
+    // the middle: on a tablet on its side, a field and a grid across the whole screen were
+    // a long way from each other and from the thumbs.
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        (column.layoutParams as? LayoutParams)?.apply {
+            width = minOf(MeasureSpec.getSize(widthMeasureSpec), context.dp(MAX_WIDTH))
+            gravity = Gravity.CENTER_HORIZONTAL
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         // Four across on a phone, more where there is room, as wide as the desktop's cells.
-        val wanted = ((w - context.dp(24)) / context.dp(92)).coerceAtLeast(4)
+        val wanted = ((minOf(w, context.dp(MAX_WIDTH)) - context.dp(24)) / context.dp(92)).coerceAtLeast(4)
         if (wanted != columns) {
             columns = wanted
             refresh()
@@ -529,5 +540,10 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
             icon.setPadding(context.dp(1), context.dp(1), context.dp(1), context.dp(1))
             return this
         }
+    }
+
+    private companion object {
+        /** The desktop launcher's widest, in dp: nine of the phone's columns. */
+        const val MAX_WIDTH = 860
     }
 }

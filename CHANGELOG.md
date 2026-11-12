@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- On its side, the home screen has two panes no wider than a big phone: the clock's card
+  at the top on the left and the favourites at the bottom against the right edge, under the
+  thumb; on a tablet the wallpaper shows between them, and the shade behind the favourites
+  stays behind them. Each pane keeps clear of the frame only on its own side, so a turned
+  phone's cutout or buttons no longer take room from both. On a tablet the clock is the
+  desktop's size.
+- The drawer is no wider than the desktop's launcher, in the middle: on a tablet on its
+  side the field and the grid no longer cross the whole screen.
 - Open on the computer asks first, naming the web's site and the computer: any app on the
   phone could start it, not only the share sheet, and have the computer open a web of its
   own choosing without a word.

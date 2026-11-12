@@ -24,6 +24,9 @@ object Nihil {
     const val DRAWER = 320L
     const val SLOW = 480L
 
+    /** The smallest width, in dp, of a tablet's screen (Android's own sw600dp). */
+    const val TABLET_DP = 600
+
     /** Content appears at the end of an opening, like LEDs switching on. */
     fun reveal(progress: Float): Float = ((progress - 0.55f) / 0.45f).coerceIn(0f, 1f)
 
@@ -50,3 +53,6 @@ fun Context.dp(value: Float): Float =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, resources.displayMetrics)
 
 fun Context.dp(value: Int): Int = (dp(value.toFloat()) + 0.5f).toInt()
+
+/** A tablet's screen, whichever way up: its smallest width is [Nihil.TABLET_DP] or more. */
+val Context.isTablet: Boolean get() = resources.configuration.smallestScreenWidthDp >= Nihil.TABLET_DP

@@ -2,10 +2,13 @@ package com.nihilshell.launcher.ui
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.ComposeShader
 import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.PorterDuff
 import android.graphics.Shader
 import android.text.format.DateFormat
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
@@ -83,11 +86,17 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
 
     private val scrim = Paint()
     // The shade behind the favourites, made again only when the card changes.
-    private var bottomShade: LinearGradient? = null
+    private var bottomShade: Shader? = null
     private var shadeFor = ""
+    // Where the favourites' pane starts on its side (0 upright: they are as wide as the card).
+    private var shadeLeft = 0
     private var dim = false
     private var bandTop = 0
     private var bandBottom = 0
+    // The frame's thickness on each side, from the window's insets.
+    private var insetLeft = 0
+    private var insetTop = 0
+    private var insetRight = 0
 
     init {
         setWillNotDraw(false)
@@ -139,14 +148,20 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         updateClock(animate = false)
     }
 
-    /** The card's edges (frame thickness) so content sits inside it. */
+    /**
+     * The card's edges (frame thickness) so content sits inside it. Which of them each part
+     * keeps clear of depends on where it is, upright or on its side: [onMeasure] says.
+     */
     fun setCard(left: Int, top: Int, right: Int, bottom: Int) {
+        insetLeft = left
+        insetTop = top
+        insetRight = right
         bandTop = top
         bandBottom = bottom
         val side = context.dp(24)
-        header.setPadding(left + context.dp(14), top + context.dp(14), right + context.dp(14), 0)
-        favoritesHolder.setPadding(left + side - context.dp(8), 0, right + side, bottom + context.dp(22))
-        empty.setPadding(left + side, 0, right + side, bottom + context.dp(34))
+        favoritesHolder.setPadding(side - context.dp(8), 0, side, bottom + context.dp(22))
+        empty.setPadding(side, 0, side, bottom + context.dp(34))
+        requestLayout()
         invalidate()
     }
 
@@ -200,27 +215,45 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
     }
 
     // Upright, the favourites below the clock's card, wherever it ends: they never go under
-    // it. On its side (a phone turned, a tablet), the card on the left and the favourites on
-    // the right, each in half. The card is never wider than on a big phone.
+    // it. On its side (a phone turned, a tablet), two panes no wider than a big phone, as the
+    // desktop has its widgets: the card at the top on the left, the favourites at the bottom
+    // against the right edge, under the right thumb; on a tablet the wallpaper shows between
+    // them. Each pane keeps clear of the frame only on the edge it touches. On a tablet (600 dp
+    // and more, either way up) the clock is the desktop's size.
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = MeasureSpec.getSize(widthMeasureSpec)
         val wide = w > MeasureSpec.getSize(heightMeasureSpec)
-        val half = (w - context.dp(16)) / 2
-        val cardWidth = minOf(if (wide) half else w, context.dp(560))
+        // Each pane inside the frame's sides (a turned phone's cutout or buttons on one of
+        // them), so the two never meet; the card's pane takes the left side's as padding.
+        val pane = minOf((w - insetLeft - insetRight - context.dp(GAP)) / 2, context.dp(PANE_MAX))
+        val cardWidth = if (wide) insetLeft + pane else minOf(w, context.dp(CARD_MAX))
+        val tablet = context.isTablet
+        clock.setTextSize(TypedValue.COMPLEX_UNIT_SP, if (tablet) CLOCK_TABLET else CLOCK_PHONE)
+        header.setPadding(
+            insetLeft + context.dp(14),
+            insetTop + context.dp(14),
+            (if (wide) 0 else insetRight) + context.dp(14),
+            0,
+        )
         (header.layoutParams as? LayoutParams)?.apply {
             width = cardWidth
             gravity = if (wide) Gravity.TOP or Gravity.START else Gravity.TOP or Gravity.CENTER_HORIZONTAL
         }
         header.measure(MeasureSpec.makeMeasureSpec(cardWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
         (favoritesScroll.layoutParams as? LayoutParams)?.apply {
-            width = if (wide) half else LayoutParams.MATCH_PARENT
+            width = if (wide) pane else LayoutParams.MATCH_PARENT
             gravity = if (wide) Gravity.TOP or Gravity.END else Gravity.TOP or Gravity.START
             topMargin = if (wide) 0 else header.measuredHeight + context.dp(10)
+            leftMargin = if (wide) 0 else insetLeft
+            rightMargin = insetRight
         }
         (empty.layoutParams as? LayoutParams)?.apply {
-            width = if (wide) half else LayoutParams.MATCH_PARENT
+            width = if (wide) pane else LayoutParams.MATCH_PARENT
             gravity = if (wide) Gravity.BOTTOM or Gravity.END else Gravity.BOTTOM
+            leftMargin = if (wide) 0 else insetLeft
+            rightMargin = insetRight
         }
+        shadeLeft = if (wide) w - insetRight - pane else 0
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
@@ -292,19 +325,34 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
             return
         }
         // A soft shade behind the favourites, so any wallpaper stays readable;
-        // the clock has its own card.
+        // the clock has its own card. On its side only behind their pane, fading in
+        // from the left before their names start.
         val cardEnd = h - bandBottom
         val bottomStart = cardEnd - h * 0.5f
-        val key = "$h $bandBottom"
+        val fadeFrom = if (shadeLeft > 0) shadeLeft - context.dp(56f) else 0f
+        val key = "$w $h $bandBottom $shadeLeft"
         if (key != shadeFor) {
             shadeFor = key
-            bottomShade = LinearGradient(0f, bottomStart, 0f, cardEnd, 0, 0xA6000000.toInt(), Shader.TileMode.CLAMP)
+            val rising = LinearGradient(0f, bottomStart, 0f, cardEnd, 0, 0xA6000000.toInt(), Shader.TileMode.CLAMP)
+            bottomShade = if (shadeLeft <= 0) rising else ComposeShader(
+                rising,
+                LinearGradient(fadeFrom, 0f, shadeLeft + context.dp(8f), 0f, 0, 0xFF000000.toInt(), Shader.TileMode.CLAMP),
+                PorterDuff.Mode.DST_IN,
+            )
         }
         scrim.shader = bottomShade
-        canvas.drawRect(0f, bottomStart, w, h, scrim)
+        canvas.drawRect(fadeFrom.coerceAtLeast(0f), bottomStart, w, h, scrim)
     }
 
     private companion object {
         const val MAX_UNREAD = 6
+        /** Upright, the card's widest (a tablet's); on its side, each pane's: a big phone's. */
+        const val CARD_MAX = 560
+        const val PANE_MAX = 440
+        /** Between the two panes on a turned phone, whose halves they fill. */
+        const val GAP = 16
+        const val CLOCK_PHONE = 68f
+        /** The desktop's clock widget (home/shell/background/Desktop.qml). */
+        const val CLOCK_TABLET = 84f
     }
 }
