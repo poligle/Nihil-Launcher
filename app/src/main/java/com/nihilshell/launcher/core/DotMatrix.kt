@@ -120,6 +120,18 @@ object DotMatrix {
         return 1f
     }
 
+    /**
+     * The size a wallpaper is drawn at for a screen of [width] by [height], either way up:
+     * upright, the screen's own; on a [tablet], which is used on its side as much as upright,
+     * a square as long as its longest side. Android shows each way up the centre of it, dot
+     * for dot; an upright one was stretched to fill the screen turned, and its LEDs blurred.
+     */
+    fun wallpaperSize(width: Int, height: Int, tablet: Boolean): Pair<Int, Int> {
+        val short = minOf(width, height)
+        val long = maxOf(width, height)
+        return if (tablet) Pair(long, long) else Pair(short, long)
+    }
+
     /** Scale and offsets that make [srcW] x [srcH] cover [dstW] x [dstH], centred. */
     fun cover(srcW: Int, srcH: Int, dstW: Int, dstH: Int): Triple<Float, Int, Int> {
         val scale = max(dstW / srcW.toFloat(), dstH / srcH.toFloat())

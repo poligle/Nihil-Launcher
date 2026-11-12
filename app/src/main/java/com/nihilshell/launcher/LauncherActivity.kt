@@ -40,6 +40,7 @@ import com.nihilshell.launcher.core.ActionHost
 import com.nihilshell.launcher.core.Actions
 import com.nihilshell.launcher.core.AppEntry
 import com.nihilshell.launcher.core.Entry
+import com.nihilshell.launcher.core.DotMatrix
 import com.nihilshell.launcher.core.DotRender
 import com.nihilshell.launcher.core.Apps
 import com.nihilshell.launcher.core.Prefs
@@ -62,6 +63,7 @@ import com.nihilshell.launcher.ui.RootLayout
 import com.nihilshell.launcher.ui.WebDialog
 import com.nihilshell.launcher.ui.WRAP
 import com.nihilshell.launcher.ui.dp
+import com.nihilshell.launcher.ui.isTablet
 import com.nihilshell.launcher.ui.lp
 import java.net.URLEncoder
 import java.text.Collator
@@ -686,8 +688,7 @@ class LauncherActivity :
         val info = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull() ?: return
         if (info.firstInstallTime != info.lastUpdateTime) return
         val bounds = windowManager.maximumWindowMetrics.bounds
-        val width = minOf(bounds.width(), bounds.height())
-        val height = maxOf(bounds.width(), bounds.height())
+        val (width, height) = DotMatrix.wallpaperSize(bounds.width(), bounds.height(), isTablet)
         val pitch = prefs.dotPitch
         val app = applicationContext
         Thread {

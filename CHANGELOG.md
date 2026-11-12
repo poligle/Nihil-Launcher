@@ -10,6 +10,9 @@
   desktop's size.
 - The drawer is no wider than the desktop's launcher, in the middle: on a tablet on its
   side the field and the grid no longer cross the whole screen.
+- On a tablet the studio, and the night of a fresh install, draw the wallpaper as a square
+  as long as the screen's longest side: Android shows its middle either way up, dot for
+  dot, where an upright one was stretched on its side and its LEDs blurred.
 - Open on the computer asks first, naming the web's site and the computer: any app on the
   phone could start it, not only the share sheet, and have the computer open a web of its
   own choosing without a word.

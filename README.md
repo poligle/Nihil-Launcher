@@ -270,8 +270,9 @@ anything older (`core/TaskBoard.kt`, as `Tasks.qml` and `TaskMerge.js` on the de
 
 Hold the home screen → **NIHIL wallpaper**, or type `> wallpaper`.
 
-Pick a photo and it becomes an LED matrix at the exact resolution of the screen, with the
-same algorithm and constants as the desktop's
+Pick a photo and it becomes an LED matrix at the exact resolution of the screen (on a
+tablet, a square as long as its longest side, so it shows dot for dot either way up), with
+the same algorithm and constants as the desktop's
 [`theme/dotmatrix.py`](https://github.com/poligle/Nihil-Shell/blob/nihil/theme/dotmatrix.py):
 the light of each cell, the black point raised so a night sky stays off, single
 highlights lit as stars, and LEDs that grow with their brightness.

@@ -20,6 +20,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.nihilshell.launcher.core.DotMatrix
 import com.nihilshell.launcher.core.DotRender
 import com.nihilshell.launcher.core.Prefs
 import com.nihilshell.launcher.ui.MATCH
@@ -30,6 +31,7 @@ import com.nihilshell.launcher.ui.AppMenu
 import com.nihilshell.launcher.ui.Choice
 import com.nihilshell.launcher.ui.WRAP
 import com.nihilshell.launcher.ui.dp
+import com.nihilshell.launcher.ui.isTablet
 import com.nihilshell.launcher.ui.llp
 import com.nihilshell.launcher.ui.lp
 import com.nihilshell.launcher.ui.mono
@@ -40,8 +42,9 @@ import kotlin.math.abs
 
 /**
  * The wallpaper studio: a photo becomes an LED matrix at the exact resolution
- * of the screen, with the same algorithm as the desktop's wallpapers. All on
- * the phone; nothing is uploaded anywhere.
+ * of the screen (on a tablet, a square as long as its longest side, for either
+ * way up: DotMatrix.wallpaperSize), with the same algorithm as the desktop's
+ * wallpapers. All on the phone; nothing is uploaded anywhere.
  */
 class WallpaperActivity : Activity() {
 
@@ -71,8 +74,9 @@ class WallpaperActivity : Activity() {
         window.isNavigationBarContrastEnforced = false
 
         val bounds = windowManager.maximumWindowMetrics.bounds
-        screenW = minOf(bounds.width(), bounds.height())
-        screenH = maxOf(bounds.width(), bounds.height())
+        val (width, height) = DotMatrix.wallpaperSize(bounds.width(), bounds.height(), isTablet)
+        screenW = width
+        screenH = height
 
         val column = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -94,7 +98,7 @@ class WallpaperActivity : Activity() {
         header.addView(KeyButton(this, getString(R.string.studio_pick)).apply { setOnClickListener { pick() } })
         column.addView(header, llp(MATCH, WRAP))
 
-        // The preview, in the screen's proportions.
+        // The preview, in the wallpaper's proportions: on a tablet, all of the square.
         val stage = AspectFrame(this, screenW.toFloat() / screenH)
         preview = ImageView(this).apply {
             scaleType = ImageView.ScaleType.FIT_CENTER

@@ -20,6 +20,14 @@ class DotMatrixTest {
     }
 
     @Test
+    fun wallpaperUprightOnAPhoneSquareOnATablet() {
+        assertEquals(Pair(1080, 2340), DotMatrix.wallpaperSize(2340, 1080, tablet = false))
+        assertEquals(Pair(1080, 2340), DotMatrix.wallpaperSize(1080, 2340, tablet = false))
+        assertEquals(Pair(2560, 2560), DotMatrix.wallpaperSize(2560, 1600, tablet = true))
+        assertEquals(Pair(2560, 2560), DotMatrix.wallpaperSize(1600, 2560, tablet = true))
+    }
+
+    @Test
     fun percentileOfHistogram() {
         val h = IntArray(11)
         h[0] = 50
