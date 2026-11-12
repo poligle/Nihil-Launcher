@@ -160,6 +160,8 @@
     <string name="deck_forget_confirm">¿Olvidar %1$s? Para volver a ser su deck tendrá que mostrar su QR.</string>
     <string name="deck_open_on">Abrir en el ordenador</string>
     <string name="deck_no_url">No hay ninguna web en lo que has compartido.</string>
+    <string name="deck_share_confirm">¿Abrir %1$s en %2$s?</string>
+    <string name="deck_share_open">Abrir</string>
     <string name="deck_paired">Emparejado con %1$s</string>
     <string name="deck_settings_sub">Este móvil como deck de NIHIL en el ordenador.</string>
     <string name="hint_deck">Deck</string>

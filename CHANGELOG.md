@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Open on the computer asks first, naming the web's site and the computer: any app on the
+  phone could start it, not only the share sheet, and have the computer open a web of its
+  own choosing without a word.
 - The deck forgets the computer with a cross instead of a bin, and its dots have no names
   beside them.
 - The home screen's favourites fade where they meet the clock, instead of going over it.

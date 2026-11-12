@@ -163,6 +163,8 @@
     <string name="deck_forget_confirm">Forget %1$s? To be its deck again, it will have to show its QR.</string>
     <string name="deck_open_on">Open on the computer</string>
     <string name="deck_no_url">There’s no web in what you shared.</string>
+    <string name="deck_share_confirm">Open %1$s on %2$s?</string>
+    <string name="deck_share_open">Open</string>
     <string name="deck_paired">Paired with %1$s</string>
     <string name="deck_settings_sub">This phone as a deck for NIHIL on the computer.</string>
     <string name="hint_deck">Deck</string>
