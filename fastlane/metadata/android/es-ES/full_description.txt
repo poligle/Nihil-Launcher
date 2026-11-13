@@ -1,0 +1,18 @@
+NIHIL es una pantalla de inicio en negro, grises y puntos: el lenguaje de NIHIL, un escritorio para NixOS, en el móvil. Sin anuncios, sin rastreo, sin cuenta y sin más bibliotecas que la estándar de Kotlin; hasta su lector de QR es suyo.
+
+• El marco. La pantalla es negra y el fondo es una tarjeta redondeada encajada en ella. La barra de estado y la de gestos van sobre el marco, y la tarjeta sigue las esquinas redondeadas de la propia pantalla.
+• El cajón es el marco que crece. Desliza hacia arriba y el borde inferior de la tarjeta sigue al dedo: las apps en una cuadrícula monocroma, el primer resultado elevado y en color, el buscador abajo, al alcance del pulgar.
+• El reloj. La hora en puntos, el día y la fecha; la batería como diez LEDs, la próxima alarma y las apps con notificaciones sin leer.
+• La luz del borde. Con acceso a las notificaciones, una luz recorre el marco una vez por cada notificación, dos veces y en rojo por una llamada o una alarma, y sube desde abajo al conectar el cargador. Con el servicio de accesibilidad, por las esquinas de la propia pantalla sobre cualquier app.
+• Un solo campo. Apps, acciones y cuentas en una misma búsqueda: ">" para las acciones, "=" para una calculadora con unidades, bases, porcentajes, derivadas, integrales y ecuaciones.
+• Webs como apps. Añade una página desde el menú de la pantalla de inicio o al compartir desde un navegador: espera en el cajón entre las apps y se abre en una pestaña propia.
+• Estudio de fondos. Una foto se convierte en una matriz de LEDs a la resolución exacta de la pantalla.
+• Iconos con una sola voz. Los temáticos en tinta y el resto en grises, o con sus propios colores.
+• El deck. Emparejado con NIHIL en tu ordenador, el móvil abre sus apps y webs, pone y pasa su música, sube y baja su volumen, lo bloquea, comparte su portapapeles y es su trackpad. El kanban del escritorio viene también, sincronizado.
+• En español o en inglés.
+
+Su permiso INTERNET es solo para el deck: habla únicamente con el ordenador con el que se emparejó, por HTTPS fijado a la clave de ese ordenador. De una notificación, NIHIL mira qué app la publicó, sus indicadores y su categoría, nunca su texto. El servicio de accesibilidad no lee ningún contenido.
+
+Android 12 o posterior. El escritorio: github.com/poligle/Nihil-Shell
+
+NIHIL es un proyecto independiente, sin relación con Nothing Technology Limited.

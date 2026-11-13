@@ -1,0 +1,18 @@
+NIHIL is a home screen in black, greys and dots: the language of NIHIL, a desktop for NixOS, on the phone. No ads, no tracking, no account, and no libraries beyond the Kotlin standard library; even its QR reader is its own.
+
+• The frame. The screen is black and the wallpaper is a rounded card set into it. The status bar and the gesture bar sit on the frame, and the card follows the screen's own rounded corners.
+• The drawer is the frame growing. Swipe up and the card's bottom edge follows your finger: the apps in a monochrome grid, the first result raised and in colour, the search field at the bottom, by your thumb.
+• The clock. The time in dots, the day and the date; the battery as ten LEDs, the next alarm and the apps with unread notifications.
+• The light on the edge. With notification access, a light runs once round the frame for every notification, twice and in red for a call or an alarm, and climbs from the bottom when the charger goes in. With the accessibility service, round the screen's own corners over any app.
+• One field. Apps, actions and sums in a single search: ">" for actions, "=" for a calculator with units, bases, percentages, derivatives, integrals and equations.
+• Webs as apps. Add a page from the home screen's menu or a browser's share sheet: it waits in the drawer among the apps and opens in a tab of its own.
+• Wallpaper studio. A photo becomes an LED matrix at the exact resolution of the screen.
+• Icons in one voice. Themed icons in ink and the rest in greys, or in their own colours.
+• The deck. Paired with NIHIL on your computer, the phone opens its apps and webs, plays its music, turns its volume, locks it, shares its clipboard and is its trackpad. The desktop's kanban comes along, in sync.
+• Spanish or English.
+
+Its INTERNET permission is for the deck alone: it talks only to the computer it was paired with, over HTTPS pinned to that computer's key. Of a notification, NIHIL looks at which app posted it, its flags and its category, never its text. The accessibility service reads no content.
+
+Android 12 or newer. The desktop: github.com/poligle/Nihil-Shell
+
+NIHIL is an independent project, not affiliated with Nothing Technology Limited.

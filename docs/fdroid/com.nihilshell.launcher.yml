@@ -1,0 +1,40 @@
+# A draft of fdroiddata's metadata/com.nihilshell.launcher.yml, for the merge request that
+# adds NIHIL to F-Droid (RELEASING.md, F-Droid). Fill in the three <...> and check it with
+# fdroid lint; fdroid rewritemeta drops these comments.
+Categories:
+  - Theming
+License: MIT
+AuthorName: poligle
+WebSite: https://nihilshell.com/android/
+SourceCode: https://github.com/poligle/Nihil-Launcher
+IssueTracker: https://github.com/poligle/Nihil-Launcher/issues
+Changelog: https://github.com/poligle/Nihil-Launcher/blob/HEAD/CHANGELOG.md
+
+AutoName: NIHIL
+
+RepoType: git
+Repo: https://github.com/poligle/Nihil-Launcher.git
+# F-Droid builds the tag and compares its APK with this one: the same but for the
+# signature, and it publishes this one, signed with your key.
+Binaries: https://github.com/poligle/Nihil-Launcher/releases/download/v%v/nihil-launcher-v%v.apk
+
+Builds:
+  - versionName: <X.Y.Z>
+    versionCode: <nihilVersionCode>
+    commit: v<X.Y.Z>
+    subdir: app
+    # Unsigned: without NIHIL_KEYSTORE the build would sign with a debug key.
+    prebuild: sed -i -e '/signingConfig = /d' build.gradle.kts
+    gradle:
+      - yes
+
+# apksigner verify --print-certs nihil-launcher-vX.Y.Z.apk, "Signer #1 certificate
+# SHA-256 digest", in lowercase.
+AllowedAPKSigningKeys: <sha-256 of the signing certificate>
+
+AutoUpdateMode: Version
+# Releases only: a v0.4.0-rc.1 is a pre-release on GitHub and nothing here.
+UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
+UpdateCheckData: app/build.gradle.kts|val nihilVersionCode = (\d+)|app/build.gradle.kts|val nihilVersion = "(.+)"
+CurrentVersion: <X.Y.Z>
+CurrentVersionCode: <nihilVersionCode>

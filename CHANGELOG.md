@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- F-Droid: NIHIL's page in `fastlane/` (English and Spanish, the icon, a banner and eight
+  screenshots) and a draft of its F-Droid metadata in `docs/fdroid/`; `nihilVersionCode`
+  is written out, for F-Droid to read, and the build checks it (`RELEASING.md`, F-Droid).
 - The deck shares the clipboard with the computer: its key, next to the lock, sends what this
   phone copied there, or brings what the computer copied here. Android lets an app read its
   clipboard only while it is in front, so it goes when asked. It needs a NIHIL on the

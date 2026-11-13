@@ -1,0 +1,1 @@
+A monochrome, dot-matrix launcher, and a deck for your NixOS desktop

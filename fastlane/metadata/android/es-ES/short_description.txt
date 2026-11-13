@@ -1,0 +1,1 @@
+Un launcher monocromo de puntos, y un deck para tu escritorio NixOS

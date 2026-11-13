@@ -10,16 +10,24 @@ plugins {
 // enough for your own phone.
 val releaseKeystore = System.getenv("NIHIL_KEYSTORE")?.let { file(it) }?.takeIf { it.isFile }
 
-// The version, the one thing to change for a release: MAJOR.MINOR.PATCH, or with -rc.N
+// The version, what changes for a release: MAJOR.MINOR.PATCH, or with -rc.N
 // for a pre-release. Android's versionCode comes from it, so it always goes up:
 // 0.2.0-rc.3 is 20003, 0.2.0 is 20099, 0.2.1-rc.1 is 20101.
 val nihilVersion = "0.3.6"
+// The same versionCode written out, because F-Droid reads it from this file at each tag
+// (fastlane/, RELEASING.md) and can't work it out. When it isn't nihilVersion's, the
+// build stops and says which it is.
+val nihilVersionCode = 30699
 
 fun versionCodeOf(name: String): Int {
     val match = Regex("""(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?""").matchEntire(name)
         ?: error("nihilVersion must be MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-rc.N, not $name")
     val (major, minor, patch, rc) = match.destructured
     return major.toInt() * 1_000_000 + minor.toInt() * 10_000 + patch.toInt() * 100 + (rc.toIntOrNull() ?: 99)
+}
+
+check(nihilVersionCode == versionCodeOf(nihilVersion)) {
+    "nihilVersionCode is $nihilVersionCode, but nihilVersion $nihilVersion is ${versionCodeOf(nihilVersion)}"
 }
 
 android {
@@ -32,7 +40,7 @@ android {
         applicationId = "com.nihilshell.launcher"
         minSdk = 31
         targetSdk = 35
-        versionCode = versionCodeOf(nihilVersion)
+        versionCode = nihilVersionCode
         versionName = nihilVersion
     }
 
