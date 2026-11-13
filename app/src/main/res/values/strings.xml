@@ -159,6 +159,13 @@
     <string name="deck_opened">Opened on %1$s</string>
     <string name="deck_lock">Lock</string>
     <string name="deck_locked">%1$s is locked</string>
+    <string name="deck_clipboard">Clipboard</string>
+    <string name="deck_clip_send">Send what this phone copied to %1$s</string>
+    <string name="deck_clip_fetch">Bring what %1$s copied</string>
+    <string name="deck_clip_sent">Copied on %1$s</string>
+    <string name="deck_clip_fetched">Copied from %1$s</string>
+    <string name="deck_clip_nothing">Nothing copied on this phone</string>
+    <string name="deck_clip_empty">%1$s has no text copied</string>
     <string name="deck_forget">Forget this computer</string>
     <string name="deck_forget_confirm">Forget %1$s? To be its deck again, it will have to show its QR.</string>
     <string name="deck_open_on">Open on the computer</string>

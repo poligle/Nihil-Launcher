@@ -198,7 +198,8 @@ has its letter.
 
 The phone as a remote for [NIHIL](https://github.com/poligle/Nihil-Shell) on your computer:
 it opens the computer's apps and webs, plays, pauses and skips its music, turns its volume,
-locks it and is its trackpad. It can't run commands or read files.
+locks it, shares its clipboard (sends what the phone copied, or brings what the computer
+copied, when asked) and is its trackpad. It can't run commands or read files.
 
 1. On the computer: Preferences → Devices → **Use devices**, apply, then **Pair a device**.
 2. On the phone: the laptop key under the drawer's field, `> computer`, or Settings →
@@ -366,7 +367,7 @@ app/src/main/java/com/nihilshell/launcher/
 ├── LauncherActivity.kt    the home screen: layers, insets, gestures, receivers
 ├── SettingsActivity.kt    settings, also "NIHIL" in the app list
 ├── WallpaperActivity.kt   the studio
-├── DeckActivity.kt        the deck: music, volume, caffeine, night light, lock, apps and webs, trackpad
+├── DeckActivity.kt        the deck: music, volume, caffeine, night light, clipboard, lock, apps and webs, trackpad
 ├── DeckScanActivity.kt    pairing: the camera and the QR
 ├── DeckShareActivity.kt   "Open on the computer" in the share sheet
 ├── WebShareActivity.kt    "Add to NIHIL" in the share sheet

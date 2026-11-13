@@ -156,6 +156,13 @@
     <string name="deck_opened">Abierto en %1$s</string>
     <string name="deck_lock">Bloquear</string>
     <string name="deck_locked">%1$s está bloqueado</string>
+    <string name="deck_clipboard">Portapapeles</string>
+    <string name="deck_clip_send">Enviar a %1$s lo copiado en el móvil</string>
+    <string name="deck_clip_fetch">Traer lo copiado en %1$s</string>
+    <string name="deck_clip_sent">Copiado en %1$s</string>
+    <string name="deck_clip_fetched">Copiado de %1$s</string>
+    <string name="deck_clip_nothing">No hay nada copiado en el móvil</string>
+    <string name="deck_clip_empty">%1$s no tiene texto copiado</string>
     <string name="deck_forget">Olvidar este ordenador</string>
     <string name="deck_forget_confirm">¿Olvidar %1$s? Para volver a ser su deck tendrá que mostrar su QR.</string>
     <string name="deck_open_on">Abrir en el ordenador</string>

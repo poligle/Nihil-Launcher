@@ -2,6 +2,8 @@ package com.nihilshell.launcher
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -227,6 +229,7 @@ class DeckActivity : Activity() {
             toggle("night", nightKey, R.string.deck_night_on, R.string.deck_night_off)
         }
         header.addView(nightKey, llp(dp(40), dp(40)).apply { marginEnd = dp(10) })
+        header.addView(key(R.drawable.mdi_clipboard, R.string.deck_clipboard) { clipboard(computer) }, llp(dp(40), dp(40)).apply { marginEnd = dp(10) })
         header.addView(key(R.drawable.mdi_lock, R.string.deck_lock) { lock() }, llp(dp(40), dp(40)).apply { marginEnd = dp(22) })
         header.addView(circle(LineIcon.Shape.CLOSE, R.string.deck_forget) { forget(computer) })
         screen.addView(header, llp(MATCH, WRAP))
@@ -701,6 +704,56 @@ class DeckActivity : Activity() {
     }
 
     private fun lock() = send("/v1/lock", JSONObject()) { computer, _ -> getString(R.string.deck_locked, computer.name) }
+
+    /** The clipboard, one with the computer's: this phone's sent there, or the computer's
+     *  brought here. Android lets an app read its clipboard only while it is in front,
+     *  so it goes when asked rather than on its own. */
+    private fun clipboard(computer: Computer) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.deck_clipboard)
+            .setItems(arrayOf(getString(R.string.deck_clip_send, computer.name), getString(R.string.deck_clip_fetch, computer.name))) { _, which ->
+                if (which == 0) sendClipboard() else fetchClipboard()
+            }
+            .show()
+    }
+
+    private fun sendClipboard() {
+        val clip = getSystemService(ClipboardManager::class.java)?.primaryClip
+        val text = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(this)?.toString().orEmpty() else ""
+        if (text.isEmpty()) {
+            notice.show(getString(R.string.deck_clip_nothing))
+            return
+        }
+        // The computer takes 256 KB: in UTF-8, never more than four bytes a character.
+        send("/v1/clipboard", JSONObject().put("text", text.take(64 * 1024)), missing = true) { computer, _ ->
+            getString(R.string.deck_clip_sent, computer.name)
+        }
+    }
+
+    private fun fetchClipboard() {
+        val computer = store.computer ?: return
+        val client = DeckClient(computer, store.token())
+        pool.execute {
+            val reply = client.call("GET", "/v1/clipboard", null, this)
+            store.save(computer)
+            main.post {
+                if (isDestroyed) return@post
+                val text = reply?.json?.optString("text").orEmpty()
+                when {
+                    reply == null -> notice.show(getString(R.string.deck_unreachable_status, computer.name))
+                    reply.status == 401 -> unpaired(computer)
+                    reply.status == 404 -> notice.show(getString(R.string.deck_older, computer.name))
+                    reply.status != 200 -> notice.show(message(reply, computer, ""))
+                    text.isEmpty() -> notice.show(getString(R.string.deck_clip_empty, computer.name))
+                    else -> {
+                        getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(computer.name, text))
+                        // From Android 13 the system says what was copied itself.
+                        if (Build.VERSION.SDK_INT < 33) notice.show(getString(R.string.deck_clip_fetched, computer.name))
+                    }
+                }
+            }
+        }
+    }
 
     /** The computer's caffeine or night light, turned over; the key shows what it says now. */
     private fun toggle(kind: String, view: ImageView?, on: Int, off: Int) =

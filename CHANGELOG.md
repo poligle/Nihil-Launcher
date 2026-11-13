@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The deck shares the clipboard with the computer: its key, next to the lock, sends what this
+  phone copied there, or brings what the computer copied here. Android lets an app read its
+  clipboard only while it is in front, so it goes when asked. It needs a NIHIL on the
+  computer that knows it (the deck says so when it doesn't).
 - On its side, the home screen has two panes no wider than a big phone: the clock's card
   at the top on the left and the favourites at the bottom against the right edge, under the
   thumb; on a tablet the wallpaper shows between them, and the shade behind the favourites
