@@ -47,8 +47,9 @@ fun Context.text(
 fun Context.mono(value: CharSequence = "", size: Float = 11f, color: Int = Nihil.MUTED): TextView =
     text(value, size, color, Nihil.fonts(this).mono)
 
+/** A rounded surface: as it always was, or smoked glass when chosen (Glass). */
 fun rounded(color: Int, radius: Float, strokeWidth: Int = 0, strokeColor: Int = 0): GradientDrawable =
-    GradientDrawable().apply {
+    GlassDrawable().apply {
         setColor(color)
         cornerRadius = radius
         if (strokeWidth > 0) setStroke(strokeWidth, strokeColor)
@@ -56,7 +57,15 @@ fun rounded(color: Int, radius: Float, strokeWidth: Int = 0, strokeColor: Int = 
 
 /** A press highlight in the shape of [radius] (no colour, only a soft white). */
 fun ripple(radius: Float, content: Drawable? = null): RippleDrawable =
-    RippleDrawable(ColorStateList.valueOf(0x24FFFFFF), content, rounded(Nihil.INK, radius))
+    RippleDrawable(
+        ColorStateList.valueOf(0x24FFFFFF),
+        content,
+        // Only its shape counts: never glass.
+        GradientDrawable().apply {
+            setColor(Nihil.INK)
+            cornerRadius = radius
+        },
+    )
 
 fun View.pad(all: Int) = setPadding(all, all, all, all)
 

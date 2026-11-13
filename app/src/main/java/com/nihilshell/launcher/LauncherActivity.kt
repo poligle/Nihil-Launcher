@@ -30,6 +30,7 @@ import android.text.format.DateFormat
 import android.view.Gravity
 import android.view.RoundedCorner
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsAnimation
 import android.view.inputmethod.InputMethodManager
@@ -54,6 +55,7 @@ import com.nihilshell.launcher.ui.AppMenu
 import com.nihilshell.launcher.ui.DrawerView
 import com.nihilshell.launcher.ui.EASE
 import com.nihilshell.launcher.ui.FrameView
+import com.nihilshell.launcher.ui.Glass
 import com.nihilshell.launcher.ui.HomeView
 import com.nihilshell.launcher.ui.LineIcon
 import com.nihilshell.launcher.ui.MATCH
@@ -112,6 +114,7 @@ class LauncherActivity :
         prefs = Prefs.get(this)
         Apps.init(this)
         Torch.init(this)
+        Glass.start(this) { if (::root.isInitialized) redraw(root) }
 
         // Edge to edge on every version (Android 15 enforces it; 12-14 need the call).
         @Suppress("DEPRECATION")
@@ -191,6 +194,15 @@ class LauncherActivity :
         updateAlarm()
         Webs.fetchIcons(this, prefs.webs)
         if (!prefs.wallpaperSeeded && Access.isDefaultHome(this)) seedWallpaper()
+        // The wallpaper may have changed while away: the glass sees the new one, or none.
+        Glass.start(this) { if (::root.isInitialized) redraw(root) }
+    }
+
+    /** Every view and background drawn again (the glass has a new wallpaper behind it). */
+    private fun redraw(view: View) {
+        view.invalidate()
+        view.background?.invalidateSelf()
+        if (view is ViewGroup) for (i in 0 until view.childCount) redraw(view.getChildAt(i))
     }
 
     override fun onPause() {
@@ -406,6 +418,8 @@ class LauncherActivity :
                 Webs.fetchIcons(this, prefs.webs)
             }
             Prefs.DIM -> home.setDim(prefs.dimWallpaper)
+            // Every surface is made again, as glass or as it was.
+            Prefs.GLASS -> recreate()
             Prefs.GLYPH -> onUnread(Glyph.unread)
         }
     }
@@ -695,7 +709,8 @@ class LauncherActivity :
             val done = runCatching {
                 val photo = DotRender.decodeCover(ImageDecoder.createSource(app.assets, DEFAULT_WALLPAPER), width, height)
                 val dots = DotRender.render(DotRender.grid(photo, pitch), width, height)
-                WallpaperManager.getInstance(app).setBitmap(dots, null, true, WallpaperManager.FLAG_SYSTEM)
+                val id = WallpaperManager.getInstance(app).setBitmap(dots, null, true, WallpaperManager.FLAG_SYSTEM)
+                Glass.remember(app, dots, id)
             }.isSuccess
             if (done) runOnUiThread { if (!isDestroyed) notice(getString(R.string.wallpaper_seeded)) }
         }.start()

@@ -23,6 +23,7 @@ import android.widget.TextView
 import com.nihilshell.launcher.core.DotMatrix
 import com.nihilshell.launcher.core.DotRender
 import com.nihilshell.launcher.core.Prefs
+import com.nihilshell.launcher.ui.Glass
 import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
 import com.nihilshell.launcher.ui.KeyButton
@@ -246,7 +247,11 @@ class WallpaperActivity : Activity() {
         status.text = getString(R.string.studio_rendering)
         val context: Context = applicationContext
         worker.execute {
-            val ok = runCatching { WallpaperManager.getInstance(context).setBitmap(bitmap, null, true, which) }.isSuccess
+            val ok = runCatching {
+                val id = WallpaperManager.getInstance(context).setBitmap(bitmap, null, true, which)
+                // The home screen's: the glass sees it (ui/Glass.kt).
+                if (which and WallpaperManager.FLAG_SYSTEM != 0) Glass.remember(context, bitmap, id)
+            }.isSuccess
             main.post { status.text = getString(if (ok) R.string.studio_done else R.string.studio_failed) }
         }
     }

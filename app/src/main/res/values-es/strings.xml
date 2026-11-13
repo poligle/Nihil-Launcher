@@ -57,6 +57,8 @@
     <string name="set_icons_sub">Mono usa el icono temático cuando la app lo tiene.</string>
     <string name="set_fav_icons">Iconos en favoritos</string>
     <string name="set_dim">Atenuar el fondo</string>
+    <string name="set_glass">Cristal ahumado</string>
+    <string name="set_glass_sub">El marco y cada tarjeta y tecla como cristal oscuro, como en el escritorio: el fondo se ve a través, esmerilado, y se curva en los bordes (Android 13 o posterior, con un fondo puesto por NIHIL).</string>
     <string name="set_wallpaper">Fondo NIHIL</string>
     <string name="set_wallpaper_sub">Convierte una foto en LEDs</string>
     <string name="section_behaviour">Comportamiento</string>

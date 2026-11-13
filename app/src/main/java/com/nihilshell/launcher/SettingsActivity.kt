@@ -18,6 +18,7 @@ import com.nihilshell.launcher.deck.DeckStore
 import com.nihilshell.launcher.system.Access
 import com.nihilshell.launcher.system.Glyph
 import com.nihilshell.launcher.ui.Toggle
+import com.nihilshell.launcher.ui.Glass
 import com.nihilshell.launcher.ui.LineIcon
 import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
@@ -122,6 +123,13 @@ class SettingsActivity : Activity() {
         column.addView(rule(), llp(MATCH, dp(1)))
         column.addView(switchRow(getString(R.string.set_fav_icons), null, prefs.favoriteIcons) { prefs.favoriteIcons = it })
         column.addView(switchRow(getString(R.string.set_dim), null, prefs.dimWallpaper) { prefs.dimWallpaper = it })
+        column.addView(
+            switchRow(getString(R.string.set_glass), getString(R.string.set_glass_sub), prefs.glass) {
+                prefs.glass = it
+                Glass.start(this) {}
+                recreate()
+            },
+        )
         column.addView(
             row(getString(R.string.set_wallpaper), body(getString(R.string.set_wallpaper_sub)), chevron()) {
                 startActivity(Intent(this, WallpaperActivity::class.java))

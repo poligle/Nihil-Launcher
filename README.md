@@ -70,6 +70,10 @@ beyond the Kotlin standard library; even the QR reader is its own.
   in greys. Or grey, or the original colours. NIHIL's own is the Android robot in dots, as
   the desktop wears the NixOS snowflake.
 - **Spanish or English**, the phone's language or its own (Android 13 and later).
+- **Smoked glass**, off unless chosen: the frame and every surface as dark glass, as on the
+  desktop. The wallpaper NIHIL put on shows through frosted, clear and bent near the edges,
+  bright dots glowing through it and lighting the edges near them (Android 13 and later);
+  any other wallpaper shows through the smoke without the bend.
 
 
 ---

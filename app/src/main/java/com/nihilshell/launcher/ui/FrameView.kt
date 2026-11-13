@@ -26,6 +26,7 @@ class FrameView(context: Context) : View(context) {
     private val black = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Nihil.VOID }
     private val shape = Path()
     private val card = RectF()
+    private val at = IntArray(2)
 
     private var left = 0
     private var top = 0
@@ -67,7 +68,16 @@ class FrameView(context: Context) : View(context) {
         val h = height.toFloat()
         card.set(left.toFloat(), top.toFloat(), w - right, cardBottom)
         if (card.height() <= 0.5f) {
-            canvas.drawRect(0f, 0f, w, h, black)
+            if (Glass.enabled) {
+                // All frame: the glass with no edge in sight (the card far below the screen).
+                shape.reset()
+                shape.addRect(0f, 0f, w, h, Path.Direction.CW)
+                card.set(0f, h + 4096f, w, h + 8192f)
+                getLocationOnScreen(at)
+                Glass.paint(canvas, context, shape, card, 0f, Nihil.VOID, true, at[0].toFloat(), at[1].toFloat(), true)
+            } else {
+                canvas.drawRect(0f, 0f, w, h, black)
+            }
             return
         }
         val r = min(radius, card.height() / 2)
@@ -75,7 +85,13 @@ class FrameView(context: Context) : View(context) {
         shape.fillType = Path.FillType.EVEN_ODD
         shape.addRect(0f, 0f, w, h, Path.Direction.CW)
         shape.addRoundRect(card, r, r, Path.Direction.CW)
-        canvas.drawPath(shape, black)
+        if (Glass.enabled) {
+            // Smoked glass: the frame is glass round the card, bent along its edge.
+            getLocationOnScreen(at)
+            Glass.paint(canvas, context, shape, card, r, Nihil.VOID, true, at[0].toFloat(), at[1].toFloat(), true)
+        } else {
+            canvas.drawPath(shape, black)
+        }
         drawGlyph(canvas)
     }
 

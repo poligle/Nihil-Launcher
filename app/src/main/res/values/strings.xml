@@ -60,6 +60,8 @@
     <string name="set_icons_sub">Mono uses the themed icon when the app has one.</string>
     <string name="set_fav_icons">Icons in favourites</string>
     <string name="set_dim">Dim the wallpaper</string>
+    <string name="set_glass">Smoked glass</string>
+    <string name="set_glass_sub">The frame and every card and key as dark glass, as on the desktop: the wallpaper shows through, frosted, and bends at the edges (Android 13 and later, with a wallpaper NIHIL put on).</string>
     <string name="set_wallpaper">NIHIL wallpaper</string>
     <string name="set_wallpaper_sub">Turn a photo into LEDs</string>
     <string name="section_behaviour">Behaviour</string>

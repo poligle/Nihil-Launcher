@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Smoked glass, off unless chosen in Settings: the frame and every card, key and row as dark
+  glass, as on the desktop. On the home screen the wallpaper shows through a third of the
+  smoke and, with one NIHIL put on and Android 13 or later, as the desktop's glass has it:
+  clear and bent at the edges, frosted beyond, the light of bright dots spread through the
+  frost and gathered by the edge near them, with a glint where the light from the top left
+  catches it (`ui/Glass.kt`, AGSL; the frost reads a chain of smaller copies of the
+  wallpaper, made once as it loads). On Android 12 it is the wallpaper frosted through the
+  smoke, flat; with another wallpaper, the smoke and the glint over it.
 - F-Droid: NIHIL's page in `fastlane/` (English and Spanish, the icon, a banner and eight
   screenshots) and a draft of its F-Droid metadata in `docs/fdroid/`; `nihilVersionCode`
   is written out, for F-Droid to read, and the build checks it (`RELEASING.md`, F-Droid).

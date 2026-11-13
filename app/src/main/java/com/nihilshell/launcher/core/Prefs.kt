@@ -57,6 +57,16 @@ class Prefs private constructor(context: Context) {
         get() = sp.getBoolean(DOUBLE_TAP, false)
         set(value) = sp.edit().putBoolean(DOUBLE_TAP, value).apply()
 
+    /** Smoked glass: the frame and every surface as dark glass (ui/Glass.kt). */
+    var glass: Boolean
+        get() = sp.getBoolean(GLASS, false)
+        set(value) = sp.edit().putBoolean(GLASS, value).apply()
+
+    /** The id of the home screen's wallpaper NIHIL last put on, which the glass keeps a copy of; -1 none. */
+    var glassWallpaperId: Int
+        get() = sp.getInt(GLASS_WALLPAPER, -1)
+        set(value) = sp.edit().putInt(GLASS_WALLPAPER, value).apply()
+
     /** Whether NIHIL's own wallpaper was put on, the first time it was the home app. */
     var wallpaperSeeded: Boolean
         get() = sp.getBoolean(SEEDED, false)
@@ -140,6 +150,8 @@ class Prefs private constructor(context: Context) {
         const val DOUBLE_TAP = "double_tap"
         const val PITCH = "pitch"
         const val SEEDED = "wallpaper_seeded"
+        const val GLASS = "glass"
+        const val GLASS_WALLPAPER = "glass_wallpaper"
         const val WEBS = "webs"
 
         @Volatile
