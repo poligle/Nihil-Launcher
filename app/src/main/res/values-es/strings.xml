@@ -139,13 +139,6 @@
     <string name="deck_opened">Abierto en %1$s</string>
     <string name="deck_lock">Bloquear</string>
     <string name="deck_locked">%1$s está bloqueado</string>
-    <string name="deck_clipboard">Portapapeles</string>
-    <string name="deck_clip_send">Enviar a %1$s lo copiado en el móvil</string>
-    <string name="deck_clip_fetch">Traer lo copiado en %1$s</string>
-    <string name="deck_clip_sent">Copiado en %1$s</string>
-    <string name="deck_clip_fetched">Copiado de %1$s</string>
-    <string name="deck_clip_nothing">No hay nada copiado en el móvil</string>
-    <string name="deck_clip_empty">%1$s no tiene texto copiado</string>
     <string name="deck_forget">Olvidar este ordenador</string>
     <string name="deck_forget_confirm">¿Olvidar %1$s? Para volver a ser su deck tendrá que mostrar su QR.</string>
     <string name="deck_open_on">Abrir en el ordenador</string>
@@ -186,7 +179,7 @@
     <string name="deck_night_off">Luz nocturna apagada en %1$s</string>
     <string name="deck_older">El NIHIL de %1$s aún no sabe hacer esto: actualízalo</string>
     <string name="set_deck_screen">Pantalla encendida en el deck</string>
-    <string name="about_icons">La cafeína, la luz nocturna y el bloqueo del deck son los del escritorio, de Material Design Icons, con la Pictogrammers Free License.</string>
+    <string name="about_icons">Los iconos que el deck, las tareas y Vector comparten con el escritorio son de Material Design Icons, con la Pictogrammers Free License.</string>
     <string name="web_add">Añadir web</string>
     <string name="web_edit">Editar la web</string>
     <string name="web_name_hint">Nombre (opcional)</string>
@@ -199,4 +192,18 @@
     <string name="deck_trackpad_refused">%1$s no puede usar el trackpad ahora mismo</string>
     <string name="deck_full_screen">Pantalla completa</string>
     <string name="deck_full_screen_leave">Salir de pantalla completa</string>
+    <string name="vector_from">Recibido de %1$s</string>
+    <string name="vector_sent">Enviado a %1$s</string>
+    <string name="vector_detail">%1$s · de %2$s</string>
+    <string name="vector_copy">Copiar</string>
+    <string name="vector_copied">Copiado</string>
+    <string name="vector_open">Abrir</string>
+    <string name="vector_share">Compartir</string>
+    <string name="vector_paste">Enviar lo copiado en el móvil</string>
+    <string name="vector_pick">Enviar un archivo</string>
+    <string name="vector_nothing">Nada que enviar</string>
+    <string name="vector_big">Demasiado grande: hasta 100 MB</string>
+    <string name="vector_unreadable">No se puede leer</string>
+    <string name="vector_unpaired">Empareja antes el móvil con un ordenador</string>
+    <string name="vector_none_opens">Ninguna app lo abre</string>
 </resources>

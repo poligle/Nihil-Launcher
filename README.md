@@ -57,7 +57,8 @@ beyond the Kotlin standard library; even the QR reader is its own.
   corners over any app.
 - **The deck.** Paired with NIHIL on your computer, the phone opens its apps and webs, plays
   its music, turns its volume, locks it and is its trackpad, with the desktop's own gestures.
-  The desktop's kanban comes along, in sync. [More below](#the-deck).
+  The desktop's kanban comes along, in sync, and Vector carries a text, a picture, a video or
+  any file either way. [More below](#the-deck).
 - **Webs, as apps.** Add one from the home screen's menu or a browser's share sheet: it
   waits in the drawer among the apps, goes on the home screen like them, and opens in Chrome
   in a tab of its own. [More below](#webs).
@@ -202,8 +203,8 @@ has its letter.
 
 The phone as a remote for [NIHIL](https://github.com/poligle/Nihil-Shell) on your computer:
 it opens the computer's apps and webs, plays, pauses and skips its music, turns its volume,
-locks it, shares its clipboard (sends what the phone copied, or brings what the computer
-copied, when asked) and is its trackpad. It can't run commands or read files.
+locks it and is its trackpad, and Vector carries things between them. It can't run commands
+or read the computer's files.
 
 1. On the computer: Preferences → Devices → **Use devices**, apply, then **Pair a device**.
 2. On the phone: the laptop key under the drawer's field, `> computer`, or Settings →
@@ -266,6 +267,16 @@ written last and the place chosen last, its column and where in it, and a deleti
 anything older (`core/TaskBoard.kt`, as `Tasks.qml` and `TaskMerge.js` on the desktop).
 
 <br clear="right">
+
+### Vector
+
+Above the kanban, in a box of LEDs, the last thing the computer sent: a picture, a text, a video
+or any file, up to 100 MB. A tap copies it, a picture or a file as itself, to paste in another
+app; held, it opens or is shared. Its keys send what this phone copied, or a file picked, and
+**Vector** in the share sheet sends anything shared to it. A notification says when something
+comes, and the box keeps only the last one: the next takes its place. On the computer it is the
+dashboard's Vector, under the clock. While the phone is on and paired it listens, the request
+held open by the computer until there is something; with the screen off it waits.
 
 ---
 
@@ -371,16 +382,20 @@ app/src/main/java/com/nihilshell/launcher/
 ├── LauncherActivity.kt    the home screen: layers, insets, gestures, receivers
 ├── SettingsActivity.kt    settings, also "NIHIL" in the app list
 ├── WallpaperActivity.kt   the studio
-├── DeckActivity.kt        the deck: music, volume, caffeine, night light, clipboard, lock, apps and webs, trackpad
+├── DeckActivity.kt        the deck: music, volume, caffeine, night light, lock, apps and webs, trackpad
 ├── DeckScanActivity.kt    pairing: the camera and the QR
 ├── DeckShareActivity.kt   "Open on the computer" in the share sheet
 ├── WebShareActivity.kt    "Add to NIHIL" in the share sheet
-├── TasksActivity.kt       the desktop's kanban
+├── TasksActivity.kt       the desktop's kanban, and Vector above it
+├── VectorShareActivity.kt "Vector" in the share sheet
 ├── deck/
 │   ├── DeckClient.kt      HTTPS pinned to the computer, pairing, mDNS
 │   ├── DeckStore.kt       the computer, its token in the Keystore, the webs
 │   ├── DeckCache.kt       the icons the computer gives, kept a week
 │   ├── TrackpadLink.kt    the trackpad's stream to the computer
+│   ├── Vector.kt          what comes from the computer and goes to it, its listening and notification
+│   ├── VectorProvider.kt  the last thing that came, for other apps to read
+│   ├── VectorCopy.kt      the notification's Copy
 │   └── TasksStore.kt      the kanban on the phone, its clock and its sync
 ├── core/
 │   ├── Apps.kt            every launchable app, in every profile; icons off the main thread
@@ -408,6 +423,7 @@ app/src/main/java/com/nihilshell/launcher/
 │   ├── ReorderGrid.kt     cells put in order by holding one
 │   ├── ReorderList.kt     rows put in order the same way: the tasks
 │   ├── Trackpad.kt        the deck's trackpad, its LEDs under the fingers
+│   ├── VectorBox.kt       Vector's box, its LEDs running round when something goes or comes
 │   ├── LedGauge.kt, LineIcon.kt, AppMenu.kt, WebDialog.kt, EntryIcon.kt, Widgets.kt
 │   └── Nihil.kt           tokens, fonts, motion
 └── system/

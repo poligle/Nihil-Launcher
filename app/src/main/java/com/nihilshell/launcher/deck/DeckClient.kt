@@ -5,6 +5,7 @@ import android.net.Uri
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import org.json.JSONObject
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -23,6 +24,8 @@ import javax.net.ssl.SSLSocket
 import javax.net.ssl.X509TrustManager
 
 class DeckClient(private val computer: Computer, private val token: String?) {
+    class TooBig : IOException("too big")
+
     class Reply(val status: Int, val type: String?, val bytes: ByteArray) {
         val json: JSONObject?
             get() = if (type?.startsWith("application/json") == true) runCatching { JSONObject(String(bytes, Charsets.UTF_8)) }.getOrNull() else null
@@ -30,11 +33,35 @@ class DeckClient(private val computer: Computer, private val token: String?) {
         val error: String? get() = json?.optString("error")?.takeIf { it.isNotEmpty() }
     }
 
-    fun call(method: String, path: String, body: JSONObject? = null, context: Context? = null): Reply? {
+    fun call(method: String, path: String, body: JSONObject? = null, context: Context? = null): Reply? =
+        each(context) { host -> once(host, computer.port, computer.pin, method, path, body, token) }
+
+    fun listen(path: String, timeout: Int, context: Context? = null): Reply? =
+        each(context) { host -> exchange(host, computer.port, computer.pin, token, "GET", path, timeout) }
+
+    fun download(path: String, into: File, max: Long): Reply? = each(null) { host ->
+        exchange(host, computer.port, computer.pin, token, "GET", path, 30000) { connection, status ->
+            if (status != 200) return@exchange read(connection, status)
+            connection.inputStream.use { input -> into.outputStream().use { output -> copy(input, output, max) } }
+            Reply(status, connection.contentType, ByteArray(0))
+        }
+    }
+
+    fun upload(path: String, type: String, name: String, file: File, context: Context? = null): Reply? = each(context) { host ->
+        exchange(host, computer.port, computer.pin, token, "POST", path, 60000, send = { connection ->
+            connection.doOutput = true
+            connection.setFixedLengthStreamingMode(file.length())
+            connection.setRequestProperty("Content-Type", type)
+            connection.setRequestProperty("X-Vector-Name", Uri.encode(name))
+            connection.outputStream.use { output -> file.inputStream().use { it.copyTo(output, CHUNK) } }
+        })
+    }
+
+    private fun <T : Any> each(context: Context?, attempt: (String) -> T?): T? {
         val tried = LinkedHashSet<String>()
         for (host in listOfNotNull(computer.last) + computer.hosts) {
             if (!tried.add(host)) continue
-            once(host, computer.port, computer.pin, method, path, body, token)?.let {
+            attempt(host)?.let {
                 computer.last = host
                 return it
             }
@@ -42,7 +69,7 @@ class DeckClient(private val computer: Computer, private val token: String?) {
         if (context == null) return null
         for (host in discover(context)) {
             if (!tried.add(host)) continue
-            once(host, computer.port, computer.pin, method, path, body, token)?.let {
+            attempt(host)?.let {
                 computer.last = host
                 return it
             }
@@ -170,30 +197,61 @@ class DeckClient(private val computer: Computer, private val token: String?) {
             return Pairing.Failed("unreachable")
         }
 
+        private const val CHUNK = 64 * 1024
+
         fun once(host: String, port: Int, pin: String, method: String, path: String, body: JSONObject?, token: String?): Reply? =
-            runCatching {
-                val connection = URL("https", host, port, path).openConnection() as HttpsURLConnection
-                try {
-                    connection.sslSocketFactory = tls(pin).socketFactory
-                    connection.hostnameVerifier = HostnameVerifier { _, _ -> true } // the pin decides
-                    connection.connectTimeout = 2500
-                    connection.readTimeout = 9000
-                    connection.useCaches = false
-                    connection.requestMethod = method
-                    if (token != null) connection.setRequestProperty("Authorization", "Bearer $token")
-                    if (body != null) {
-                        connection.doOutput = true
-                        connection.setRequestProperty("Content-Type", "application/json")
-                        connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
-                    }
-                    val status = connection.responseCode
-                    val stream = if (status >= 400) connection.errorStream else connection.inputStream
-                    val bytes = stream?.use { it.readBytes() } ?: ByteArray(0)
-                    Reply(status, connection.contentType, bytes)
-                } finally {
-                    connection.disconnect()
+            exchange(host, port, pin, token, method, path, 9000, send = { connection ->
+                if (body != null) {
+                    connection.doOutput = true
+                    connection.setRequestProperty("Content-Type", "application/json")
+                    connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
                 }
-            }.getOrNull()
+            })
+
+        private fun exchange(
+            host: String,
+            port: Int,
+            pin: String,
+            token: String?,
+            method: String,
+            path: String,
+            timeout: Int,
+            send: (HttpsURLConnection) -> Unit = {},
+            receive: (HttpsURLConnection, Int) -> Reply = { connection, status -> read(connection, status) },
+        ): Reply? = runCatching {
+            val connection = URL("https", host, port, path).openConnection() as HttpsURLConnection
+            try {
+                connection.sslSocketFactory = tls(pin).socketFactory
+                connection.hostnameVerifier = HostnameVerifier { _, _ -> true } // the pin decides
+                connection.connectTimeout = 2500
+                connection.readTimeout = timeout
+                connection.useCaches = false
+                connection.requestMethod = method
+                if (token != null) connection.setRequestProperty("Authorization", "Bearer $token")
+                send(connection)
+                receive(connection, connection.responseCode)
+            } finally {
+                connection.disconnect()
+            }
+        }.getOrNull()
+
+        private fun read(connection: HttpsURLConnection, status: Int): Reply {
+            val stream = if (status >= 400) connection.errorStream else connection.inputStream
+            val bytes = stream?.use { it.readBytes() } ?: ByteArray(0)
+            return Reply(status, connection.contentType, bytes)
+        }
+
+        fun copy(input: InputStream, output: OutputStream, max: Long): Long {
+            val buffer = ByteArray(CHUNK)
+            var total = 0L
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) return total
+                total += count
+                if (total > max) throw TooBig()
+                output.write(buffer, 0, count)
+            }
+        }
 
         private fun tls(pin: String): SSLContext = SSLContext.getInstance("TLS").apply { init(null, arrayOf(Pinned(pin)), null) }
 

@@ -2,8 +2,6 @@ package com.nihilshell.launcher
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -37,6 +35,7 @@ import com.nihilshell.launcher.deck.DeckCache
 import com.nihilshell.launcher.deck.DeckClient
 import com.nihilshell.launcher.deck.DeckStore
 import com.nihilshell.launcher.deck.TrackpadLink
+import com.nihilshell.launcher.deck.Vector
 import com.nihilshell.launcher.deck.Web
 import com.nihilshell.launcher.ui.KeyButton
 import com.nihilshell.launcher.ui.LineIcon
@@ -126,6 +125,8 @@ class DeckActivity : Activity() {
         }
         if (intent?.getBooleanExtra(EXTRA_PAIRED, false) == true) {
             store.computer?.let { main.postDelayed({ notice.show(getString(R.string.deck_paired, it.name)) }, 300) }
+            Vector.forget(this)
+            Vector.start(this)
         }
         build()
     }
@@ -206,7 +207,6 @@ class DeckActivity : Activity() {
             toggle("night", nightKey, R.string.deck_night_on, R.string.deck_night_off)
         }
         header.addView(nightKey, llp(dp(40), dp(40)).apply { marginEnd = dp(10) })
-        header.addView(key(R.drawable.mdi_clipboard, R.string.deck_clipboard) { clipboard(computer) }, llp(dp(40), dp(40)).apply { marginEnd = dp(10) })
         header.addView(key(R.drawable.mdi_lock, R.string.deck_lock) { lock() }, llp(dp(40), dp(40)).apply { marginEnd = dp(22) })
         header.addView(circle(LineIcon.Shape.CLOSE, R.string.deck_forget) { forget(computer) })
         screen.addView(header, llp(MATCH, WRAP))
@@ -656,51 +656,6 @@ class DeckActivity : Activity() {
 
     private fun lock() = send("/v1/lock", JSONObject()) { computer, _ -> getString(R.string.deck_locked, computer.name) }
 
-    private fun clipboard(computer: Computer) {
-        AlertDialog.Builder(this)
-            .setTitle(R.string.deck_clipboard)
-            .setItems(arrayOf(getString(R.string.deck_clip_send, computer.name), getString(R.string.deck_clip_fetch, computer.name))) { _, which ->
-                if (which == 0) sendClipboard() else fetchClipboard()
-            }
-            .show()
-    }
-
-    private fun sendClipboard() {
-        val clip = getSystemService(ClipboardManager::class.java)?.primaryClip
-        val text = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(this)?.toString().orEmpty() else ""
-        if (text.isEmpty()) {
-            notice.show(getString(R.string.deck_clip_nothing))
-            return
-        }
-        send("/v1/clipboard", JSONObject().put("text", text.take(64 * 1024)), missing = true) { computer, _ ->
-            getString(R.string.deck_clip_sent, computer.name)
-        }
-    }
-
-    private fun fetchClipboard() {
-        val computer = store.computer ?: return
-        val client = DeckClient(computer, store.token())
-        pool.execute {
-            val reply = client.call("GET", "/v1/clipboard", null, this)
-            store.save(computer)
-            main.post {
-                if (isDestroyed) return@post
-                val text = reply?.json?.optString("text").orEmpty()
-                when {
-                    reply == null -> notice.show(getString(R.string.deck_unreachable_status, computer.name))
-                    reply.status == 401 -> unpaired(computer)
-                    reply.status == 404 -> notice.show(getString(R.string.deck_older, computer.name))
-                    reply.status != 200 -> notice.show(message(reply, computer, ""))
-                    text.isEmpty() -> notice.show(getString(R.string.deck_clip_empty, computer.name))
-                    else -> {
-                        getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(computer.name, text))
-                        if (Build.VERSION.SDK_INT < 33) notice.show(getString(R.string.deck_clip_fetched, computer.name))
-                    }
-                }
-            }
-        }
-    }
-
     private fun toggle(kind: String, view: ImageView?, on: Int, off: Int) =
         send("/v1/$kind", JSONObject().put("action", "toggle"), missing = true) { computer, reply ->
             val now = reply.json?.optBoolean("on") == true
@@ -737,6 +692,7 @@ class DeckActivity : Activity() {
 
     private fun unpaired(computer: Computer) {
         store.forget()
+        Vector.forget(this)
         build()
         notice.show(getString(R.string.deck_forgotten, computer.name))
     }
@@ -748,6 +704,7 @@ class DeckActivity : Activity() {
                 val client = DeckClient(computer, store.token())
                 pool.execute { client.call("POST", "/v1/unpair", JSONObject()) }
                 store.forget()
+                Vector.forget(this)
                 DeckCache.dir(this).deleteRecursively()
                 pictures.clear()
                 build()

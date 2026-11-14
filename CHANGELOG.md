@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Vector, in Tasks above the kanban, in place of the deck's clipboard key: a text, a picture, a
+  video or any file, up to 100 MB, either way between this phone and the computer. What the
+  computer sends waits in a box of LEDs, a tap from the clipboard (a picture or a file as
+  itself), and opens or is shared when held; a notification says it came. Its keys send what
+  this phone copied, or a file picked, and **Vector** in the share sheet sends anything shared.
+  Each side keeps only the last one. While the phone is on and paired it listens to the
+  computer (`deck/Vector.kt`), which holds the request open until there is something. It needs
+  a NIHIL on the computer with Vector.
 - Settings say no more than their names: the lines that explained each section and option
   are gone, and only what needs doing stays (an access to allow, Glyph light listening). The
   deck's pairing screen is its title and its key.
@@ -16,10 +24,6 @@
 - F-Droid: NIHIL's page in `fastlane/` (English and Spanish, the icon, a banner and eight
   screenshots) and a draft of its F-Droid metadata in `docs/fdroid/`; `nihilVersionCode`
   is written out, for F-Droid to read, and the build checks it (`RELEASING.md`, F-Droid).
-- The deck shares the clipboard with the computer: its key, next to the lock, sends what this
-  phone copied there, or brings what the computer copied here. Android lets an app read its
-  clipboard only while it is in front, so it goes when asked. It needs a NIHIL on the
-  computer that knows it (the deck says so when it doesn't).
 - On its side, the home screen has two panes no wider than a big phone: the clock's card
   at the top on the left and the favourites at the bottom against the right edge, under the
   thumb; on a tablet the wallpaper shows between them, and the shade behind the favourites

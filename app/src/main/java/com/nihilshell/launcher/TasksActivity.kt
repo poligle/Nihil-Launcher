@@ -1,16 +1,26 @@
 package com.nihilshell.launcher
 
+import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Outline
 import android.graphics.Paint
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.InputType
+import android.text.TextUtils
+import android.text.format.Formatter
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.View
+import android.view.ViewOutlineProvider
 import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -23,12 +33,15 @@ import com.nihilshell.launcher.core.TaskBoard
 import com.nihilshell.launcher.deck.DeckClient
 import com.nihilshell.launcher.deck.DeckStore
 import com.nihilshell.launcher.deck.TasksStore
+import com.nihilshell.launcher.deck.Vector
 import com.nihilshell.launcher.ui.AppMenu
 import com.nihilshell.launcher.ui.Choice
 import com.nihilshell.launcher.ui.LineIcon
 import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
+import com.nihilshell.launcher.ui.Notice
 import com.nihilshell.launcher.ui.ReorderList
+import com.nihilshell.launcher.ui.VectorBox
 import com.nihilshell.launcher.ui.WRAP
 import com.nihilshell.launcher.ui.dp
 import com.nihilshell.launcher.ui.llp
@@ -46,6 +59,13 @@ class TasksActivity : Activity() {
     private lateinit var tabs: Choice
     private lateinit var list: LinearLayout
     private lateinit var field: EditText
+    private lateinit var notice: Notice
+    private lateinit var box: VectorBox
+    private lateinit var preview: ImageView
+    private lateinit var vectorTitle: TextView
+    private lateinit var vectorDetail: TextView
+    private var shownId: String? = null
+    private val vector: (String) -> Unit = { what -> vectorEvent(what) }
     private val popup by lazy { AppMenu(this) }
     private val main = Handler(Looper.getMainLooper())
     private val worker = Executors.newSingleThreadExecutor()
@@ -64,6 +84,7 @@ class TasksActivity : Activity() {
         column.addView(text(getString(R.string.tasks_title), 22f, Nihil.INK), llp(MATCH, WRAP))
         status = mono("", 11f, Nihil.MUTED)
         column.addView(status, llp(MATCH, WRAP).apply { topMargin = dp(6) })
+        column.addView(vectorBox(), llp(MATCH, WRAP).apply { topMargin = dp(18) })
         tabs = Choice(this, titles(), 0) { show(it) }
         column.addView(tabs, llp(MATCH, WRAP).apply { topMargin = dp(18) })
         list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -96,26 +117,222 @@ class TasksActivity : Activity() {
         }
         column.addView(field, llp(MATCH, dp(50)).apply { topMargin = dp(10) })
 
+        notice = Notice(this)
         val root = FrameLayout(this).apply { setBackgroundColor(Nihil.VOID) }
         root.addView(column, lp(MATCH, MATCH))
+        root.addView(notice, lp(WRAP, WRAP, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL))
         root.setOnApplyWindowInsetsListener { _, insets ->
             val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.ime() or WindowInsets.Type.displayCutout())
             column.setPadding(bars.left + dp(24), bars.top + dp(24), bars.right + dp(24), bars.bottom + dp(16))
+            (notice.layoutParams as FrameLayout.LayoutParams).bottomMargin = bars.bottom + dp(84)
             insets
         }
         setContentView(root)
         show(0)
+        askToNotify()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        box.visibility = if (DeckStore.get(this).computer != null) View.VISIBLE else View.GONE
+        Vector.listen(vector)
+        Vector.start(this)
+        box.busy = Vector.sending
+        showVector()
     }
 
     override fun onResume() {
         super.onResume()
+        Vector.watching++
         sync()
+    }
+
+    override fun onPause() {
+        Vector.watching--
+        super.onPause()
+    }
+
+    override fun onStop() {
+        Vector.unlisten(vector)
+        super.onStop()
     }
 
     override fun onDestroy() {
         main.removeCallbacks(syncSoon)
         worker.shutdown()
         super.onDestroy()
+    }
+
+    private fun askToNotify() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || DeckStore.get(this).computer == null) return
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
+        val asked = getSharedPreferences("vector", MODE_PRIVATE)
+        if (asked.getBoolean("asked", false)) return
+        asked.edit().putBoolean("asked", true).apply()
+        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFY)
+    }
+
+    private fun vectorBox(): View {
+        box = VectorBox(this).apply {
+            isClickable = true
+            contentDescription = getString(R.string.vector)
+            setOnClickListener { tapVector() }
+            setOnLongClickListener {
+                vectorMenu(it)
+                true
+            }
+        }
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            minimumHeight = dp(84)
+            setPadding(dp(16), dp(12), dp(12), dp(12))
+        }
+        preview = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            clipToOutline = true
+            outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) = outline.setRoundRect(0, 0, view.width, view.height, dp(8f))
+            }
+        }
+        row.addView(preview, llp(dp(48), dp(48)).apply { marginEnd = dp(14) })
+        val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        texts.addView(mono(getString(R.string.vector), 11f, Nihil.MUTED), llp(WRAP, WRAP))
+        vectorTitle = text("", 14f, Nihil.INK).apply {
+            maxLines = 2
+            ellipsize = TextUtils.TruncateAt.END
+        }
+        texts.addView(vectorTitle, llp(MATCH, WRAP).apply { topMargin = dp(5) })
+        vectorDetail = mono("", 10f, Nihil.MUTED)
+        texts.addView(vectorDetail, llp(MATCH, WRAP).apply { topMargin = dp(4) })
+        row.addView(texts, llp(0, WRAP, 1f))
+        row.addView(vectorKey(getDrawable(R.drawable.mdi_clipboard), R.string.vector_paste) { send(Vector.clipboard(this)) }, llp(dp(40), dp(40)).apply { marginStart = dp(8) })
+        row.addView(vectorKey(LineIcon(LineIcon.Shape.PLUS, Nihil.DIM), R.string.vector_pick) { pick() }, llp(dp(40), dp(40)).apply { marginStart = dp(8) })
+        box.addView(row, lp(MATCH, WRAP))
+        return box
+    }
+
+    private fun vectorKey(icon: Drawable?, description: Int, onTap: () -> Unit): ImageView = ImageView(this).apply {
+        val r = dp(20f)
+        setImageDrawable(icon?.mutate()?.apply { setTint(Nihil.DIM) })
+        pad(dp(10))
+        background = ripple(r, rounded(Nihil.SURFACE, r, dp(1), Nihil.LINE))
+        contentDescription = getString(description)
+        setOnClickListener { onTap() }
+    }
+
+    private fun showVector() {
+        val item = Vector.current(this)
+        if (item?.id == shownId && (item != null || preview.drawable != null)) return
+        shownId = item?.id
+        preview.setImageDrawable(null)
+        preview.setPadding(0, 0, 0, 0)
+        preview.visibility = View.VISIBLE
+        vectorTitle.visibility = if (item == null) View.GONE else View.VISIBLE
+        vectorDetail.visibility = vectorTitle.visibility
+        if (item == null) {
+            preview.setImageDrawable(LineIcon(LineIcon.Shape.SWAP, Nihil.MUTED))
+            preview.pad(dp(10))
+            return
+        }
+        vectorDetail.text = getString(R.string.vector_detail, Formatter.formatShortFileSize(this, item.size), item.from)
+        when (item.kind) {
+            "text" -> {
+                preview.visibility = View.GONE
+                vectorTitle.text = item.text(2048).trim()
+            }
+            "image" -> {
+                vectorTitle.text = item.name
+                val size = dp(96)
+                worker.execute {
+                    val picture = Vector.thumbnail(item.file, size)
+                    main.post { if (!isDestroyed && shownId == item.id) preview.setImageBitmap(picture) }
+                }
+            }
+            else -> {
+                vectorTitle.text = item.name
+                preview.setImageDrawable(LineIcon(if (item.kind == "video") LineIcon.Shape.VIDEO else LineIcon.Shape.FILE, Nihil.DIM))
+                preview.pad(dp(10))
+            }
+        }
+    }
+
+    private fun vectorEvent(what: String) {
+        if (isDestroyed) return
+        when (what) {
+            "sending", "receiving" -> box.busy = true
+            "missed" -> box.busy = Vector.sending
+            "received" -> {
+                box.busy = Vector.sending
+                showVector()
+                box.lap()
+            }
+            "sent" -> {
+                box.busy = false
+                box.lap()
+            }
+            "failed" -> {
+                box.busy = false
+                box.blink(Nihil.SIGNAL)
+            }
+        }
+    }
+
+    private fun tapVector() {
+        if (Vector.current(this) == null) {
+            send(Vector.clipboard(this))
+        } else if (Vector.copy(this)) {
+            box.blink(Nihil.INK)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) notice.show(getString(R.string.vector_copied))
+        }
+    }
+
+    private fun send(payload: Vector.Payload?) {
+        if (payload == null) {
+            notice.show(getString(R.string.vector_nothing))
+            return
+        }
+        Vector.send(this, payload) { outcome, computer ->
+            if (!isDestroyed) notice.show(Vector.say(this, outcome, computer))
+        }
+    }
+
+    private fun pick() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*")
+        @Suppress("DEPRECATION")
+        runCatching { startActivityForResult(intent, REQUEST_PICK) }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        val uri = data?.data
+        if (requestCode == REQUEST_PICK && resultCode == RESULT_OK && uri != null) send(Vector.payload(this, uri))
+    }
+
+    private fun vectorMenu(anchor: View) {
+        val item = Vector.current(this) ?: return
+        val uri = Vector.uri(this, item)
+        val items = ArrayList<AppMenu.Item>()
+        items += AppMenu.Item(LineIcon.Shape.COPY, getString(R.string.vector_copy)) { tapVector() }
+        if (item.kind != "text") {
+            items += AppMenu.Item(LineIcon.Shape.EXPAND, getString(R.string.vector_open)) {
+                val view = Intent(Intent.ACTION_VIEW).setDataAndType(uri, item.mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                if (runCatching { startActivity(view) }.isFailure) notice.show(getString(R.string.vector_none_opens))
+            }
+        }
+        items += AppMenu.Item(LineIcon.Shape.SHARE, getString(R.string.vector_share)) {
+            val share = Intent(Intent.ACTION_SEND)
+            if (item.kind == "text") {
+                share.setType("text/plain").putExtra(Intent.EXTRA_TEXT, item.text())
+            } else {
+                share.setType(item.mime).putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                share.clipData = ClipData.newRawUri(item.name, uri)
+            }
+            runCatching { startActivity(Intent.createChooser(share, null)) }
+        }
+        val title = if (item.kind == "text") item.text(256).lineSequence().firstOrNull().orEmpty() else item.name
+        popup.show(anchor = anchor, title = title, items = items)
     }
 
     private fun titles(): List<String> {
@@ -275,5 +492,10 @@ class TasksActivity : Activity() {
                 }
             }
         }
+    }
+
+    private companion object {
+        const val REQUEST_PICK = 11
+        const val REQUEST_NOTIFY = 12
     }
 }

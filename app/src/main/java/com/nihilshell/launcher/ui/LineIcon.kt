@@ -21,6 +21,7 @@ class LineIcon(
         SEARCH, CHEVRON, UP, DOWN, SETTINGS, GEAR, LOCK, IMAGE, TORCH, WIFI, BLUETOOTH,
         BATTERY, SOUND, ALARM, INFO, TRASH, HIDE, PLUS, MINUS, CHECK, CLOSE, CALC, BOLT,
         ENTER, WEB, HOME, BELL, LAPTOP, PLAY, PAUSE, NEXT, PREVIOUS, TASKS, PENCIL, EXPAND, COLLAPSE,
+        SWAP, FILE, VIDEO, COPY, SHARE,
     }
 
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -84,6 +85,7 @@ class LineIcon(
             Shape.INFO -> listOf(floatArrayOf(12f, 7.8f, 1.1f))
             Shape.WIFI -> listOf(floatArrayOf(12f, 18.5f, 1.3f))
             Shape.IMAGE -> listOf(floatArrayOf(15.8f, 9.2f, 1.5f))
+            Shape.SHARE -> listOf(floatArrayOf(17.5f, 5.5f, 2.2f), floatArrayOf(6.5f, 12f, 2.2f), floatArrayOf(17.5f, 18.5f, 2.2f))
             Shape.TORCH -> listOf(floatArrayOf(12f, 14f, 1.1f))
             Shape.CALC -> listOf(
                 floatArrayOf(8.6f, 13f, 1f), floatArrayOf(12f, 13f, 1f), floatArrayOf(15.4f, 13f, 1f),
@@ -247,6 +249,35 @@ class LineIcon(
                 Shape.LAPTOP -> {
                     p.addRoundRect(RectF(5f, 5.5f, 19f, 15.5f), 1.5f, 1.5f, Path.Direction.CW)
                     p.line(2.5f, 19f, 21.5f, 19f)
+                }
+                Shape.SWAP -> {
+                    p.line(4f, 8.5f, 19.5f, 8.5f)
+                    p.line(16f, 5f, 19.5f, 8.5f, 16f, 12f)
+                    p.line(20f, 15.5f, 4.5f, 15.5f)
+                    p.line(8f, 12f, 4.5f, 15.5f, 8f, 19f)
+                }
+                Shape.FILE -> {
+                    p.line(13.5f, 3.5f, 6.5f, 3.5f, 6.5f, 20.5f, 17.5f, 20.5f, 17.5f, 7.5f)
+                    p.close()
+                    p.line(13.5f, 3.5f, 13.5f, 7.5f, 17.5f, 7.5f)
+                }
+                Shape.VIDEO -> {
+                    p.addRoundRect(RectF(3.5f, 6.5f, 15f, 17.5f), 2f, 2f, Path.Direction.CW)
+                    p.line(15f, 10.5f, 20.5f, 7.5f, 20.5f, 16.5f, 15f, 13.5f)
+                }
+                Shape.COPY -> {
+                    p.addRoundRect(RectF(8.5f, 8.5f, 19.5f, 19.5f), 2f, 2f, Path.Direction.CW)
+                    p.line(15.5f, 8.5f, 15.5f, 6.5f)
+                    p.arc(13.5f, 6.5f, 2f, 0f, -90f)
+                    p.line(13.5f, 4.5f, 6.5f, 4.5f)
+                    p.arc(6.5f, 6.5f, 2f, 270f, -90f)
+                    p.line(4.5f, 6.5f, 4.5f, 13.5f)
+                    p.arc(6.5f, 13.5f, 2f, 180f, -90f)
+                    p.line(6.5f, 15.5f, 8.5f, 15.5f)
+                }
+                Shape.SHARE -> {
+                    p.line(15.6f, 6.6f, 8.4f, 10.9f)
+                    p.line(8.4f, 13.1f, 15.6f, 17.4f)
                 }
                 Shape.PLAY -> {
                     p.line(8.5f, 5.5f, 18.5f, 12f, 8.5f, 18.5f)

@@ -48,6 +48,7 @@ import com.nihilshell.launcher.core.Prefs
 import com.nihilshell.launcher.core.Torch
 import com.nihilshell.launcher.core.WebEntry
 import com.nihilshell.launcher.core.Webs
+import com.nihilshell.launcher.deck.Vector
 import com.nihilshell.launcher.system.Access
 import com.nihilshell.launcher.system.Glyph
 import com.nihilshell.launcher.system.LockService
@@ -164,6 +165,7 @@ class LauncherActivity :
 
     override fun onStart() {
         super.onStart()
+        Vector.start(this)
         register()
         home.updateClock(animate = false)
         updateAlarm()

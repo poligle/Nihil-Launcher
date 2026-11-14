@@ -142,13 +142,6 @@
     <string name="deck_opened">Opened on %1$s</string>
     <string name="deck_lock">Lock</string>
     <string name="deck_locked">%1$s is locked</string>
-    <string name="deck_clipboard">Clipboard</string>
-    <string name="deck_clip_send">Send what this phone copied to %1$s</string>
-    <string name="deck_clip_fetch">Bring what %1$s copied</string>
-    <string name="deck_clip_sent">Copied on %1$s</string>
-    <string name="deck_clip_fetched">Copied from %1$s</string>
-    <string name="deck_clip_nothing">Nothing copied on this phone</string>
-    <string name="deck_clip_empty">%1$s has no text copied</string>
     <string name="deck_forget">Forget this computer</string>
     <string name="deck_forget_confirm">Forget %1$s? To be its deck again, it will have to show its QR.</string>
     <string name="deck_open_on">Open on the computer</string>
@@ -189,7 +182,7 @@
     <string name="deck_night_off">Night light off in %1$s</string>
     <string name="deck_older">%1$s\'s NIHIL doesn\'t know this yet: update it</string>
     <string name="set_deck_screen">Screen on in the deck</string>
-    <string name="about_icons">The deck\'s caffeine, night light and lock are the desktop\'s own, from Material Design Icons, under the Pictogrammers Free License.</string>
+    <string name="about_icons">The icons the deck, the tasks and Vector share with the desktop are Material Design Icons, under the Pictogrammers Free License.</string>
     <string name="web_add">Add a web</string>
     <string name="web_edit">Edit the web</string>
     <string name="web_name_hint">Name (optional)</string>
@@ -202,4 +195,19 @@
     <string name="deck_trackpad_refused">%1$s can’t take the trackpad right now</string>
     <string name="deck_full_screen">Full screen</string>
     <string name="deck_full_screen_leave">Leave full screen</string>
+    <string name="vector" translatable="false">Vector</string>
+    <string name="vector_from">Received from %1$s</string>
+    <string name="vector_sent">Sent to %1$s</string>
+    <string name="vector_detail">%1$s · from %2$s</string>
+    <string name="vector_copy">Copy</string>
+    <string name="vector_copied">Copied</string>
+    <string name="vector_open">Open</string>
+    <string name="vector_share">Share</string>
+    <string name="vector_paste">Send what this phone copied</string>
+    <string name="vector_pick">Send a file</string>
+    <string name="vector_nothing">Nothing to send</string>
+    <string name="vector_big">Too big: up to 100 MB</string>
+    <string name="vector_unreadable">It can’t be read</string>
+    <string name="vector_unpaired">Pair this phone with a computer first</string>
+    <string name="vector_none_opens">No app opens it</string>
 </resources>

@@ -8,7 +8,7 @@ NIHIL is a home screen in black, greys and dots: the language of NIHIL, a deskto
 • Webs as apps. Add a page from the home screen's menu or a browser's share sheet: it waits in the drawer among the apps and opens in a tab of its own.
 • Wallpaper studio. A photo becomes an LED matrix at the exact resolution of the screen.
 • Icons in one voice. Themed icons in ink and the rest in greys, or in their own colours.
-• The deck. Paired with NIHIL on your computer, the phone opens its apps and webs, plays its music, turns its volume, locks it, shares its clipboard and is its trackpad. The desktop's kanban comes along, in sync.
+• The deck. Paired with NIHIL on your computer, the phone opens its apps and webs, plays its music, turns its volume, locks it and is its trackpad. The desktop's kanban comes along, in sync, and Vector carries texts, pictures, videos and files either way.
 • Spanish or English.
 
 Its INTERNET permission is for the deck alone: it talks only to the computer it was paired with, over HTTPS pinned to that computer's key. Of a notification, NIHIL looks at which app posted it, its flags and its category, never its text. The accessibility service reads no content.
