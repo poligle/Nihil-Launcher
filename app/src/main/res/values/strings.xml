@@ -52,19 +52,14 @@
     <string name="icons_mono">Mono</string>
     <string name="icons_grey">Grey</string>
     <string name="icons_color">Colour</string>
-    <string name="set_icons_sub">Mono uses the themed icon when the app has one.</string>
     <string name="set_fav_icons">Icons in favourites</string>
     <string name="set_dim">Dim the wallpaper</string>
     <string name="set_glass">Smoked glass</string>
-    <string name="set_glass_sub">The frame and every card and key as dark glass, as on the desktop: the wallpaper shows through, frosted, and bends at the edges (Android 13 and later, with a wallpaper NIHIL put on).</string>
     <string name="set_wallpaper">NIHIL wallpaper</string>
-    <string name="set_wallpaper_sub">Turn a photo into LEDs</string>
     <string name="section_behaviour">Behaviour</string>
     <string name="set_keyboard">Keyboard when the drawer opens</string>
     <string name="set_glyph">Glyph light</string>
-    <string name="set_glyph_sub">Light around the screen and LEDs for every notification. Needs notification access; over other apps, Accessibility too.</string>
     <string name="set_lock">Accessibility</string>
-    <string name="set_lock_sub">Lock the screen with a double tap on the home screen, and the Glyph light over other apps. It uses an accessibility service that reads nothing.</string>
     <string name="section_apps">Apps</string>
     <string name="set_hidden_none">No hidden apps</string>
     <string name="set_unhide">Show</string>
@@ -102,7 +97,6 @@
     <string name="web_search">Search the web for “%1$s”</string>
     <string name="hint_hidden">Hidden</string>
     <string name="torch_unavailable">No torch available</string>
-    <string name="set_hidden_sub">Hidden apps leave the list, but search still finds them.</string>
     <plurals name="results">
         <item quantity="one">%d result</item>
         <item quantity="other">%d results</item>
@@ -112,10 +106,6 @@
     <string name="keys_calc">Calculate</string>
     <string name="keys_open">Open</string>
     <string name="prefs_title">Preferences</string>
-    <string name="section_look_sub">How the home screen and the icons look.</string>
-    <string name="section_behaviour_sub">What NIHIL does when you touch it, and the Glyph light.</string>
-    <string name="section_apps_sub">Apps you hid from the drawer.</string>
-    <string name="section_about_sub">NIHIL on the phone, as on the desktop.</string>
     <string name="deck_title">Computer</string>
     <string name="deck_pair_title">Pair with the computer</string>
     <string name="deck_scan_hint">On the computer: Preferences → Devices → Pair a device. Point the camera at its QR.</string>
@@ -128,7 +118,6 @@
     <string name="deck_error_expired">The code ran out: show a new QR on %1$s.</string>
     <string name="deck_error_wait">Too many tries: wait a minute.</string>
     <string name="deck_error_unreachable">%1$s doesn’t answer: are you on the same network?</string>
-    <string name="deck_unpaired_sub">Pair this phone with NIHIL on your computer to open its apps and webs, play its music, turn its volume, lock it and be its trackpad from here.</string>
     <string name="deck_pair">Pair</string>
     <string name="deck_connected">Connected: %1$s</string>
     <string name="deck_looking">Looking for %1$s…</string>
@@ -167,12 +156,10 @@
     <string name="deck_share_confirm">Open %1$s on %2$s?</string>
     <string name="deck_share_open">Open</string>
     <string name="deck_paired">Paired with %1$s</string>
-    <string name="deck_settings_sub">This phone as a deck for NIHIL on the computer.</string>
     <string name="hint_deck">Deck</string>
     <string name="deck_apps_webs">Apps and webs</string>
     <string name="deck_volume_title">Volume</string>
     <string name="set_language">Language</string>
-    <string name="set_language_sub">NIHIL speaks the phone’s language; here it can have its own, English or Spanish.</string>
     <string name="about_robot">The Android robot of the icon is modified from work created and shared by Google, under the Creative Commons 3.0 Attribution License.</string>
     <string name="glyph_try">Try the light</string>
     <string name="glyph_listening">Listening to notifications.</string>
@@ -202,7 +189,6 @@
     <string name="deck_night_off">Night light off in %1$s</string>
     <string name="deck_older">%1$s\'s NIHIL doesn\'t know this yet: update it</string>
     <string name="set_deck_screen">Screen on in the deck</string>
-    <string name="set_deck_screen_sub">This phone\'s screen doesn\'t turn off while the deck is open</string>
     <string name="about_icons">The deck\'s caffeine, night light and lock are the desktop\'s own, from Material Design Icons, under the Pictogrammers Free License.</string>
     <string name="web_add">Add a web</string>
     <string name="web_edit">Edit the web</string>

@@ -99,41 +99,41 @@ class SettingsActivity : Activity() {
             llp(MATCH, WRAP).apply { topMargin = dp(22) },
         )
 
-        section(R.string.section_look, R.string.section_look_sub)
+        section(R.string.section_look)
         val icons = Choice(
             this,
             listOf(getString(R.string.icons_mono), getString(R.string.icons_grey), getString(R.string.icons_color)),
             prefs.iconStyle.ordinal,
         ) { prefs.iconStyle = IconStyle.entries[it] }
-        column.addView(row(getString(R.string.set_icons), body(getString(R.string.set_icons_sub)), null, rule = false, onClick = null))
+        column.addView(row(getString(R.string.set_icons), null, null, rule = false, onClick = null))
         column.addView(icons, llp(WRAP, WRAP).apply { bottomMargin = dp(8) })
         column.addView(rule(), llp(MATCH, dp(1)))
         column.addView(switchRow(getString(R.string.set_fav_icons), null, prefs.favoriteIcons) { prefs.favoriteIcons = it })
         column.addView(switchRow(getString(R.string.set_dim), null, prefs.dimWallpaper) { prefs.dimWallpaper = it })
         column.addView(
-            switchRow(getString(R.string.set_glass), getString(R.string.set_glass_sub), prefs.glass) {
+            switchRow(getString(R.string.set_glass), null, prefs.glass) {
                 prefs.glass = it
                 Glass.start(this) {}
                 recreate()
             },
         )
         column.addView(
-            row(getString(R.string.set_wallpaper), body(getString(R.string.set_wallpaper_sub)), chevron()) {
+            row(getString(R.string.set_wallpaper), null, chevron()) {
                 startActivity(Intent(this, WallpaperActivity::class.java))
             },
         )
         column.addView(
-            row(getString(R.string.deck_title), body(getString(R.string.deck_settings_sub)), chevron()) {
+            row(getString(R.string.deck_title), null, chevron()) {
                 startActivity(Intent(this, DeckActivity::class.java))
             },
         )
         val deck = DeckStore.get(this)
-        column.addView(switchRow(getString(R.string.set_deck_screen), getString(R.string.set_deck_screen_sub), deck.keepScreenOn) { deck.keepScreenOn = it })
+        column.addView(switchRow(getString(R.string.set_deck_screen), null, deck.keepScreenOn) { deck.keepScreenOn = it })
 
-        section(R.string.section_behaviour, R.string.section_behaviour_sub)
+        section(R.string.section_behaviour)
         column.addView(switchRow(getString(R.string.set_keyboard), null, prefs.keyboardOnOpen) { prefs.keyboardOnOpen = it })
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            column.addView(row(getString(R.string.set_language), body(getString(R.string.set_language_sub)), chevron()) {
+            column.addView(row(getString(R.string.set_language), null, chevron()) {
                 Access.startFirst(
                     this,
                     listOf(
@@ -144,7 +144,7 @@ class SettingsActivity : Activity() {
             })
         }
 
-        glyphSub = body(getString(R.string.set_glyph_sub))
+        glyphSub = body("")
         glyphSwitch = Toggle(this)
         column.addView(row(getString(R.string.set_glyph), glyphSub, glyphSwitch) {
             if (prefs.glyph && !Access.hasNotificationAccess(this)) {
@@ -169,7 +169,7 @@ class SettingsActivity : Activity() {
             refreshAccess()
         }
 
-        lockSub = body(getString(R.string.set_lock_sub))
+        lockSub = body("")
         lockSwitch = Toggle(this)
         column.addView(row(getString(R.string.set_lock), lockSub, lockSwitch) {
             if (prefs.doubleTapLock && !Access.hasLockService(this)) {
@@ -185,12 +185,11 @@ class SettingsActivity : Activity() {
             refreshAccess()
         }
 
-        section(R.string.section_apps, R.string.section_apps_sub)
-        column.addView(body(getString(R.string.set_hidden_sub)), llp(MATCH, WRAP).apply { bottomMargin = dp(6) })
+        section(R.string.section_apps)
         hiddenList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         column.addView(hiddenList, llp(MATCH, WRAP))
 
-        section(R.string.section_about, R.string.section_about_sub)
+        section(R.string.section_about)
         val version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull().orEmpty()
         column.addView(body(getString(R.string.about_text, version)), llp(MATCH, WRAP))
         column.addView(body(getString(R.string.about_fonts)), llp(MATCH, WRAP).apply { topMargin = dp(10) })
@@ -213,15 +212,13 @@ class SettingsActivity : Activity() {
         glyphSub.text = when {
             prefs.glyph && !notifications -> getString(R.string.glyph_needs_access) + "\n" + getString(R.string.restricted_hint)
             prefs.glyph && !Glyph.connected -> getString(R.string.glyph_not_connected)
-            prefs.glyph -> getString(R.string.set_glyph_sub) + "\n" + getString(R.string.glyph_listening)
-            else -> getString(R.string.set_glyph_sub)
+            prefs.glyph -> getString(R.string.glyph_listening)
+            else -> ""
         }
+        glyphSub.visibility = if (glyphSub.text.isEmpty()) View.GONE else View.VISIBLE
         val lock = Access.hasLockService(this)
-        lockSub.text = if (prefs.doubleTapLock && !lock) {
-            getString(R.string.lock_needs_service) + "\n" + getString(R.string.restricted_hint)
-        } else {
-            getString(R.string.set_lock_sub)
-        }
+        lockSub.text = if (prefs.doubleTapLock && !lock) getString(R.string.lock_needs_service) + "\n" + getString(R.string.restricted_hint) else ""
+        lockSub.visibility = if (lockSub.text.isEmpty()) View.GONE else View.VISIBLE
     }
 
     private fun fillHidden() {
@@ -252,10 +249,9 @@ class SettingsActivity : Activity() {
         if (requestCode == REQUEST_HOME) refreshAccess()
     }
 
-    private fun section(title: Int, sub: Int) {
-        column.addView(text(getString(title), 22f, Nihil.INK, fonts.sans), llp(MATCH, WRAP).apply { topMargin = dp(40) })
-        column.addView(text(getString(sub), 13f, Nihil.DIM, fonts.sans).apply { setLineSpacing(dp(2f), 1f) }, llp(MATCH, WRAP).apply {
-            topMargin = dp(4)
+    private fun section(title: Int) {
+        column.addView(text(getString(title), 22f, Nihil.INK, fonts.sans), llp(MATCH, WRAP).apply {
+            topMargin = dp(40)
             bottomMargin = dp(8)
         })
     }

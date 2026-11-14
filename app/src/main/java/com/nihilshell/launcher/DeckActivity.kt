@@ -176,13 +176,9 @@ class DeckActivity : Activity() {
             }
             column.addView(Wordmark(this, dp(36)), llp(WRAP, WRAP))
             column.addView(text(getString(R.string.deck_pair_title), 22f, Nihil.INK), llp(WRAP, WRAP).apply { topMargin = dp(22) })
-            column.addView(text(getString(R.string.deck_unpaired_sub), 13f, Nihil.DIM).apply {
-                gravity = Gravity.CENTER
-                setLineSpacing(dp(2f), 1f)
-            }, llp(dp(460), WRAP).apply { topMargin = dp(6) })
             column.addView(KeyButton(this, getString(R.string.deck_pair), accent = true).apply {
                 setOnClickListener { startActivity(Intent(this@DeckActivity, DeckScanActivity::class.java)) }
-            }, llp(WRAP, WRAP).apply { topMargin = dp(18) })
+            }, llp(WRAP, WRAP).apply { topMargin = dp(22) })
             content.addView(column, lp(WRAP, WRAP, Gravity.CENTER))
             return
         }

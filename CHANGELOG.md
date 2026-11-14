@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Settings say no more than their names: the lines that explained each section and option
+  are gone, and only what needs doing stays (an access to allow, Glyph light listening). The
+  deck's pairing screen is its title and its key.
 - Smoked glass, off unless chosen in Settings: the frame and every card, key and row as dark
   glass, as on the desktop. On the home screen the wallpaper shows through a third of the
   smoke and, with one NIHIL put on and Android 13 or later, as the desktop's glass has it:

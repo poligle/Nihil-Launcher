@@ -49,19 +49,14 @@
     <string name="icons_mono">Mono</string>
     <string name="icons_grey">Gris</string>
     <string name="icons_color">Color</string>
-    <string name="set_icons_sub">Mono usa el icono temático cuando la app lo tiene.</string>
     <string name="set_fav_icons">Iconos en favoritos</string>
     <string name="set_dim">Atenuar el fondo</string>
     <string name="set_glass">Cristal ahumado</string>
-    <string name="set_glass_sub">El marco y cada tarjeta y tecla como cristal oscuro, como en el escritorio: el fondo se ve a través, esmerilado, y se curva en los bordes (Android 13 o posterior, con un fondo puesto por NIHIL).</string>
     <string name="set_wallpaper">Fondo NIHIL</string>
-    <string name="set_wallpaper_sub">Convierte una foto en LEDs</string>
     <string name="section_behaviour">Comportamiento</string>
     <string name="set_keyboard">Teclado al abrir el cajón</string>
     <string name="set_glyph">Luz Glyph</string>
-    <string name="set_glyph_sub">Luz alrededor de la pantalla y LEDs con cada notificación. Necesita acceso a las notificaciones; sobre otras apps, también Accesibilidad.</string>
     <string name="set_lock">Accesibilidad</string>
-    <string name="set_lock_sub">Bloquear la pantalla con un doble toque en el inicio, y la luz Glyph sobre otras apps. Usa un servicio de accesibilidad que no lee nada.</string>
     <string name="section_apps">Apps</string>
     <string name="set_hidden_none">No hay apps ocultas</string>
     <string name="set_unhide">Mostrar</string>
@@ -98,7 +93,6 @@
     <string name="web_search">Buscar «%1$s» en la web</string>
     <string name="hint_hidden">Oculta</string>
     <string name="torch_unavailable">Linterna no disponible</string>
-    <string name="set_hidden_sub">Las apps ocultas salen de la lista, pero la búsqueda las sigue encontrando.</string>
     <plurals name="results">
         <item quantity="one">%d resultado</item>
         <item quantity="many">%d resultados</item>
@@ -109,10 +103,6 @@
     <string name="keys_calc">Calcular</string>
     <string name="keys_open">Abrir</string>
     <string name="prefs_title">Preferencias</string>
-    <string name="section_look_sub">Cómo se ven el inicio y los iconos.</string>
-    <string name="section_behaviour_sub">Qué hace NIHIL cuando lo tocas, y la luz Glyph.</string>
-    <string name="section_apps_sub">Las apps que has escondido del cajón.</string>
-    <string name="section_about_sub">NIHIL en el móvil, como en el escritorio.</string>
     <string name="deck_title">Ordenador</string>
     <string name="deck_pair_title">Emparejar con el ordenador</string>
     <string name="deck_scan_hint">En el ordenador: Preferencias → Dispositivos → Emparejar un dispositivo. Apunta la cámara a su QR.</string>
@@ -125,7 +115,6 @@
     <string name="deck_error_expired">El código ha caducado: muestra un QR nuevo en %1$s.</string>
     <string name="deck_error_wait">Demasiados intentos: espera un minuto.</string>
     <string name="deck_error_unreachable">%1$s no responde: ¿estáis en la misma red?</string>
-    <string name="deck_unpaired_sub">Empareja este móvil con NIHIL en tu ordenador para abrir sus apps y webs, poner su música, subir y bajar el volumen, bloquearlo y hacerle de trackpad desde aquí.</string>
     <string name="deck_pair">Emparejar</string>
     <string name="deck_connected">Conectado: %1$s</string>
     <string name="deck_looking">Buscando %1$s…</string>
@@ -164,12 +153,10 @@
     <string name="deck_share_confirm">¿Abrir %1$s en %2$s?</string>
     <string name="deck_share_open">Abrir</string>
     <string name="deck_paired">Emparejado con %1$s</string>
-    <string name="deck_settings_sub">Este móvil como deck de NIHIL en el ordenador.</string>
     <string name="hint_deck">Deck</string>
     <string name="deck_apps_webs">Apps y webs</string>
     <string name="deck_volume_title">Volumen</string>
     <string name="set_language">Idioma</string>
-    <string name="set_language_sub">NIHIL habla el idioma del móvil; aquí puede tener uno propio, inglés o español.</string>
     <string name="about_robot">El robot de Android del icono está modificado a partir de un trabajo creado y compartido por Google, con licencia Creative Commons 3.0 Atribución.</string>
     <string name="glyph_try">Probar la luz</string>
     <string name="glyph_listening">Escuchando las notificaciones.</string>
@@ -199,7 +186,6 @@
     <string name="deck_night_off">Luz nocturna apagada en %1$s</string>
     <string name="deck_older">El NIHIL de %1$s aún no sabe hacer esto: actualízalo</string>
     <string name="set_deck_screen">Pantalla encendida en el deck</string>
-    <string name="set_deck_screen_sub">La pantalla del móvil no se apaga mientras el deck está abierto</string>
     <string name="about_icons">La cafeína, la luz nocturna y el bloqueo del deck son los del escritorio, de Material Design Icons, con la Pictogrammers Free License.</string>
     <string name="web_add">Añadir web</string>
     <string name="web_edit">Editar la web</string>
