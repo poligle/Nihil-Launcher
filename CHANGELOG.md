@@ -1,7 +1,5 @@
 # Changelog
 
-## Unreleased
-
 - Vector, as on the desktop: what the computer sends waits in the box until it is used,
   copied (a text or a picture), saved in `Download/Vector`, opened, shared or let go, and then
   the box is empty again; a tap does the first, and keys under it the rest, in place of the

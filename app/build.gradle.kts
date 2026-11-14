@@ -7,8 +7,8 @@ plugins {
 
 val releaseKeystore = System.getenv("NIHIL_KEYSTORE")?.let { file(it) }?.takeIf { it.isFile }
 
-val nihilVersion = "0.4.1"
-val nihilVersionCode = 40199
+val nihilVersion = "0.4.2"
+val nihilVersionCode = 40299
 
 fun versionCodeOf(name: String): Int {
     val match = Regex("""(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?""").matchEntire(name)
