@@ -13,7 +13,7 @@ val releaseKeystore = System.getenv("NIHIL_KEYSTORE")?.let { file(it) }?.takeIf 
 // The version, what changes for a release: MAJOR.MINOR.PATCH, or with -rc.N
 // for a pre-release. Android's versionCode comes from it, so it always goes up:
 // 0.2.0-rc.3 is 20003, 0.2.0 is 20099, 0.2.1-rc.1 is 20101.
-val nihilVersion = "0.3.6"
+val nihilVersion = "0.4.0"
 // The same versionCode written out, because F-Droid reads it from this file at each tag
 // (fastlane/, RELEASING.md) and can't work it out. When it isn't nihilVersion's, the
 // build stops and says which it is.
