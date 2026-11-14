@@ -17,7 +17,7 @@ val nihilVersion = "0.4.0"
 // The same versionCode written out, because F-Droid reads it from this file at each tag
 // (fastlane/, RELEASING.md) and can't work it out. When it isn't nihilVersion's, the
 // build stops and says which it is.
-val nihilVersionCode = 30699
+val nihilVersionCode = 40099
 
 fun versionCodeOf(name: String): Int {
     val match = Regex("""(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?""").matchEntire(name)
