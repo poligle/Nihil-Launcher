@@ -40,11 +40,6 @@ import com.nihilshell.launcher.ui.ripple
 import com.nihilshell.launcher.ui.text
 import java.util.concurrent.Executors
 
-/**
- * The desktop's kanban on the phone: to do, doing and done, the same cards. Every
- * change is kept here at once and sent to the computer when it answers; away from
- * it, the phone goes on, and the next sync merges what each side did (TaskBoard).
- */
 class TasksActivity : Activity() {
     private lateinit var tasks: TasksStore
     private lateinit var status: TextView
@@ -78,7 +73,6 @@ class TasksActivity : Activity() {
         }
         column.addView(scroll, llp(MATCH, 0, 1f).apply { topMargin = dp(12) })
 
-        // The desktop's "+ New task": the field at the bottom, by the thumb.
         field = EditText(this).apply {
             typeface = fonts.sans
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
@@ -136,7 +130,6 @@ class TasksActivity : Activity() {
         if (cards.isEmpty()) {
             list.addView(text(getString(R.string.tasks_empty), 14f, Nihil.MUTED), llp(MATCH, WRAP).apply { topMargin = dp(16) })
         }
-        // Held and moved, a card goes where it is let go, and so it is on the desktop.
         val rows = ReorderList(this, dp(8))
         rows.onReorder = { from, to ->
             tasks.place(cards[from].id, index, to)
@@ -145,7 +138,6 @@ class TasksActivity : Activity() {
         for (card in cards) rows.addView(row(card, rows))
         list.addView(rows, llp(MATCH, WRAP))
         if (index == TaskBoard.COLUMNS - 1 && cards.isNotEmpty()) {
-            // The done ones away, with the desktop's broom (its notifications have it too).
             val r = dp(22f)
             list.addView(ImageView(this).apply {
                 setImageDrawable(getDrawable(R.drawable.mdi_broom)?.mutate()?.apply { setTint(Nihil.DIM) })
@@ -163,10 +155,6 @@ class TasksActivity : Activity() {
         }
     }
 
-    /**
-     * A card as the desktop's: its dot (hollow to do, lit doing, dim done), its text and the
-     * pencil. Tapped, its menu; held and moved, another place in its column.
-     */
     private fun row(card: TaskBoard.Card, rows: ReorderList): View = LinearLayout(this).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
@@ -182,7 +170,6 @@ class TasksActivity : Activity() {
             }
         }
         addView(dot, llp(dp(8), dp(8)).apply { marginEnd = dp(12) })
-        // Done, struck through as on the desktop.
         addView(text(card.text, 15f, if (card.column == 2) Nihil.MUTED else Nihil.INK).apply {
             setPadding(0, dp(4), 0, dp(4))
             if (card.column == 2) paintFlags = paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
@@ -240,7 +227,6 @@ class TasksActivity : Activity() {
             .show()
     }
 
-    /** Shown at once; sent a moment later, so a few changes in a row go together. */
     private fun changed() {
         refresh()
         main.removeCallbacks(syncSoon)

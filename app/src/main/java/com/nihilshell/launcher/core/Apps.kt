@@ -23,41 +23,30 @@ import android.util.LruCache
 import java.text.Collator
 import java.util.concurrent.Executors
 
-/** What the drawer and the home screen list: an app, or a web kept here (Webs). */
 sealed interface Entry {
-    /** Stable id, as the favourites keep it. */
     val key: String
     val label: String
 
-    /** Normalised label for [Fuzzy]. */
     val searchLabel: String
 }
 
-/** One launchable activity, in one user profile (personal, work, Secure Folder...). */
 class AppEntry(val info: LauncherActivityInfo, serial: Long, val paused: Boolean = false) : Entry {
     val component: ComponentName = info.componentName
     val packageName: String = component.packageName
     val user: UserHandle = info.user
     override val label: String = info.label?.toString()?.trim().orEmpty().ifEmpty { packageName }
 
-    /** Stable id: "package/.Activity#userSerial". */
     override val key: String = "${component.flattenToShortString()}#$serial"
 
     override val searchLabel: String = Fuzzy.normalize(label)
 
     val isPersonal: Boolean = user == Process.myUserHandle()
 
-    /** System apps can only lose their updates, not be removed. */
     val canUninstall: Boolean = info.applicationInfo.flags.let {
         it and ApplicationInfo.FLAG_SYSTEM == 0 || it and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP != 0
     }
 }
 
-/**
- * Every launchable app, from LauncherApps across all user profiles, kept in
- * sync with installs and updates. Icons are rendered off the main thread and
- * cached per style and size.
- */
 object Apps {
     private lateinit var context: Context
     private lateinit var launcherApps: LauncherApps
@@ -67,7 +56,6 @@ object Apps {
     private val loader = Executors.newSingleThreadExecutor()
     private val painter = Executors.newFixedThreadPool(2)
     private val listeners = LinkedHashSet<() -> Unit>()
-    /** Icons being painted, and who waits for each (main thread only). */
     private val waiting = HashMap<String, MutableList<(Bitmap) -> Unit>>()
 
     private val icons = object : LruCache<String, Bitmap>(
@@ -88,7 +76,6 @@ object Apps {
         launcherApps = this.context.getSystemService(LauncherApps::class.java)
         userManager = this.context.getSystemService(UserManager::class.java)
         launcherApps.registerCallback(callback, main)
-        // A work profile paused, resumed, added or removed: its apps change look or go.
         val profiles = IntentFilter().apply {
             addAction(Intent.ACTION_MANAGED_PROFILE_AVAILABLE)
             addAction(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE)
@@ -131,7 +118,6 @@ object Apps {
             val serial = userManager.getSerialNumberForUser(user)
             val paused = user != Process.myUserHandle() && runCatching { userManager.isQuietModeEnabled(user) }.getOrDefault(false)
             for (info in launcherApps.getActivityList(null, user)) {
-                // The launcher itself shows up once, as its settings ("NIHIL").
                 if (info.componentName.packageName == self && user != Process.myUserHandle()) continue
                 out += AppEntry(info, serial, paused)
             }
@@ -144,11 +130,9 @@ object Apps {
 
     fun find(key: String): AppEntry? = all.firstOrNull { it.key == key }
 
-    /** The personal-profile app that owns [packageName], if any. */
     fun byPackage(packageName: String): AppEntry? =
         all.firstOrNull { it.packageName == packageName && it.isPersonal } ?: all.firstOrNull { it.packageName == packageName }
 
-    /** Cached icon, or null; then [ready] is called on the main thread once it's painted. */
     fun icon(entry: AppEntry, size: Int, style: IconStyle, ready: (Bitmap) -> Unit): Bitmap? {
         val cacheKey = "${entry.key}|$style|$size|${entry.paused}"
         icons.get(cacheKey)?.let { return it }
@@ -169,7 +153,6 @@ object Apps {
         return null
     }
 
-    // One painting per icon, however many rows ask for it while it is painted.
     private fun paint(cacheKey: String, ready: (Bitmap) -> Unit, render: () -> Bitmap?) {
         waiting[cacheKey]?.let {
             it += ready
@@ -188,7 +171,6 @@ object Apps {
         }
     }
 
-    /** The app's shortcuts (static first, then dynamic), when NIHIL is the home app. */
     fun shortcuts(entry: AppEntry): List<ShortcutInfo> {
         if (!runCatching { launcherApps.hasShortcutHostPermission() }.getOrDefault(false)) return emptyList()
         val query = LauncherApps.ShortcutQuery()
@@ -205,7 +187,6 @@ object Apps {
     fun startShortcut(shortcut: ShortcutInfo, bounds: Rect?, options: Bundle?) =
         launcherApps.startShortcut(shortcut, bounds, options)
 
-    /** Opens the app; a paused work profile is woken up first. */
     fun launch(entry: AppEntry, bounds: Rect?, options: Bundle?) {
         if (!entry.isPersonal && userManager.isQuietModeEnabled(entry.user)) {
             userManager.requestQuietModeEnabled(false, entry.user)
@@ -222,7 +203,6 @@ object Apps {
             .putExtra(Intent.EXTRA_USER, entry.user)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-    /** Drops cached icons, e.g. when the icon style changes. */
     fun clearIcons() = icons.evictAll()
 
     private fun evict(packageName: String) {

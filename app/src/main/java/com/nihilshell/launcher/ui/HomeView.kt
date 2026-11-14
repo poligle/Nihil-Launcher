@@ -26,20 +26,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * The home screen, inside the frame's card. At the top, a card like the
- * desktop's clock widget (home/shell/background/Desktop.qml): the time in
- * dots, the day and the date, and under a hairline the battery as LEDs, the
- * next alarm and the apps with something unread. Favourites at the bottom,
- * where the thumb is.
- */
 class HomeView(context: Context, private val host: Host) : FrameLayout(context) {
-
     interface Host {
         fun launch(entry: Entry, from: View)
         fun menu(entry: Entry, from: View)
         fun openShade()
-        /** The favourites in this order now (their keys), after one was moved. */
         fun orderFavorites(keys: List<String>)
         fun closeMenu()
     }
@@ -64,12 +55,8 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         gravity = Gravity.CENTER_VERTICAL
     }
     private val unreadMore = context.mono(size = 11f, color = Nihil.DIM)
-    // The favourites: a list that can be put in order by holding one, scrolling under the
-    // clock's card when there are more than fit, sitting at the bottom when there are few.
     private val favorites = ReorderGrid(context, 1, context.dp(52))
     private val favoritesHolder = FrameLayout(context)
-    // They fade where they meet the card, and only there. The home screen lets the clock's
-    // module reach beyond its bounds; the list stays in its own, so it never goes over it.
     private val favoritesScroll = object : ScrollView(context) {
         override fun getBottomFadingEdgeStrength(): Float = 0f
     }.apply {
@@ -85,15 +72,12 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
     private val empty = context.mono(context.getString(R.string.favorites_empty), 11f, Nihil.DIM)
 
     private val scrim = Paint()
-    // The shade behind the favourites, made again only when the card changes.
     private var bottomShade: Shader? = null
     private var shadeFor = ""
-    // Where the favourites' pane starts on its side (0 upright: they are as wide as the card).
     private var shadeLeft = 0
     private var dim = false
     private var bandTop = 0
     private var bandBottom = 0
-    // The frame's thickness on each side, from the window's insets.
     private var insetLeft = 0
     private var insetTop = 0
     private var insetRight = 0
@@ -101,7 +85,6 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
     init {
         setWillNotDraw(false)
         clipChildren = false
-        // The clock's module reaches a little beyond its bounds.
         header.clipChildren = false
         header.clipToPadding = false
 
@@ -115,7 +98,6 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
             bottomMargin = context.dp(12)
         })
 
-        // The battery on the left, the alarm on the right; the unread apps under them.
         val status = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -148,10 +130,6 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         updateClock(animate = false)
     }
 
-    /**
-     * The card's edges (frame thickness) so content sits inside it. Which of them each part
-     * keeps clear of depends on where it is, upright or on its side: [onMeasure] says.
-     */
     fun setCard(left: Int, top: Int, right: Int, bottom: Int) {
         insetLeft = left
         insetTop = top
@@ -214,17 +192,9 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         unread.contentDescription = apps.joinToString { it.label }
     }
 
-    // Upright, the favourites below the clock's card, wherever it ends: they never go under
-    // it. On its side (a phone turned, a tablet), two panes no wider than a big phone, as the
-    // desktop has its widgets: the card at the top on the left, the favourites at the bottom
-    // against the right edge, under the right thumb; on a tablet the wallpaper shows between
-    // them. Each pane keeps clear of the frame only on the edge it touches. On a tablet (600 dp
-    // and more, either way up) the clock is the desktop's size.
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = MeasureSpec.getSize(widthMeasureSpec)
         val wide = w > MeasureSpec.getSize(heightMeasureSpec)
-        // Each pane inside the frame's sides (a turned phone's cutout or buttons on one of
-        // them), so the two never meet; the card's pane takes the left side's as padding.
         val pane = minOf((w - insetLeft - insetRight - context.dp(GAP)) / 2, context.dp(PANE_MAX))
         val cardWidth = if (wide) insetLeft + pane else minOf(w, context.dp(CARD_MAX))
         val tablet = context.isTablet
@@ -257,7 +227,6 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
-    /** Whether a vertical drag from (rawX, rawY) scrolls the favourites rather than opening the drawer. */
     fun favoritesScrollAt(rawX: Float, rawY: Float, dy: Float): Boolean {
         val at = IntArray(2)
         favoritesScroll.getLocationOnScreen(at)
@@ -265,10 +234,6 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
         return inside && favoritesScroll.canScrollVertically(if (dy < 0) 1 else -1)
     }
 
-    /**
-     * Whether a touch at (raw) [x], [y] lands on the home screen's own ground, where the
-     * double tap and the long press are: not on the clock's card nor on a favourite.
-     */
     fun backgroundAt(x: Float, y: Float): Boolean {
         if (contains(header, x, y)) return false
         for (i in 0 until favorites.childCount) if (contains(favorites.getChildAt(i), x, y)) return false
@@ -297,7 +262,6 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
                 setOnClickListener { host.launch(entry, this) }
                 setOnLongClickListener {
                     host.menu(entry, this)
-                    // Moving the finger now lifts the app and closes its menu.
                     favorites.arm(this) { host.closeMenu() }
                     true
                 }
@@ -324,9 +288,6 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
             canvas.drawColor(0x8C000000.toInt())
             return
         }
-        // A soft shade behind the favourites, so any wallpaper stays readable;
-        // the clock has its own card. On its side only behind their pane, fading in
-        // from the left before their names start.
         val cardEnd = h - bandBottom
         val bottomStart = cardEnd - h * 0.5f
         val fadeFrom = if (shadeLeft > 0) shadeLeft - context.dp(56f) else 0f
@@ -346,13 +307,10 @@ class HomeView(context: Context, private val host: Host) : FrameLayout(context) 
 
     private companion object {
         const val MAX_UNREAD = 6
-        /** Upright, the card's widest (a tablet's); on its side, each pane's: a big phone's. */
         const val CARD_MAX = 560
         const val PANE_MAX = 440
-        /** Between the two panes on a turned phone, whose halves they fill. */
         const val GAP = 16
         const val CLOCK_PHONE = 68f
-        /** The desktop's clock widget (home/shell/background/Desktop.qml). */
         const val CLOCK_TABLET = 84f
     }
 }

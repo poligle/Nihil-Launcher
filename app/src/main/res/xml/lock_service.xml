@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Two global actions, locking the screen and opening the shade, and a window
-  of its own for the Glyph light over other apps (HaloOverlay). It reads no
-  content, and only listens to NIHIL's own windows.
--->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeAnnouncement"
     android:accessibilityFeedbackType="feedbackGeneric"

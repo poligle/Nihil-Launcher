@@ -3,13 +3,11 @@
     <string name="app_name" translatable="false">NIHIL</string>
     <string name="tagline" translatable="false">ex nihilo</string>
 
-    <!-- Home -->
     <string name="battery_percent">%1$d%%</string>
     <string name="battery_charging">charging</string>
     <string name="alarm_next">Alarm %1$s</string>
     <string name="favorites_empty">Swipe up and hold an app to add it here.</string>
 
-    <!-- Drawer -->
     <string name="search_hint">Search</string>
     <string name="apps_count">%1$d apps</string>
     <string name="mode_actions">Actions</string>
@@ -20,7 +18,6 @@
     <string name="calc_copied">Copied</string>
     <string name="no_results">Nothing found</string>
 
-    <!-- Actions -->
     <string name="act_torch">Torch</string>
     <string name="act_wifi">Wi-Fi</string>
     <string name="act_bluetooth">Bluetooth</string>
@@ -38,7 +35,6 @@
     <string name="hint_screen">Screen</string>
     <string name="hint_studio">Studio</string>
 
-    <!-- App menu -->
     <string name="menu_add_home">Add to home</string>
     <string name="menu_remove_home">Remove from home</string>
     <string name="menu_move_up">Move up</string>
@@ -47,7 +43,6 @@
     <string name="menu_info">App info</string>
     <string name="menu_uninstall">Uninstall</string>
 
-    <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="set_default">Home app</string>
     <string name="set_default_on">NIHIL is your home screen</string>
@@ -78,7 +73,6 @@
     <string name="about_fonts">Doto, Space Grotesk and Space Mono, under the SIL Open Font License 1.1.</string>
     <string name="about_site" translatable="false">nihilshell.com/android</string>
 
-    <!-- Wallpaper studio -->
     <string name="studio_title">NIHIL wallpaper</string>
     <string name="studio_empty">Pick a photo: it becomes a matrix of LEDs at the exact resolution of your screen.</string>
     <string name="studio_pick">Choose a photo</string>
@@ -94,12 +88,10 @@
     <string name="studio_done">Done</string>
     <string name="studio_failed">Could not read the image</string>
 
-    <!-- Services -->
     <string name="glyph_service_label">NIHIL Glyph light</string>
     <string name="lock_service_label">NIHIL lock and Glyph light</string>
     <string name="lock_service_description">Locks the screen when you double tap the NIHIL home screen, and draws the Glyph light around the screen while you are in other apps. It reads nothing on the screen.</string>
 
-    <!-- Notices and extra labels -->
     <string name="menu_unhide">Show in the list</string>
     <string name="launch_failed">Can\'t open %1$s</string>
     <string name="open_failed">Nothing on this phone can open that</string>

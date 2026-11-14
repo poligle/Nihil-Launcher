@@ -24,10 +24,8 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 
-/** The easing of every NIHIL animation (the desktop's "emphasized" curve). */
 val EASE = PathInterpolator(0.2f, 0f, 0f, 1f)
 
-/** A TextView in one of the NIHIL voices. */
 fun Context.text(
     value: CharSequence = "",
     size: Float = 16f,
@@ -43,11 +41,9 @@ fun Context.text(
     includeFontPadding = false
 }
 
-/** The desktop's Label: metadata in Space Mono, as written. */
 fun Context.mono(value: CharSequence = "", size: Float = 11f, color: Int = Nihil.MUTED): TextView =
     text(value, size, color, Nihil.fonts(this).mono)
 
-/** A rounded surface: as it always was, or smoked glass when chosen (Glass). */
 fun rounded(color: Int, radius: Float, strokeWidth: Int = 0, strokeColor: Int = 0): GradientDrawable =
     GlassDrawable().apply {
         setColor(color)
@@ -55,12 +51,10 @@ fun rounded(color: Int, radius: Float, strokeWidth: Int = 0, strokeColor: Int = 
         if (strokeWidth > 0) setStroke(strokeWidth, strokeColor)
     }
 
-/** A press highlight in the shape of [radius] (no colour, only a soft white). */
 fun ripple(radius: Float, content: Drawable? = null): RippleDrawable =
     RippleDrawable(
         ColorStateList.valueOf(0x24FFFFFF),
         content,
-        // Only its shape counts: never glass.
         GradientDrawable().apply {
             setColor(Nihil.INK)
             cornerRadius = radius
@@ -76,10 +70,6 @@ fun llp(width: Int, height: Int, weight: Float = 0f) = LinearLayout.LayoutParams
 const val MATCH = ViewGroup.LayoutParams.MATCH_PARENT
 const val WRAP = ViewGroup.LayoutParams.WRAP_CONTENT
 
-/**
- * The desktop's KeyButton: a small rounded key in Space Mono, on the surface
- * with a hairline; [accent] fills it with ink, [danger] with red.
- */
 class KeyButton(context: Context, label: CharSequence, accent: Boolean = false, danger: Boolean = false) : TextView(context) {
     init {
         text = label
@@ -103,10 +93,6 @@ class KeyButton(context: Context, label: CharSequence, accent: Boolean = false, 
     }
 }
 
-/**
- * The desktop's Toggle: an outlined track whose dot slides across; on, the
- * track fills with ink and the dot turns black.
- */
 class Toggle(context: Context) : View(context) {
     private val track = Paint(Paint.ANTI_ALIAS_FLAG)
     private val dot = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -123,7 +109,6 @@ class Toggle(context: Context) : View(context) {
         isClickable = true
         isFocusable = true
         setOnClickListener { set(!checked, animate = true, notify = true) }
-        // TalkBack: a switch, on or off.
         accessibilityDelegate = object : View.AccessibilityDelegate() {
             override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
@@ -165,7 +150,6 @@ class Toggle(context: Context) : View(context) {
         if (notify) onChange?.invoke(value)
     }
 
-    // 34 × 20 on the desktop; a little bigger under a finger.
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) =
         setMeasuredDimension(context.dp(40), context.dp(24))
 
@@ -188,7 +172,6 @@ class Toggle(context: Context) : View(context) {
     }
 }
 
-/** The desktop's Choice: the options as words; the chosen one in ink, underlined. */
 class Choice(
     context: Context,
     options: List<String>,
@@ -238,7 +221,6 @@ class Choice(
     }
 }
 
-/** A short message in a card like the desktop's notifications: who says it, and what. */
 class Notice(context: Context) : LinearLayout(context) {
     private val message = context.text("", 14f, Nihil.INK)
     private val hide = Runnable { animate().alpha(0f).translationY(context.dp(8f)).setDuration(Nihil.NORMAL).start() }
@@ -264,10 +246,8 @@ class Notice(context: Context) : LinearLayout(context) {
     override fun onTouchEvent(event: MotionEvent?): Boolean = false
 }
 
-/** A thin horizontal rule, as the desktop's between settings. */
 fun Context.rule(): View = View(this).apply { background = ColorDrawable(withAlpha(Nihil.LINE, 0.6f)) }
 
-/** The desktop's KeyHints key: a little keycap with what to press. */
 fun Context.keycap(key: String): TextView = mono(key, 10f, Nihil.DIM).apply {
     gravity = Gravity.CENTER
     minWidth = dp(22)

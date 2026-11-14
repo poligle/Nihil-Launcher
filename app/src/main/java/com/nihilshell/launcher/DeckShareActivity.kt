@@ -20,14 +20,6 @@ import com.nihilshell.launcher.ui.lp
 import org.json.JSONObject
 import java.util.concurrent.Executors
 
-/**
- * "Open on the computer" in the share sheet: the web shared opens on the
- * paired computer, a notice says so, and this goes, over whatever was on
- * screen and in its orientation (the deck itself is landscape).
- *
- * Any app can start this, not only the share sheet, with a web of its own
- * choosing: so the web opens on the computer once the person here says so.
- */
 class DeckShareActivity : Activity() {
     private val main = Handler(Looper.getMainLooper())
     private val worker = Executors.newSingleThreadExecutor()
@@ -47,7 +39,6 @@ class DeckShareActivity : Activity() {
         val store = DeckStore.get(this)
         val computer = store.computer
         if (computer == null) {
-            // Not paired yet: the deck, to pair.
             startActivity(Intent(this, DeckActivity::class.java))
             finish()
             return

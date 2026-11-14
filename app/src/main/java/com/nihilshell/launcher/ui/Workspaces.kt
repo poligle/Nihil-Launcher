@@ -10,11 +10,6 @@ import android.view.ViewGroup
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/**
- * Pages side by side, a screen each, as the desktop's workspaces: a sideways
- * swipe goes to the next one, a tap on [show] jumps. Each page keeps its own
- * vertical scrolling: only a drag that is more sideways than down is taken.
- */
 class Workspaces(context: Context) : ViewGroup(context) {
     var onPage: ((Int) -> Unit)? = null
 
@@ -44,7 +39,6 @@ class Workspaces(context: Context) : ViewGroup(context) {
         if (animator == null && !dragging) scrollTo(page * w, 0)
     }
 
-    /** Goes to page [index], sliding unless [animate] is false. */
     fun show(index: Int, animate: Boolean = true) {
         val target = index.coerceIn(0, (childCount - 1).coerceAtLeast(0))
         val changed = target != page
@@ -64,7 +58,6 @@ class Workspaces(context: Context) : ViewGroup(context) {
         if (changed) onPage?.invoke(target)
     }
 
-    /** A drag that began elsewhere ([SwipeBar]): the workspaces follow it as one on them. */
     fun beginDrag() {
         animator?.cancel()
         animator = null
@@ -169,10 +162,6 @@ class Workspaces(context: Context) : ViewGroup(context) {
     }
 }
 
-/**
- * The dots under the workspaces, as the desktop's bar shows them: the current one lit.
- * Their names are for TalkBack only.
- */
 class PageDots(context: Context, names: List<String>, private val onPick: (Int) -> Unit) : android.widget.LinearLayout(context) {
     private val dots = ArrayList<View>()
 
@@ -210,10 +199,6 @@ class PageDots(context: Context, names: List<String>, private val onPick: (Int) 
     }
 }
 
-/**
- * A strip that swipes [pages] as a drag on them would: the deck's header, for when the
- * workspace on screen keeps its own swipes (the trackpad). A tap still reaches its keys.
- */
 class SwipeBar(context: Context, private val pages: () -> Workspaces?) : android.widget.LinearLayout(context) {
     private val slop = ViewConfiguration.get(context).scaledTouchSlop
     private var downX = 0f

@@ -9,14 +9,10 @@ import android.graphics.Paint
 import android.net.Uri
 import kotlin.math.roundToInt
 
-/** Android side of [DotMatrix]: decode a photo to the screen and draw the LEDs. */
 object DotRender {
-
-    /** The photo at [uri], scaled and centre-cropped to exactly [width] x [height]. */
     fun decodeCover(resolver: ContentResolver, uri: Uri, width: Int, height: Int): Bitmap =
         decodeCover(ImageDecoder.createSource(resolver, uri), width, height)
 
-    /** The same, from any source (the launcher's own wallpaper, in its assets). */
     fun decodeCover(source: ImageDecoder.Source, width: Int, height: Int): Bitmap {
         val decoded = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
             decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE

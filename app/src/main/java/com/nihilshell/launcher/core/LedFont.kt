@@ -1,10 +1,5 @@
 package com.nihilshell.launcher.core
 
-/**
- * The 5 x 7 LED digits of the home clock, laid out on a 25 x 7 panel:
- * digit, digit, colon, digit, digit, with one dark column between slots.
- * Pure Kotlin, tested on the JVM.
- */
 object LedFont {
     const val COLS = 25
     const val ROWS = 7
@@ -24,10 +19,6 @@ object LedFont {
         arrayOf(".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."),
     )
 
-    /**
-     * LED levels (0 or 1), row by row, for a time written "HH:MM". A shorter
-     * string is right-aligned (" 9:41"); anything that isn't a digit stays dark.
-     */
     fun matrix(time: String): FloatArray {
         val out = FloatArray(COLS * ROWS)
         val chars = time.padStart(5).takeLast(5)

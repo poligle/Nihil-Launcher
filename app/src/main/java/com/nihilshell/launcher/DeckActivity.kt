@@ -62,19 +62,7 @@ import org.json.JSONObject
 import java.net.URLEncoder
 import java.util.concurrent.Executors
 
-/**
- * The deck: this phone as a remote for NIHIL on the computer (docs/deck.md
- * in Nihil-Shell). Its music and volume; its caffeine, night light and lock,
- * at the top with the desktop's own icons; and its apps and the webs kept
- * here, each with its icon: the apps' from the computer's icon theme, the
- * webs' found by the computer, so the phone talks to no one else.
- * In landscape, on one screen without scrolling, in workspaces as the
- * desktop's: the music and the volume in one; the apps and the webs, each
- * scrolling on its own, in the next; and the computer's trackpad in the
- * last. Sharing a web to "Open on the computer" is DeckShareActivity.
- */
 class DeckActivity : Activity() {
-
     private lateinit var store: DeckStore
     private lateinit var content: FrameLayout
     private lateinit var notice: Notice
@@ -131,7 +119,6 @@ class DeckActivity : Activity() {
         setContentView(root)
         root.setOnApplyWindowInsetsListener { _, insets ->
             val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
-            // In full screen the trackpad takes nearly all of it.
             val side = dp(if (full) 8 else 20)
             content.setPadding(bars.left + side, bars.top + dp(if (full) 8 else 14), bars.right + side, bars.bottom + dp(8))
             (notice.layoutParams as FrameLayout.LayoutParams).bottomMargin = bars.bottom + dp(20)
@@ -145,7 +132,6 @@ class DeckActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        // Settings, "Screen on in the deck": this phone's screen, not the computer's.
         if (store.keepScreenOn) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         onScreen = true
@@ -169,8 +155,6 @@ class DeckActivity : Activity() {
         pool.shutdownNow()
         super.onDestroy()
     }
-
-    // --- The screen -----------------------------------------------------------------
 
     private fun build() {
         content.removeAllViews()
@@ -203,13 +187,11 @@ class DeckActivity : Activity() {
             return
         }
 
-        // As many tiles across as fit: the apps on three fifths of the width, the webs on two.
         val wide = resources.displayMetrics.widthPixels / resources.displayMetrics.density
         appsColumns = ((wide * 0.6f - 40) / 84).toInt().coerceIn(4, 10)
         websColumns = ((wide * 0.4f - 40) / 84).toInt().coerceIn(3, 6)
 
         val screen = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        // Swiped, the header changes workspace from any of them, the trackpad too.
         val header = SwipeBar(this) { workspaces }.apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -220,7 +202,6 @@ class DeckActivity : Activity() {
         status = mono(getString(R.string.deck_looking, computer.name), 11f, Nihil.MUTED)
         names.addView(status, llp(WRAP, WRAP).apply { topMargin = dp(2) })
         header.addView(names, llp(0, WRAP, 1f))
-        // The computer's own keys, as its quick settings: lit while on.
         caffeineKey = key(R.drawable.mdi_coffee, R.string.deck_caffeine) {
             toggle("caffeine", caffeineKey, R.string.deck_caffeine_on, R.string.deck_caffeine_off)
         }
@@ -252,25 +233,21 @@ class DeckActivity : Activity() {
         showWebs()
     }
 
-    /** The third workspace: this screen as the computer's touchpad, while it shows. */
     private fun trackpadPage(): View {
         val card = FrameLayout(this).apply {
             background = rounded(Nihil.VOID, dp(22f), dp(1), Nihil.LINE)
             clipToOutline = true
-            // Every finger to the trackpad, wherever it lands.
             isMotionEventSplittingEnabled = false
         }
         val pad = Trackpad(this).apply { contentDescription = getString(R.string.deck_trackpad) }
         pad.onFrame = { time, count, ids, xs, ys -> link.frame(time, count, ids, xs, ys) }
         pad.onSize = { trackpadOn() }
         card.addView(pad, lp(MATCH, MATCH))
-        // Words only when it isn't working: connecting, or why not.
         trackpadStatus = mono("", 11f, Nihil.MUTED).apply { maxWidth = dp(360) }
         card.addView(trackpadStatus, lp(WRAP, WRAP, Gravity.TOP or Gravity.START).apply {
             leftMargin = dp(20)
             topMargin = dp(18)
         })
-        // Full screen and back, in its corner.
         fullKey = ImageView(this).apply {
             setImageDrawable(LineIcon(LineIcon.Shape.EXPAND, Nihil.MUTED))
             pad(dp(9))
@@ -286,7 +263,6 @@ class DeckActivity : Activity() {
         return card
     }
 
-    /** The trackpad on the whole screen, or back among the workspaces. */
     private fun setFull(on: Boolean) {
         if (full == on) return
         full = on
@@ -299,7 +275,6 @@ class DeckActivity : Activity() {
         content.requestApplyInsets()
     }
 
-    /** The system's bars, shown or out of the way (a swipe from an edge brings them back a moment). */
     private fun bars(shown: Boolean) {
         val controller = window.insetsController ?: return
         if (shown) {
@@ -310,8 +285,6 @@ class DeckActivity : Activity() {
         }
     }
 
-    // Back, in full screen, leaves it first: Android 13 and later ask for a callback;
-    // before, onBackPressed.
     private var backCallback: Any? = null
 
     private fun watchBack(on: Boolean) {
@@ -331,7 +304,6 @@ class DeckActivity : Activity() {
         if (full) setFull(false) else super.onBackPressed()
     }
 
-    /** What plays, the volume and the keys again: every few seconds while the deck shows. */
     private fun refreshState() {
         val computer = store.computer ?: return
         if (asking || !onScreen) return
@@ -346,7 +318,6 @@ class DeckActivity : Activity() {
         }
     }
 
-    /** The stream while the trackpad is the workspace on screen; none otherwise. */
     private fun trackpadOn() {
         val pad = trackpad
         if (onScreen && pad != null && pad.width > 0 && workspaces?.page == TRACKPAD && store.computer != null) {
@@ -369,7 +340,6 @@ class DeckActivity : Activity() {
         }
     }
 
-    /** The first workspace: what plays, with its keys, and the volume beside it. */
     private fun musicPage(): View {
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -384,7 +354,6 @@ class DeckActivity : Activity() {
             scaleType = ImageView.ScaleType.CENTER_CROP
             clipToOutline = true
             background = rounded(Nihil.SURFACE, dp(14f), dp(1), Nihil.LINE)
-            // In greys, as everything else here.
             colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(0f) })
             contentDescription = getString(R.string.deck_cover)
         }
@@ -418,8 +387,6 @@ class DeckActivity : Activity() {
         music.addView(transport, llp(MATCH, WRAP))
         page.addView(music, llp(0, MATCH, 3f).apply { marginEnd = dp(14) })
 
-        // The volume, narrower and filling its height: its number and its LEDs in the middle,
-        // its keys at the music's.
         val sound = card()
         sound.addView(mono(getString(R.string.deck_volume_title), 11f, Nihil.MUTED))
         sound.addView(View(this), llp(MATCH, 0, 1f))
@@ -444,13 +411,11 @@ class DeckActivity : Activity() {
         }
         turn.addView(circle(LineIcon.Shape.MINUS, R.string.deck_volume_down, size = 52) { turn("down") })
         turn.addView(circle(LineIcon.Shape.PLUS, R.string.deck_volume_up, size = 52) { turn("up") }, llp(dp(52), dp(52)).apply { marginStart = dp(14) })
-        // Level with the previous and next keys' middle (the play key is taller).
         sound.addView(turn, llp(WRAP, WRAP).apply { bottomMargin = dp(8) })
         page.addView(sound, llp(0, MATCH, 1.4f))
         return page
     }
 
-    /** The second workspace: the computer's apps and the webs kept here, each scrolling on its own. */
     private fun appsPage(): View {
         val page = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         appsGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -477,7 +442,6 @@ class DeckActivity : Activity() {
         setPadding(dp(20), dp(16), dp(20), dp(16))
     }
 
-    /** The computer's apps and what it plays, asked again each time the screen shows. */
     private fun refresh() {
         val computer = store.computer ?: return
         val client = DeckClient(computer, store.token())
@@ -518,12 +482,10 @@ class DeckActivity : Activity() {
         showCover(media?.optString("cover").orEmpty())
         play?.setImageDrawable(LineIcon(if (playing) LineIcon.Shape.PAUSE else LineIcon.Shape.PLAY, Nihil.VOID))
         showVolume(state.optJSONObject("volume"))
-        // A computer with an older NIHIL says nothing of these: they stay unlit.
         lit(caffeineKey, state.optBoolean("caffeine"))
         lit(nightKey, state.optBoolean("night"))
     }
 
-    /** The cover of what plays, asked for again only when the computer says it changed. */
     private fun showCover(token: String) {
         val view = cover ?: return
         if (token == coverShown) return
@@ -549,9 +511,6 @@ class DeckActivity : Activity() {
         meter?.set(if (level == null || level.optBoolean("muted")) 0 else level.optInt("level"), false)
     }
 
-    // --- Tiles ---------------------------------------------------------------------
-
-    // The apps in the order put here (held and moved), the ones new on the computer at the end.
     private fun showApps(apps: List<Pair<String, String>>, computer: Computer) {
         val holder = appsGrid ?: return
         val order = store.appsOrder
@@ -577,7 +536,6 @@ class DeckActivity : Activity() {
         holder.addView(grid, llp(MATCH, WRAP))
     }
 
-    // The webs in their order, held and moved; held and let go, a menu to remove one.
     private fun showWebs() {
         val holder = websGrid ?: return
         val computer = store.computer ?: return
@@ -670,7 +628,6 @@ class DeckActivity : Activity() {
         }, llp(MATCH, WRAP).apply { topMargin = dp(10) })
     }
 
-    /** An icon: kept in memory, then on disk (the computer's change rarely), then asked for. */
     private fun picture(key: String, path: String, computer: Computer, ready: (Bitmap) -> Unit) {
         pictures[key]?.let { return ready(it) }
         val file = DeckCache.file(this, key)
@@ -689,8 +646,6 @@ class DeckActivity : Activity() {
         }
     }
 
-    // --- What the buttons do --------------------------------------------------------
-
     private fun open(body: JSONObject) = send("/v1/open", body) { computer, _ -> getString(R.string.deck_opened, computer.name) }
 
     private fun media(action: String) = send("/v1/media", JSONObject().put("action", action)) { _, _ ->
@@ -705,9 +660,6 @@ class DeckActivity : Activity() {
 
     private fun lock() = send("/v1/lock", JSONObject()) { computer, _ -> getString(R.string.deck_locked, computer.name) }
 
-    /** The clipboard, one with the computer's: this phone's sent there, or the computer's
-     *  brought here. Android lets an app read its clipboard only while it is in front,
-     *  so it goes when asked rather than on its own. */
     private fun clipboard(computer: Computer) {
         AlertDialog.Builder(this)
             .setTitle(R.string.deck_clipboard)
@@ -724,7 +676,6 @@ class DeckActivity : Activity() {
             notice.show(getString(R.string.deck_clip_nothing))
             return
         }
-        // The computer takes 256 KB: in UTF-8, never more than four bytes a character.
         send("/v1/clipboard", JSONObject().put("text", text.take(64 * 1024)), missing = true) { computer, _ ->
             getString(R.string.deck_clip_sent, computer.name)
         }
@@ -747,7 +698,6 @@ class DeckActivity : Activity() {
                     text.isEmpty() -> notice.show(getString(R.string.deck_clip_empty, computer.name))
                     else -> {
                         getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(computer.name, text))
-                        // From Android 13 the system says what was copied itself.
                         if (Build.VERSION.SDK_INT < 33) notice.show(getString(R.string.deck_clip_fetched, computer.name))
                     }
                 }
@@ -755,7 +705,6 @@ class DeckActivity : Activity() {
         }
     }
 
-    /** The computer's caffeine or night light, turned over; the key shows what it says now. */
     private fun toggle(kind: String, view: ImageView?, on: Int, off: Int) =
         send("/v1/$kind", JSONObject().put("action", "toggle"), missing = true) { computer, reply ->
             val now = reply.json?.optBoolean("on") == true
@@ -763,8 +712,6 @@ class DeckActivity : Activity() {
             getString(if (now) on else off, computer.name)
         }
 
-    /** A request in the background; [done] says what to tell when it went well.
-     *  With [missing], a 404 means the computer's NIHIL is older than this. */
     private fun send(path: String, body: JSONObject, missing: Boolean = false, done: (Computer, DeckClient.Reply) -> String?) {
         val computer = store.computer ?: return
         val client = DeckClient(computer, store.token())
@@ -792,7 +739,6 @@ class DeckActivity : Activity() {
         else -> getString(R.string.deck_refused, computer.name)
     }
 
-    /** The computer forgot this phone (Preferences, Phone): so does the phone. */
     private fun unpaired(computer: Computer) {
         store.forget()
         build()
@@ -861,7 +807,6 @@ class DeckActivity : Activity() {
             layoutParams = llp(dp(size), dp(size))
         }
 
-    /** A key with the desktop's own glyph for it (Material Design Icons, as its Nerd Font has them). */
     private fun key(icon: Int, description: Int, onTap: () -> Unit): ImageView = ImageView(this).apply {
         tag = icon
         pad(dp(10))
@@ -870,7 +815,6 @@ class DeckActivity : Activity() {
         lit(this, false)
     }
 
-    /** Lit as the desktop's toggles while on: ink, the glyph in black. */
     private fun lit(view: ImageView?, on: Boolean) {
         view ?: return
         val r = dp(20f)

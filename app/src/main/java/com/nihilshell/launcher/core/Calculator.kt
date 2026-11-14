@@ -31,32 +31,13 @@ import kotlin.math.tan
 import kotlin.math.tanh
 import kotlin.math.truncate
 
-/**
- * The "=" mode of the drawer, nearer the desktop's (qalc):
- *   + - * / ^ and mod, parentheses, implicit products (2pi, 3(4+1)), postfix ! % and °;
- *   percentages as qalc takes them: 200 + 15% = 230, 200 - 15% = 170, 200 * 15% = 30;
- *   0x 0b 0o numbers; pi e tau phi;
- *   sqrt cbrt abs sign ln log log2 log10 exp, sin cos tan and their inverses and
- *   hyperbolics (radians, or degrees with °), round floor ceil trunc, and min max hypot
- *   gcd lcm root and log with a base, their arguments apart with ";" or ", ";
- *   conversions, "<expression> <unit> to <unit>" (also in, a, en, →): length, mass, time,
- *   temperature, data, speed, volume, area, energy, pressure, power and angle; and into
- *   hex, bin, oct or dec; and calculus (Symbolic): diff, integrate, solve, sum, product,
- *   limit.
- * Both "." and "," work as the decimal mark between digits; × ÷ − are read too.
- * Pure Kotlin, tested on the JVM.
- */
 object Calculator {
-
     class Error(message: String) : Exception(message)
 
-    /** A result: its value, and how it is shown and copied (with its unit, or in its base). */
     class Answer(val value: Double, val text: String)
 
-    /** The value of [expression], or null when it can't be read. */
     fun evaluate(expression: String): Double? = calculate(expression)?.value
 
-    /** The value of [expression] and how to show it, or null when it can't be read. */
     fun calculate(expression: String): Answer? = try {
         Symbolic.calculate(expression)
             ?: convert(expression)
@@ -71,7 +52,6 @@ object Calculator {
         null
     }
 
-    /** True for "10 km to mi" or "255 to hex": a conversion, even without "=". */
     fun isConversion(raw: String): Boolean {
         val s = raw.trim().lowercase()
         if (TO_BASE.matches(s)) return true
@@ -79,7 +59,6 @@ object Calculator {
         return m.groupValues[1].any { it.isDigit() } && m.groupValues[2] in UNITS && m.groupValues[3] in UNITS
     }
 
-    /** Up to 12 significant digits, no trailing zeros, "." as the decimal mark. */
     fun format(value: Double): String {
         if (value.isInfinite()) return if (value > 0) "∞" else "-∞"
         if (value == 0.0) return "0"
@@ -90,8 +69,6 @@ object Calculator {
             rounded.toPlainString()
         }
     }
-
-    // --- Conversions -----------------------------------------------------------------
 
     private const val UNIT = "[a-zµ°][a-z0-9µ°/²³]*"
     private val CONVERSION = Regex("^(.*?)\\s*($UNIT)\\s+(?:to|in|a|en|->|→)\\s+($UNIT)\\s*$")
@@ -126,7 +103,6 @@ object Calculator {
         return Answer(value, format(value) + " " + to.symbol)
     }
 
-    /** A unit: how many of its dimension's base it is (and, for temperatures, from where). */
     private class Unit(val symbol: String, val dimension: String, val factor: Double, val offset: Double = 0.0) {
         fun toBase(x: Double) = (x + offset) * factor
 
@@ -231,8 +207,6 @@ object Calculator {
         add("angle", PI / 180, "°", "deg", "degree", "degrees", "grado", "grados")
     }
 
-    // --- Expressions -----------------------------------------------------------------
-
     private class Parser(source: String) {
         private val s = source
             .lowercase()
@@ -242,7 +216,6 @@ object Calculator {
             .replace(DECIMAL_COMMA, ".")
             .replace(',', ';')
         private var i = 0
-        /** Whether the factor just read ended in %, to add or take a share in + and -. */
         private var percent = false
 
         fun parse(): Double {
@@ -274,7 +247,6 @@ object Calculator {
             return true
         }
 
-        // x + 15% is x and 15% of it, as qalc reads it; 15% alone is 0.15.
         private fun expression(): Double {
             var value = term().first
             while (true) {
@@ -286,7 +258,6 @@ object Calculator {
             }
         }
 
-        /** The value, and whether it is a bare percentage. */
         private fun term(): Pair<Double, Boolean> {
             var value = factor()
             var bare = percent
@@ -307,7 +278,6 @@ object Calculator {
             return i < s.length && (s[i] == '(' || s[i].isLetter())
         }
 
-        // Right-associative power binds tighter than a leading minus: -2^2 = -4.
         private fun factor(): Double {
             if (eat('-')) return -factor()
             if (eat('+')) return factor()
@@ -347,7 +317,6 @@ object Calculator {
         }
 
         private fun number(): Double {
-            // 0xff, 0b1010, 0o17
             if (s[i] == '0' && i + 2 < s.length + 1 && i + 1 < s.length && s[i + 1] in "xbo") {
                 val radix = when (s[i + 1]) {
                     'x' -> 16

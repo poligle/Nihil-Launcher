@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- NIHIL tokens (the same palette as the desktop, theme/nihil.nix) -->
 <resources>
     <color name="nihil_void">#FF000000</color>
     <color name="nihil_line">#FF2A2A2A</color>

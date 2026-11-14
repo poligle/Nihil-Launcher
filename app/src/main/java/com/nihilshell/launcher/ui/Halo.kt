@@ -17,17 +17,6 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 
-/**
- * The Glyph light, as the desktop draws it (home/shell/frame/GlyphLight.qml):
- *   NOTIFY  a segment runs once round the ring, clockwise from the top-right
- *           corner, with a soft glow under it
- *   SIGNAL  the same in red, twice: a call or an alarm
- *   CHARGE  two lights climb from the middle of the bottom edge and meet at
- *           the top, leaving a fading trail, then it all goes out
- * The ring is a rounded rectangle: the card's edge on the home screen
- * (FrameView), the screen's own edge over other apps (HaloOverlay). Lengths
- * are the desktop's, as parts of the way round.
- */
 class Halo(private val view: View) {
     private val density = view.resources.displayMetrics.density
     private val ring = Path()
@@ -40,7 +29,6 @@ class Halo(private val view: View) {
     }
 
     private var perimeter = 0f
-    /** Where the top-right corner starts, measured from the middle of the bottom edge. */
     private var corner = 0f
 
     private var animator: ValueAnimator? = null
@@ -49,7 +37,6 @@ class Halo(private val view: View) {
 
     val running: Boolean get() = animator != null
 
-    /** The ring: [rect], with corners of [radius]. It starts at the middle of the bottom edge and goes clockwise. */
     fun setRing(rect: RectF, radius: Float) {
         val r = radius.coerceIn(0f, min(rect.width(), rect.height()) / 2)
         ring.reset()
@@ -70,7 +57,6 @@ class Halo(private val view: View) {
         view.invalidate()
     }
 
-    /** Runs [kind] once; [onEnd] when it has gone out (not when another one replaces it). */
     fun play(kind: Glyph.Pulse, onEnd: (() -> Unit)? = null) {
         val old = animator
         animator = null
@@ -108,8 +94,6 @@ class Halo(private val view: View) {
         if (pulse == Glyph.Pulse.CHARGE) drawRise(canvas) else drawSweep(canvas)
     }
 
-    // A segment of 3.25 % of the way round (260 px of a laptop's frame),
-    // entering at the corner and leaving there after a whole turn.
     private fun drawSweep(canvas: Canvas) {
         val tint = if (pulse == Glyph.Pulse.SIGNAL) Nihil.SIGNAL else Nihil.INK
         val segment = max(perimeter * 0.0325f, 48 * density)
@@ -120,7 +104,6 @@ class Halo(private val view: View) {
         stroke(canvas, from, to, tint, 2 * density)
     }
 
-    // 70 % climbing, eased as every NIHIL motion, then 30 % going out.
     private fun drawRise(canvas: Canvas) {
         val climb = EASE.getInterpolation((value / 0.7f).coerceAtMost(1f))
         val out = ((value - 0.7f) / 0.3f).coerceIn(0f, 1f)
@@ -138,14 +121,12 @@ class Halo(private val view: View) {
         }
     }
 
-    /** The stretch of one side's route that ends at [reach] and is [length] long. */
     private fun beam(canvas: Canvas, side: Int, reach: Float, length: Float, alpha: Float, width: Float) {
         val tail = max(0f, reach - length)
         if (side < 0) stroke(canvas, tail, reach, withAlpha(Nihil.INK, alpha), width)
         else stroke(canvas, perimeter - reach, perimeter - tail, withAlpha(Nihil.INK, alpha), width)
     }
 
-    /** The ring from [from] to [to], distances from the middle of the bottom edge: they wrap. */
     private fun stroke(canvas: Canvas, from: Float, to: Float, color: Int, width: Float) {
         var length = min(to - from, perimeter)
         if (length <= 0.5f) return

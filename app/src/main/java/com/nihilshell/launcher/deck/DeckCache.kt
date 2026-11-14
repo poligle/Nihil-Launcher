@@ -4,10 +4,6 @@ import android.content.Context
 import java.io.File
 import java.security.MessageDigest
 
-/**
- * The icons the computer gives, on disk: the deck's apps and webs, and the launcher's webs.
- * A file each, by key, good for a week.
- */
 object DeckCache {
     const val WEEK = 7L * 24 * 60 * 60 * 1000
 

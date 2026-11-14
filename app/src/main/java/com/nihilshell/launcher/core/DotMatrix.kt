@@ -5,16 +5,7 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-/**
- * A photo as an LED matrix, the same algorithm as the desktop wallpapers
- * (theme/dotmatrix.py): the image, already cover-cropped to the screen, is
- * split into cells of [Params.pitch] pixels. Each cell gets an unlit LED, and a
- * lit one whose size and brightness grow with the cell's luminance. The black
- * point is raised so the sky stays off, and isolated peaks (stars) light their
- * cell even when its average is dark. Pure Kotlin, tested on the JVM.
- */
 object DotMatrix {
-
     class Params(
         val pitch: Int,
         val gamma: Float = 1.25f,
@@ -24,7 +15,6 @@ object DotMatrix {
         val offLevel: Float = 0.07f,
     )
 
-    /** One LED: centre, radius and grey level (0-255). */
     class Led(val x: Float, val y: Float, val radius: Float, val grey: Int)
 
     class Grid(
@@ -33,10 +23,8 @@ object DotMatrix {
         val originX: Int,
         val originY: Int,
         val params: Params,
-        /** Brightness 0..1 of every cell, row by row. */
         val levels: FloatArray,
     ) {
-        /** Grey of the unlit LEDs and their radius. */
         val offGrey: Int get() = (255 * params.offLevel).roundToInt()
         val offRadius: Float get() = 0.16f * params.pitch
 
@@ -45,7 +33,6 @@ object DotMatrix {
             originY + row * params.pitch + params.pitch / 2f,
         )
 
-        /** The lit LED of a cell, or null when it stays off. */
         fun lit(col: Int, row: Int): Led? {
             val v = levels[row * cols + col]
             if (v <= 0.02f) return null
@@ -57,12 +44,10 @@ object DotMatrix {
         }
     }
 
-    /** [pixels]: ARGB, [width] x [height], already cropped to the screen. */
     fun grid(pixels: IntArray, width: Int, height: Int, params: Params): Grid {
         require(pixels.size >= width * height) { "not enough pixels" }
         val pitch = params.pitch.coerceAtLeast(2)
 
-        // Luminance, normalised between the 2nd and 99.7th percentiles.
         val lum = FloatArray(width * height)
         val histogram = IntArray(BINS)
         for (k in 0 until width * height) {
@@ -109,7 +94,6 @@ object DotMatrix {
 
     private const val BINS = 1024
 
-    /** The value below which a fraction [q] of the pixels lie, from a histogram. */
     fun percentile(histogram: IntArray, total: Int, q: Float): Float {
         val target = q * total
         var seen = 0
@@ -120,19 +104,12 @@ object DotMatrix {
         return 1f
     }
 
-    /**
-     * The size a wallpaper is drawn at for a screen of [width] by [height], either way up:
-     * upright, the screen's own; on a [tablet], which is used on its side as much as upright,
-     * a square as long as its longest side. Android shows each way up the centre of it, dot
-     * for dot; an upright one was stretched to fill the screen turned, and its LEDs blurred.
-     */
     fun wallpaperSize(width: Int, height: Int, tablet: Boolean): Pair<Int, Int> {
         val short = minOf(width, height)
         val long = maxOf(width, height)
         return if (tablet) Pair(long, long) else Pair(short, long)
     }
 
-    /** Scale and offsets that make [srcW] x [srcH] cover [dstW] x [dstH], centred. */
     fun cover(srcW: Int, srcH: Int, dstW: Int, dstH: Int): Triple<Float, Int, Int> {
         val scale = max(dstW / srcW.toFloat(), dstH / srcH.toFloat())
         val w = (srcW * scale).roundToInt().coerceAtLeast(dstW)

@@ -9,7 +9,6 @@ import com.nihilshell.launcher.core.IconStyle
 import com.nihilshell.launcher.core.WebEntry
 import com.nihilshell.launcher.core.Webs
 
-/** [entry]'s icon here: at once when it is cached, or once painted, if this still shows it. */
 fun ImageView.bindIcon(entry: Entry, size: Int, style: IconStyle) {
     tag = entry.key
     setImageDrawable(null)

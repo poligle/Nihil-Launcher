@@ -7,7 +7,6 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The kanban's merge: what the phone and the desktop each did, both kept. */
 class TaskBoardTest {
     private val now = 1_800_000_000_000L
     private fun card(id: String, text: String, column: Int, t: Long, p: Long = t) = Card(id, text, column, now + t, now + p)
@@ -15,7 +14,6 @@ class TaskBoardTest {
     @Test
     fun bothSidesChangedWhileApart() {
         val before = Board(listOf(card("a", "Entregar la práctica", 0, 1), card("b", "Keycaps", 0, 2)))
-        // The phone moved a to doing and added c; the desktop renamed a and removed b.
         val phone = Board(listOf(card("a", "Entregar la práctica", 1, 1, 10), card("b", "Keycaps", 0, 2), card("c", "Nilo v3", 0, 11)))
         val desktop = Board(listOf(card("a", "Entregar la práctica 2", 0, 12, 1)), mapOf("b" to now + 13))
         val merged = TaskBoard.merge(phone, desktop, now + 20)

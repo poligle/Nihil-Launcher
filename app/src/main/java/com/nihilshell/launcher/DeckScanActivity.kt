@@ -45,13 +45,7 @@ import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * Pairing: the camera reads the QR in the computer's Preferences, Phone, with
- * NIHIL's own reader (QrDecoder: no libraries, nothing leaves the phone),
- * and the phone pairs with the computer it names, trusting only its pin.
- */
 class DeckScanActivity : Activity() {
-
     private lateinit var texture: TextureView
     private lateinit var status: TextView
     private var camera: CameraDevice? = null
@@ -75,7 +69,6 @@ class DeckScanActivity : Activity() {
         texture = TextureView(this)
         root.addView(texture, lp(MATCH, MATCH))
 
-        // Where to put the code: a square with the desktop's hairline, in ink.
         val side = dp(248)
         root.addView(View(this).apply { background = rounded(0, dp(22f), dp(2), Nihil.INK) }, lp(side, side, Gravity.CENTER))
 
@@ -133,8 +126,6 @@ class DeckScanActivity : Activity() {
         if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) start() else say(getString(R.string.deck_camera_denied))
     }
 
-    // --- The camera --------------------------------------------------------------
-
     private fun start() {
         if (done || thread != null) return
         thread = HandlerThread("deck-camera").also { it.start() }
@@ -163,7 +154,6 @@ class DeckScanActivity : Activity() {
         }.getOrNull() ?: return say(getString(R.string.deck_camera_none))
         val map = manager.getCameraCharacteristics(id).get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
         val sizes = map?.getOutputSizes(ImageFormat.YUV_420_888).orEmpty()
-        // Up to 1080p: enough modules per pixel for a code across a third of the frame, and quick to read.
         size = sizes.filter { it.width <= 1920 && it.height <= 1080 }.maxByOrNull { it.width * it.height } ?: sizes.firstOrNull() ?: size
         val images = ImageReader.newInstance(size.width, size.height, ImageFormat.YUV_420_888, 2)
         images.setOnImageAvailableListener({ frame(it) }, handler)
@@ -214,7 +204,6 @@ class DeckScanActivity : Activity() {
         }
     }
 
-    /** The preview filling the screen without stretching: the frames are landscape, the screen portrait. */
     private fun fit() {
         val w = texture.width.toFloat()
         val h = texture.height.toFloat()
@@ -226,7 +215,6 @@ class DeckScanActivity : Activity() {
         texture.setTransform(matrix)
     }
 
-    /** Each frame's luminance to the reader, one at a time: the ones that come meanwhile are dropped. */
     private fun frame(images: ImageReader) {
         val image = runCatching { images.acquireLatestImage() }.getOrNull() ?: return
         if (done || !reading.compareAndSet(false, true)) {
@@ -264,8 +252,6 @@ class DeckScanActivity : Activity() {
         handler = null
     }
 
-    // --- Pairing ----------------------------------------------------------------
-
     private fun found(text: String) {
         val invitation = DeckClient.Invitation.parse(text)
         if (invitation == null) {
@@ -294,7 +280,6 @@ class DeckScanActivity : Activity() {
                             "wait" -> R.string.deck_error_wait
                             else -> R.string.deck_error_unreachable
                         }, invitation.name))
-                        // Another look: a new QR, or the same one once the computer answers.
                         done = false
                         start()
                     }

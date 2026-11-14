@@ -7,10 +7,6 @@ import android.provider.Settings
 import com.nihilshell.launcher.R
 import com.nihilshell.launcher.ui.LineIcon
 
-/**
- * The "> actions" of the drawer: quick switches and system pages. They also
- * show up in normal search ("lin" finds the torch), in Spanish or English.
- */
 class Action(
     val id: String,
     val label: String,
@@ -21,12 +17,10 @@ class Action(
     val searchLabel: String = Fuzzy.normalize(label)
     val words: List<String> = Fuzzy.normalize(keywords).split(' ').filter { it.isNotBlank() }
 
-    /** Best score of the label or any keyword for a normalised [q]. */
     fun score(q: String): Int =
         maxOf(Fuzzy.score(searchLabel, q), words.maxOfOrNull { w -> if (w.startsWith(q)) 600 - w.length else -1 } ?: -1)
 }
 
-/** What an action needs from the screen that runs it. */
 interface ActionHost {
     val context: Context
     fun start(vararg intents: Intent): Boolean
@@ -83,7 +77,6 @@ object Actions {
         )
     }
 
-    /** Runs [action]; false if nothing could be opened. */
     fun run(action: Action, host: ActionHost): Boolean = when (action.id) {
         TORCH -> Torch.toggle().also { ok -> if (!ok) host.notice(host.context.getString(R.string.torch_unavailable)) }
         WIFI -> host.start(Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY), Intent(Settings.ACTION_WIFI_SETTINGS))

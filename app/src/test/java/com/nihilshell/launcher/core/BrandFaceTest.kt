@@ -7,7 +7,6 @@ import org.junit.Test
 class BrandFaceTest {
     @Test
     fun nihilIsTwentyOneColumnsAsTheLogo() {
-        // N 5, I 1, H 5, I 1, L 5, and a dark column between each.
         assertEquals(21, BrandFace.columns().size)
     }
 

@@ -3,17 +3,10 @@ package com.nihilshell.launcher.system
 import android.os.Handler
 import android.os.Looper
 
-/**
- * The Glyph bus: what the notification listener (or the battery) tells the
- * home screen. Everything is delivered on the main thread.
- */
 object Glyph {
     enum class Pulse {
-        /** A notification that alerts: a white light runs around the frame. */
         NOTIFY,
-        /** A call or an alarm: the only red light. */
         SIGNAL,
-        /** The charger was connected: light rises from the bottom. */
         CHARGE,
     }
 
@@ -25,19 +18,12 @@ object Glyph {
     private val main = Handler(Looper.getMainLooper())
     private val listeners = LinkedHashSet<Listener>()
 
-    /** Apps with unread notifications, most recent first. */
     var unread: List<String> = emptyList()
         private set
 
-    /**
-     * True while the home screen draws the light itself (NIHIL in front, its
-     * drawer closed); otherwise the accessibility service draws it over
-     * whatever is on screen (HaloOverlay), when it is on.
-     */
     @Volatile
     var homeShowing = false
 
-    /** True while the notification listener is bound. */
     var connected = false
         private set
 

@@ -27,16 +27,7 @@ import com.nihilshell.launcher.core.Calculator
 import com.nihilshell.launcher.core.IconStyle
 import com.nihilshell.launcher.core.Search
 
-/**
- * The drawer: the frame grown over the whole screen, laid out as the
- * desktop's launcher (home/shell/drawers/Launcher.qml). The apps in a grid,
- * monochrome, the first result raised and in colour; the field at the
- * bottom, by the thumb and the keyboard, with how many apps it holds; and
- * under it the keys: "> " lists the actions, "= " is the calculator, enter
- * opens the first result.
- */
 class DrawerView(context: Context, private val host: Host) : FrameLayout(context) {
-
     interface Host {
         fun launch(entry: Entry, from: View)
         fun menu(entry: Entry, from: View)
@@ -50,7 +41,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         fun showKeyboard(view: View)
     }
 
-    /** What the list shows: a row of app tiles, or one result across. */
     private sealed class Item {
         class Tiles(val entries: List<Entry>, val first: Int) : Item()
         class Single(val row: Search.Row, val index: Int) : Item()
@@ -78,7 +68,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
     init {
         clipChildren = true
 
-        // Results, from the top.
         list.apply {
             adapter = this@DrawerView.adapter
             divider = null
@@ -101,7 +90,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         }
         column.addView(list, llp(MATCH, 0, 1f))
 
-        // The field: the surface with a hairline, the glass, the query, how many.
         field.apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -153,7 +141,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
             rightMargin = context.dp(20)
         })
 
-        // The keys under it, as the desktop's: tapping one starts that mode.
         val keys = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -199,7 +186,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         refresh()
     }
 
-    /** A key and what it does, the whole of it tappable. */
     private fun hint(key: String, word: Int, onTap: () -> Unit): View = LinearLayout(context).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
@@ -217,7 +203,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         host.showKeyboard(search)
     }
 
-    /** Status bar on top; gesture bar or keyboard at the bottom. */
     fun setInsets(top: Int, bottom: Int) {
         if (top == topInset && bottom == bottomInset) return
         topInset = top
@@ -233,7 +218,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         refresh()
     }
 
-    /** Called when the drawer has finished opening. */
     fun opened(keyboard: Boolean) {
         if (keyboard) {
             search.requestFocus()
@@ -241,24 +225,16 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         }
     }
 
-    /** Called when the drawer has closed: back to an empty field at the top of the list. */
     fun closed() {
         search.clearFocus()
         if (search.text.isNotEmpty()) search.setText("")
         list.setSelection(0)
     }
 
-    /**
-     * True when a downward drag starting at [y] (in this view) should close the
-     * drawer rather than scroll: with the list at its top.
-     */
     fun canCloseFrom(y: Float): Boolean = y > column.top + field.top || !list.canScrollVertically(-1)
 
     val query: String get() = search.text.toString()
 
-    // No wider than the desktop's launcher (home/shell/frame/Frame.qml, launcherW), and in
-    // the middle: on a tablet on its side, a field and a grid across the whole screen were
-    // a long way from each other and from the thumbs.
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         (column.layoutParams as? LayoutParams)?.apply {
             width = minOf(MeasureSpec.getSize(widthMeasureSpec), context.dp(MAX_WIDTH))
@@ -269,7 +245,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        // Four across on a phone, more where there is room, as wide as the desktop's cells.
         val wanted = ((minOf(w, context.dp(MAX_WIDTH)) - context.dp(24)) / context.dp(92)).coerceAtLeast(4)
         if (wanted != columns) {
             columns = wanted
@@ -293,7 +268,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         if (q.isNotEmpty()) list.setSelection(0)
     }
 
-    /** Consecutive apps in rows of [columns] tiles; everything else across. The letters go: the grid is in order. */
     private fun group(rows: List<Search.Row>): List<Item> {
         val out = ArrayList<Item>()
         var run = ArrayList<Entry>()
@@ -331,8 +305,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
     }
 
     private fun firstTile(): View? = ((list.getChildAt(0) as? ViewGroup)?.getChildAt(0)).takeIf { list.firstVisiblePosition == 0 }
-
-    // --- Rows ----------------------------------------------------------------
 
     private inner class Rows : BaseAdapter() {
         override fun getCount() = items.size
@@ -405,7 +377,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         }
     }
 
-    /** A row of the grid: [columns] cells, an app in each, the rest empty. */
     private inner class TileRow(context: Context) : LinearLayout(context) {
         private val cells = ArrayList<Tile>()
 
@@ -433,7 +404,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         }
     }
 
-    /** An app as the desktop's cell: the icon over its name; the selected one raised, in colour. */
     private inner class Tile(context: Context) : LinearLayout(context) {
         private val icon = ImageView(context)
         private val name = context.mono(size = 11f, color = Nihil.MUTED).apply {
@@ -478,7 +448,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
         }
     }
 
-    /** An action, "search the web" or an app across: as the desktop's actions, a glyph, the name, a hint. */
     private inner class LineView(context: Context) : LinearLayout(context) {
         private val icon = ImageView(context)
         private val label = context.text("", 15f, Nihil.DIM).apply {
@@ -543,7 +512,6 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
     }
 
     private companion object {
-        /** The desktop launcher's widest, in dp: nine of the phone's columns. */
         const val MAX_WIDTH = 860
     }
 }

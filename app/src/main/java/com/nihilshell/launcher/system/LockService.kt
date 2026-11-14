@@ -10,17 +10,10 @@ import android.os.PowerManager
 import android.view.accessibility.AccessibilityEvent
 import com.nihilshell.launcher.core.Prefs
 
-/**
- * An accessibility service that reads nothing: it locks the screen (double
- * tap on the home screen), pulls down the notification shade as a fallback,
- * and draws the Glyph light round the screen while NIHIL is not on it
- * (HaloOverlay), as the desktop's frame lights over every window.
- */
 class LockService : AccessibilityService(), Glyph.Listener {
     private var overlay: HaloOverlay? = null
     private var receiving = false
 
-    // The charger going in with another app on screen: the light rises there.
     private val power = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) = onPulse(Glyph.Pulse.CHARGE)
     }
@@ -60,15 +53,11 @@ class LockService : AccessibilityService(), Glyph.Listener {
 
     override fun onInterrupt() = Unit
 
-    // --- Glyph.Listener: the home screen draws its own light; here, the rest.
-
     override fun onUnread(packages: List<String>) = Unit
 
     override fun onPulse(pulse: Glyph.Pulse) {
-        // Over other apps only with Accessibility on in NIHIL's settings, as the double tap.
         val prefs = Prefs.get(this)
         if (Glyph.homeShowing || !prefs.glyph || !prefs.doubleTapLock) return
-        // With the screen off there is nothing to light.
         if (getSystemService(PowerManager::class.java)?.isInteractive != true) return
         (overlay ?: HaloOverlay(this).also { overlay = it }).show(pulse)
     }

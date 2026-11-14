@@ -74,12 +74,6 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
 
-/**
- * NIHIL's home screen. Three layers in one window:
- *   HomeView   clock, battery, favourites (on the wallpaper)
- *   FrameView  the black frame and the Glyph light
- *   DrawerView the drawer, which rises with the frame
- */
 class LauncherActivity :
     Activity(),
     HomeView.Host,
@@ -87,7 +81,6 @@ class LauncherActivity :
     RootLayout.Listener,
     ActionHost,
     Glyph.Listener {
-
     private lateinit var prefs: Prefs
     private lateinit var root: RootLayout
     private lateinit var home: HomeView
@@ -107,8 +100,6 @@ class LauncherActivity :
     private var resumed = false
     private var backCallback: OnBackInvokedCallback? = null
 
-    // --- Lifecycle -------------------------------------------------------------
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs.get(this)
@@ -116,7 +107,6 @@ class LauncherActivity :
         Torch.init(this)
         Glass.start(this) { if (::root.isInitialized) redraw(root) }
 
-        // Edge to edge on every version (Android 15 enforces it; 12-14 need the call).
         @Suppress("DEPRECATION")
         window.setDecorFitsSystemWindows(false)
         window.isNavigationBarContrastEnforced = false
@@ -167,7 +157,6 @@ class LauncherActivity :
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        // A single page: keep a wallpaper that is wider than the screen centred.
         runCatching {
             WallpaperManager.getInstance(this).setWallpaperOffsets(window.decorView.windowToken, 0.5f, 0.5f)
         }
@@ -179,8 +168,6 @@ class LauncherActivity :
         home.updateClock(animate = false)
         updateAlarm()
         Glyph.listen(this)
-        // Notification access granted but its listener not bound (after an
-        // update, on some phones): ask Android to bind it again.
         if (Access.hasNotificationAccess(this) && !Glyph.connected) {
             runCatching { NotificationListenerService.requestRebind(Access.glyphComponent(this)) }
         }
@@ -194,11 +181,9 @@ class LauncherActivity :
         updateAlarm()
         Webs.fetchIcons(this, prefs.webs)
         if (!prefs.wallpaperSeeded && Access.isDefaultHome(this)) seedWallpaper()
-        // The wallpaper may have changed while away: the glass sees the new one, or none.
         Glass.start(this) { if (::root.isInitialized) redraw(root) }
     }
 
-    /** Every view and background drawn again (the glass has a new wallpaper behind it). */
     private fun redraw(view: View) {
         view.invalidate()
         view.background?.invalidateSelf()
@@ -216,11 +201,6 @@ class LauncherActivity :
         updateHomeShowing()
     }
 
-    /**
-     * Whether the home card is what the light runs round now, or the screen's edge
-     * (Glyph.homeShowing). Not window focus: a heads-up notification takes it on
-     * some phones (One UI) just as its light should run.
-     */
     private fun updateHomeShowing() {
         Glyph.homeShowing = resumed && drawerProgress == 0f
     }
@@ -229,7 +209,6 @@ class LauncherActivity :
         super.onStop()
         unregister()
         Glyph.unlisten(this)
-        // Coming back always lands on the home screen.
         popup.dismiss()
         settle?.cancel()
         setProgress(0f)
@@ -248,7 +227,6 @@ class LauncherActivity :
         super.onDestroy()
     }
 
-    /** The home button while NIHIL is in front: close whatever is open. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) {
@@ -259,7 +237,6 @@ class LauncherActivity :
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        // Android 12: no OnBackInvokedDispatcher. A home screen never finishes on back.
         back()
     }
 
@@ -270,8 +247,6 @@ class LauncherActivity :
         }
     }
 
-    // --- Insets and the drawer ---------------------------------------------------
-
     private fun applyInsets(insets: WindowInsets) {
         val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
         val side = dp(6)
@@ -281,7 +256,6 @@ class LauncherActivity :
         bandBottom = max(bars.bottom, dp(10))
         imeBottom = insets.getInsets(WindowInsets.Type.ime()).bottom
 
-        // The card follows the screen's own rounded corners, a little tighter.
         val corner = insets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_LEFT)?.radius ?: 0
         val radius = if (corner > 0) (corner - side).toFloat().coerceIn(dp(18f), dp(34f)) else dp(26f)
 
@@ -316,7 +290,6 @@ class LauncherActivity :
             settled(open)
             return
         }
-        // A fast fling finishes sooner.
         val speed = (abs(velocity) / (frame.travel * 3f)).coerceIn(0f, 1f)
         settle = ValueAnimator.ofFloat(drawerProgress, target).apply {
             duration = (Nihil.DRAWER * distance * (1f - 0.45f * speed)).toLong().coerceAtLeast(120L)
@@ -347,8 +320,6 @@ class LauncherActivity :
             hideKeyboard()
         }
     }
-
-    // RootLayout.Listener
 
     override val progress: Float get() = drawerProgress
 
@@ -396,8 +367,6 @@ class LauncherActivity :
         )
     }
 
-    // --- Apps --------------------------------------------------------------------
-
     private val appsChanged: () -> Unit = { refreshApps() }
 
     private val websChanged: () -> Unit = { refreshApps() }
@@ -418,7 +387,6 @@ class LauncherActivity :
                 Webs.fetchIcons(this, prefs.webs)
             }
             Prefs.DIM -> home.setDim(prefs.dimWallpaper)
-            // Every surface is made again, as glass or as it was.
             Prefs.GLASS -> recreate()
             Prefs.GLYPH -> onUnread(Glyph.unread)
         }
@@ -432,14 +400,12 @@ class LauncherActivity :
         drawer.setContent(entries(webs), prefs.hidden, actions, prefs.iconStyle)
     }
 
-    /** The apps and the webs, by name, as the drawer lists them. */
     private fun entries(webs: List<WebEntry> = prefs.webs): List<Entry> {
         if (webs.isEmpty()) return Apps.all
         val collator = Collator.getInstance()
         return (Apps.all + webs).sortedWith { a, b -> collator.compare(a.label, b.label) }
     }
 
-    /** First run: phone, messages, camera and browser, if they're there. */
     private fun defaultFavorites(): List<String> {
         val intents = listOf(
             Intent(Intent.ACTION_DIAL),
@@ -461,7 +427,6 @@ class LauncherActivity :
             .onFailure { notice(getString(R.string.launch_failed, entry.label)) }
     }
 
-    /** On the home screen or not, and where there: how every menu of an app or a web starts. */
     private fun homeItems(key: String): ArrayList<AppMenu.Item> {
         val favorites = prefs.favorites
         val index = favorites.indexOf(key)
@@ -536,8 +501,6 @@ class LauncherActivity :
         )
     }
 
-    // HomeView.Host and DrawerView.Host
-
     override fun launch(entry: Entry, from: View) = when (entry) {
         is AppEntry -> launchApp(entry, from)
         is WebEntry -> openWeb(entry, from)
@@ -578,8 +541,6 @@ class LauncherActivity :
             getSystemService(InputMethodManager::class.java)?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
         }
     }
-
-    // --- ActionHost --------------------------------------------------------------
 
     override val context: Context get() = this
 
@@ -627,8 +588,6 @@ class LauncherActivity :
         return SimpleDateFormat(pattern, Locale.getDefault()).format(next.triggerTime).replace(".", "")
     }
 
-    // --- Glyph ---------------------------------------------------------------------
-
     override fun onUnread(packages: List<String>) {
         home.updateUnread(if (prefs.glyph) packages else emptyList(), prefs.iconStyle)
     }
@@ -636,8 +595,6 @@ class LauncherActivity :
     override fun onPulse(pulse: Glyph.Pulse) {
         if (prefs.glyph && Glyph.homeShowing) frame.pulse(pulse)
     }
-
-    // --- Time, battery, alarm ------------------------------------------------------
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -663,7 +620,6 @@ class LauncherActivity :
             addAction(Intent.ACTION_BATTERY_CHANGED)
             addAction(AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED)
         }
-        // System broadcasts only; nothing else needs to reach this receiver.
         val sticky = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
@@ -685,18 +641,11 @@ class LauncherActivity :
         val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
         if (level < 0 || scale <= 0) return
         val plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0
-        // The charger going in while NIHIL is on screen: light rises from the bottom.
         if (charging == false && plugged && prefs.glyph && Glyph.homeShowing) frame.pulse(Glyph.Pulse.CHARGE)
         charging = plugged
         home.updateBattery(level * 100 / scale, plugged)
     }
 
-    /**
-     * The first time NIHIL is the home app, its own wallpaper, as the desktop
-     * starts with it: the night in LEDs, drawn here at the screen's size with
-     * the studio's algorithm. Only on a fresh install: an update never changes
-     * a wallpaper someone already has, and the studio changes it any time.
-     */
     private fun seedWallpaper() {
         prefs.wallpaperSeeded = true
         val info = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull() ?: return

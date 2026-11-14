@@ -22,14 +22,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.X509TrustManager
 
-/**
- * The phone's side of docs/deck.md (Nihil-Shell): HTTPS to the computer,
- * trusting only the certificate whose public key is the pin from its QR,
- * checked before anything is sent. Blocking calls: run them off the main
- * thread.
- */
 class DeckClient(private val computer: Computer, private val token: String?) {
-
     class Reply(val status: Int, val type: String?, val bytes: ByteArray) {
         val json: JSONObject?
             get() = if (type?.startsWith("application/json") == true) runCatching { JSONObject(String(bytes, Charsets.UTF_8)) }.getOrNull() else null
@@ -37,11 +30,6 @@ class DeckClient(private val computer: Computer, private val token: String?) {
         val error: String? get() = json?.optString("error")?.takeIf { it.isNotEmpty() }
     }
 
-    /**
-     * The address that answered last, then the others from the QR, then
-     * whatever mDNS finds as _nihil-deck._tcp: the pin decides which is it.
-     * Null when no address answers; [Computer.last] is where one did.
-     */
     fun call(method: String, path: String, body: JSONObject? = null, context: Context? = null): Reply? {
         val tried = LinkedHashSet<String>()
         for (host in listOfNotNull(computer.last) + computer.hosts) {
@@ -62,7 +50,6 @@ class DeckClient(private val computer: Computer, private val token: String?) {
         return null
     }
 
-    /** A connection the computer turned into a stream: it answered 101 to an upgrade. */
     class Stream(val socket: SSLSocket) {
         val input: InputStream = socket.inputStream
         val output: OutputStream = socket.outputStream
@@ -72,11 +59,6 @@ class DeckClient(private val computer: Computer, private val token: String?) {
         }
     }
 
-    /**
-     * [path] as a stream that speaks [protocol], at the address that answered last or the
-     * others from the QR: the stream, or the computer's answer when it said no; neither
-     * when no address answered.
-     */
     fun upgrade(path: String, protocol: String): Pair<Stream?, Reply?> {
         for (host in (listOfNotNull(computer.last) + computer.hosts).distinct()) {
             val socket = runCatching {
@@ -100,7 +82,6 @@ class DeckClient(private val computer: Computer, private val token: String?) {
         return null to null
     }
 
-    /** The upgrade asked for, and the answer's head read a byte at a time: the stream after it stays. */
     private fun ask(socket: SSLSocket, host: String, path: String, protocol: String): Reply {
         val address = if (host.contains(':')) "[$host]" else host
         val head = StringBuilder()
@@ -146,7 +127,6 @@ class DeckClient(private val computer: Computer, private val token: String?) {
         return Reply(status, headers["content-type"], body.copyOf(read))
     }
 
-    /** What the computer's QR holds (nihil-deck://pair?…). */
     class Invitation(val name: String, val hosts: List<String>, val port: Int, val code: String, val pin: String) {
         companion object {
             private val CODE = Regex("[A-HJ-NP-Z2-9]{8}")
@@ -168,14 +148,12 @@ class DeckClient(private val computer: Computer, private val token: String?) {
     sealed class Pairing {
         class Paired(val computer: Computer, val token: String) : Pairing()
 
-        /** wrong, closed, expired, wait (docs/deck.md, Errors), or unreachable. */
         class Failed(val reason: String) : Pairing()
     }
 
     companion object {
         const val SERVICE = "_nihil-deck._tcp"
 
-        /** Pairs with the computer of [invitation]: the first address that answers to hello is the one. */
         fun pair(invitation: Invitation, device: String): Pairing {
             for (host in invitation.hosts) {
                 val hello = once(host, invitation.port, invitation.pin, "GET", "/v1/hello", null, null) ?: continue
@@ -192,7 +170,6 @@ class DeckClient(private val computer: Computer, private val token: String?) {
             return Pairing.Failed("unreachable")
         }
 
-        /** One request to one address, or null when it can't be reached or isn't the computer of [pin]. */
         fun once(host: String, port: Int, pin: String, method: String, path: String, body: JSONObject?, token: String?): Reply? =
             runCatching {
                 val connection = URL("https", host, port, path).openConnection() as HttpsURLConnection
@@ -220,7 +197,6 @@ class DeckClient(private val computer: Computer, private val token: String?) {
 
         private fun tls(pin: String): SSLContext = SSLContext.getInstance("TLS").apply { init(null, arrayOf(Pinned(pin)), null) }
 
-        /** The computers mDNS finds on this network in [timeout] ms, as addresses. */
         fun discover(context: Context, timeout: Long = 3000): List<String> {
             val nsd = context.getSystemService(NsdManager::class.java) ?: return emptyList()
             val found = Collections.synchronizedList(ArrayList<String>())
@@ -255,7 +231,6 @@ class DeckClient(private val computer: Computer, private val token: String?) {
         }
     }
 
-    /** Trusts one public key: the pin's (SHA-256 of its SubjectPublicKeyInfo, base64url). */
     private class Pinned(private val pin: String) : X509TrustManager {
         override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
             val hash = MessageDigest.getInstance("SHA-256").digest(chain.firstOrNull()?.publicKey?.encoded ?: throw CertificateException("none"))

@@ -7,12 +7,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DotMatrixTest {
-
     private fun grey(v: Int) = (0xFF shl 24) or (v shl 16) or (v shl 8) or v
 
     @Test
     fun coverFillsAndCentres() {
-        // A 4:3 photo on a 9:19.5 screen is scaled by height and cropped at the sides.
         val (scale, dx, dy) = DotMatrix.cover(4000, 3000, 1080, 2340)
         assertEquals(0.78f, scale, 1e-4f)
         assertEquals((3120 - 1080) / 2, dx)
@@ -60,7 +58,6 @@ class DotMatrixTest {
         val w = 100
         val h = 100
         val px = IntArray(w * h) { grey(10) }
-        // A little brighter background so the percentiles have a range, and one star.
         for (k in 0 until w) px[k] = grey(40)
         px[55 * w + 55] = grey(255)
         val grid = DotMatrix.grid(px, w, h, DotMatrix.Params(10))

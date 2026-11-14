@@ -12,7 +12,6 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-/** A computer this phone is a deck of: what its QR said, and the address that answered last. */
 class Computer(
     val name: String,
     val pin: String,
@@ -22,14 +21,8 @@ class Computer(
     val device: String,
 )
 
-/** A web the deck keeps, to open on the computer. */
 class Web(val url: String, val title: String)
 
-/**
- * What the deck keeps, in its own preferences (out of backups,
- * res/xml/data_extraction_rules.xml): the computer, its token encrypted
- * with a key that never leaves the Android Keystore, and the webs.
- */
 class DeckStore private constructor(context: Context) {
     private val sp = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
@@ -40,7 +33,6 @@ class DeckStore private constructor(context: Context) {
             Computer(o.getString("name"), o.getString("pin"), o.getInt("port"), hosts, o.optString("last").ifEmpty { null }, o.getString("device"))
         }.getOrNull()
 
-    /** The token, or null when there is none or it can't be read back (a new phone, a reset Keystore). */
     fun token(): String? = runCatching {
         val (iv, data) = (sp.getString(TOKEN, null) ?: return null).split(':').map { Base64.decode(it, Base64.NO_WRAP) }
         val cipher = Cipher.getInstance(CIPHER)
@@ -66,7 +58,6 @@ class DeckStore private constructor(context: Context) {
         edit.apply()
     }
 
-    /** The computer and its token go; the webs stay for the next one. */
     fun forget() {
         sp.edit().remove(COMPUTER).remove(TOKEN).apply()
     }
@@ -82,12 +73,10 @@ class DeckStore private constructor(context: Context) {
             sp.edit().putString(WEBS, a.toString()).apply()
         }
 
-    /** The computer's apps in the order put on the deck (their ids); new ones go at the end. */
     var appsOrder: List<String>
         get() = runCatching { JSONArray(sp.getString(APPS_ORDER, "[]")).let { a -> List(a.length()) { a.getString(it) } } }.getOrDefault(emptyList())
         set(value) = sp.edit().putString(APPS_ORDER, JSONArray(value).toString()).apply()
 
-    /** Caffeine on the deck: the screen stays on while it is open. */
     var keepScreenOn: Boolean
         get() = sp.getBoolean(KEEP_ON, false)
         set(value) = sp.edit().putBoolean(KEEP_ON, value).apply()

@@ -6,28 +6,12 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-/**
- * A QR reader on nothing but Kotlin, for the deck's pairing code: from a
- * picture's luminance (the camera's Y plane) to the text it holds.
- *
- * The steps every reader takes (ISO/IEC 18004, as ZXing takes them): a local
- * threshold; the three finder patterns; the grid sampled through a
- * perspective transform anchored on them and on the alignment pattern;
- * format and version; the data unmasked, read in its zigzag and split into
- * its blocks; Reed-Solomon; the segments. Versions 1 to 15 and numeric,
- * alphanumeric and byte segments: more than a pairing URI needs. Modules may
- * be dots, as the desktop draws them: the grid is sampled at their centres.
- */
 object QrDecoder {
-
-    /** The text in the QR code in [luminance] (one byte a pixel, row by row), or null. */
     fun decode(luminance: ByteArray, width: Int, height: Int): String? {
         if (width < 21 || height < 21 || luminance.size < width * height) return null
-        // As it comes; then, for a grainy picture (little light), softened.
         return attempt(luminance, width, height) ?: attempt(soften(luminance, width, height), width, height)
     }
 
-    /** A 3 × 3 box blur: the grain of a dark room goes, modules of three pixels and more stay. */
     internal fun soften(lum: ByteArray, w: Int, h: Int): ByteArray {
         val rows = IntArray(w * h)
         for (y in 0 until h) {
@@ -70,9 +54,6 @@ object QrDecoder {
         return null
     }
 
-    // --- The picture as black and white --------------------------------------
-
-    /** A black-and-white picture: true is dark. */
     internal class Bits(val width: Int, val height: Int) {
         val bits = BooleanArray(width * height)
 
@@ -85,11 +66,6 @@ object QrDecoder {
 
     private const val BLOCK = 8
 
-    /**
-     * Each 8 × 8 block against the mean of the 5 × 5 blocks around it, so a
-     * shadow or a glare across the code doesn't matter (ZXing's hybrid
-     * binarizer). A flat block is taken for background.
-     */
     internal fun binarize(lum: ByteArray, w: Int, h: Int): Bits {
         val out = Bits(w, h)
         if (w < 5 * BLOCK || h < 5 * BLOCK) {
@@ -150,8 +126,6 @@ object QrDecoder {
         return out
     }
 
-    // --- The finder patterns ---------------------------------------------------
-
     internal class Point(var x: Float, var y: Float, var size: Float, var count: Int = 1)
 
     private fun distance(a: Point, b: Point): Float {
@@ -160,7 +134,6 @@ object QrDecoder {
         return sqrt(dx * dx + dy * dy)
     }
 
-    /** Dark, light, dark three times as wide, light, dark: 1:1:3:1:1, across and down. */
     private fun crossesPattern(c: IntArray): Boolean {
         var total = 0
         for (v in c) {
@@ -216,7 +189,6 @@ object QrDecoder {
             return best()
         }
 
-        /** Three of them that make a right isosceles triangle, of one module size. */
         private fun best(): List<Point>? {
             val seen = found.filter { it.count >= 2 }.let { if (it.size >= 3) it else found }
             if (seen.size < 3) return null
@@ -308,11 +280,6 @@ object QrDecoder {
         }
     }
 
-    /**
-     * A module's size measured along the lines between the finders, where the
-     * code's own axes are: across a finder diagonally (a code turned 45°) it
-     * would come out 1.4 times too big (ZXing's calculateModuleSize).
-     */
     private fun moduleSize(image: Bits, topLeft: Point, topRight: Point, bottomLeft: Point): Float {
         val across = moduleAlong(image, topLeft, topRight)
         val down = moduleAlong(image, topLeft, bottomLeft)
@@ -333,7 +300,6 @@ object QrDecoder {
         }
     }
 
-    /** A finder's width (7 modules) on the line towards another: its centre to each outer edge. */
     private fun runBothWays(image: Bits, fromX: Float, fromY: Float, toX: Float, toY: Float): Float {
         var result = run(image, fromX.toInt(), fromY.toInt(), toX.toInt(), toY.toInt())
         var scale = 1f
@@ -359,7 +325,6 @@ object QrDecoder {
         return result - 1f
     }
 
-    /** From a finder's centre towards a point: how far to the end of its outer dark ring, or NaN. */
     private fun run(image: Bits, x0: Int, y0: Int, x1: Int, y1: Int): Float {
         val steep = abs(y1 - y0) > abs(x1 - x0)
         val fromX = if (steep) y0 else x0
@@ -395,7 +360,6 @@ object QrDecoder {
 
     private fun length(dx: Int, dy: Int): Float = sqrt((dx * dx + dy * dy).toFloat())
 
-    /** Bottom left, top left (the right angle) and top right, turning the right way. */
     private fun order(p: List<Point>): Triple<Point, Point, Point> {
         val d01 = distance(p[0], p[1])
         val d12 = distance(p[1], p[2])
@@ -416,11 +380,8 @@ object QrDecoder {
         return Triple(a, b, c)
     }
 
-    // --- The grid --------------------------------------------------------------
-
     private fun read(image: Bits, bottomLeft: Point, topLeft: Point, topRight: Point, dimension: Int, allowRetry: Boolean): String? {
         val version = (dimension - 17) / 4
-        // One module across and one down, as the finders lie: rotation and tilt included.
         val span = (dimension - 7).toFloat()
         val ux = (topRight.x - topLeft.x) / span
         val uy = (topRight.y - topLeft.y) / span
@@ -453,14 +414,12 @@ object QrDecoder {
         return decodeGrid(grid, dimension)
     }
 
-    /** The alignment pattern near where it should be: a dark module, a light ring, a dark ring. */
     private fun alignment(image: Bits, ex: Float, ey: Float, ux: Float, uy: Float, vx: Float, vy: Float): Pair<Float, Float>? {
         fun dark(x: Float, y: Float): Int {
             val px = x.roundToInt()
             val py = y.roundToInt()
             return if (px in 0 until image.width && py in 0 until image.height && image[px, py]) 1 else 0
         }
-        // Every place within five modules that looks like it, scored out of 17.
         val steps = 21
         val scores = IntArray(steps * steps)
         var bestScore = 0
@@ -479,8 +438,6 @@ object QrDecoder {
             if (score > bestScore) bestScore = score
         }
         if (bestScore < 16) return null
-        // Half a module off still scores as well where the samples fall on an edge:
-        // the middle of the best ones around the first is the centre.
         val first = scores.indexOfFirst { it == bestScore }
         var sumA = 0f
         var sumB = 0f
@@ -563,8 +520,6 @@ object QrDecoder {
         }
     }
 
-    // --- Format and version ------------------------------------------------------
-
     const val MAX_VERSION = 15
 
     private fun bch(value: Int, poly: Int): Int {
@@ -576,10 +531,8 @@ object QrDecoder {
         return v
     }
 
-    /** The 32 format words, masked as printed: index = level bits << 3 | mask. */
     internal val FORMATS = IntArray(32) { ((it shl 10) or bch(it, 0x537)) xor 0x5412 }
 
-    /** The version words, 7 to 40. */
     internal fun versionWord(version: Int): Int = (version shl 12) or bch(version, 0x1F25)
 
     private fun closest(bits: Int, words: IntArray): Int {
@@ -623,18 +576,12 @@ object QrDecoder {
         return if (found >= 0) found + 7 else null
     }
 
-    // --- The data --------------------------------------------------------------
-
     private val ALIGNMENTS = arrayOf(
         intArrayOf(), intArrayOf(), intArrayOf(6, 18), intArrayOf(6, 22), intArrayOf(6, 26), intArrayOf(6, 30),
         intArrayOf(6, 34), intArrayOf(6, 22, 38), intArrayOf(6, 24, 42), intArrayOf(6, 26, 46), intArrayOf(6, 28, 50),
         intArrayOf(6, 30, 54), intArrayOf(6, 32, 58), intArrayOf(6, 34, 62), intArrayOf(6, 26, 46, 66), intArrayOf(6, 26, 48, 70),
     )
 
-    /**
-     * Error correction per version and level (L, M, Q, H): the EC codewords
-     * of each block, then (blocks, data codewords) for each group.
-     */
     internal val BLOCKS = arrayOf(
         arrayOf(intArrayOf()),
         arrayOf(intArrayOf(7, 1, 19), intArrayOf(10, 1, 16), intArrayOf(13, 1, 13), intArrayOf(17, 1, 9)),
@@ -654,7 +601,6 @@ object QrDecoder {
         arrayOf(intArrayOf(22, 5, 87, 1, 88), intArrayOf(24, 5, 41, 5, 42), intArrayOf(30, 5, 24, 7, 25), intArrayOf(24, 11, 12, 7, 13)),
     )
 
-    /** The codewords a version holds: its modules less the patterns, in bytes. */
     internal fun codewords(version: Int): Int {
         var modules = (16 * version + 128) * version + 64
         if (version >= 2) {
@@ -665,7 +611,6 @@ object QrDecoder {
         return modules / 8
     }
 
-    /** True for the modules that hold no data: finders, timing, alignment, format, version. */
     private fun functions(version: Int, dimension: Int): Bits {
         val f = Bits(dimension, dimension)
         fun region(left: Int, top: Int, width: Int, height: Int) {
@@ -713,7 +658,6 @@ object QrDecoder {
         }
         val mask = format and 7
         val function = functions(version, dimension)
-        // Unmasked, read two columns at a time, up and down, from the right.
         val raw = IntArray(codewords(version))
         var count = 0
         var byte = 0
@@ -743,7 +687,6 @@ object QrDecoder {
         return segments(data, version)
     }
 
-    /** The blocks undone from their interleaving, each corrected; their data codewords in order. */
     private fun blocks(raw: IntArray, spec: IntArray): IntArray? {
         val ec = spec[0]
         val sizes = ArrayList<Int>()
@@ -767,8 +710,6 @@ object QrDecoder {
         }
         return out.toIntArray()
     }
-
-    // --- The segments -----------------------------------------------------------
 
     private class BitReader(private val bytes: IntArray) {
         private var byte = 0
@@ -855,7 +796,6 @@ object QrDecoder {
     }
 }
 
-/** Reed-Solomon over GF(256) with the QR polynomial (x⁸ + x⁴ + x³ + x² + 1), syndromes from α⁰. */
 internal object ReedSolomon {
     private val EXP = IntArray(512)
     private val LOG = IntArray(256)
@@ -877,7 +817,6 @@ internal object ReedSolomon {
 
     private fun power(a: Int, e: Int): Int = if (e == 0) 1 else if (a == 0) 0 else EXP[(LOG[a] * e) % 255]
 
-    /** The received block at α^i: its codewords as coefficients, the first the highest power. */
     private fun syndrome(block: IntArray, i: Int): Int {
         val x = EXP[i % 255]
         var acc = 0
@@ -885,12 +824,10 @@ internal object ReedSolomon {
         return acc
     }
 
-    /** Corrects [block] (data then [ec] error correction codewords) in place; false when it can't. */
     fun correct(block: IntArray, ec: Int): Boolean {
         val n = block.size
         val s = IntArray(ec) { syndrome(block, it) }
         if (s.all { it == 0 }) return true
-        // Berlekamp-Massey: the error locator.
         var c = IntArray(ec + 1).also { it[0] = 1 }
         var b = IntArray(ec + 1).also { it[0] = 1 }
         var l = 0
@@ -916,7 +853,6 @@ internal object ReedSolomon {
             }
         }
         if (l == 0 || 2 * l > ec) return false
-        // Chien: where the locator has its roots.
         val degrees = ArrayList<Int>()
         for (d in 0 until n) {
             val inverse = EXP[(255 - d % 255) % 255]
@@ -929,7 +865,6 @@ internal object ReedSolomon {
             if (v == 0) degrees += d
         }
         if (degrees.size != l) return false
-        // Forney: how wrong each one is.
         val omega = IntArray(ec)
         for (i in 0 until ec) {
             var v = 0

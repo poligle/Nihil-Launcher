@@ -9,11 +9,6 @@ import com.nihilshell.launcher.R
 import com.nihilshell.launcher.core.WebAddress
 import com.nihilshell.launcher.core.WebEntry
 
-/**
- * A web's address and name, to add it or change it, as the deck asks for its webs: the
- * address as a browser shows it, with or without https://; the name, left empty, is the
- * address's host. [onDone] once it closes, kept or not.
- */
 object WebDialog {
     fun show(
         context: Context,

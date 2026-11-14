@@ -10,25 +10,14 @@ import android.view.View
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-/**
- * The deck's trackpad: this screen as the computer's touchpad. Every finger goes as it is,
- * with its time ([onFrame]), and the computer's own touchpad driver makes of them what its
- * touchpad does. Under the fingers, LEDs light up, as the desktop's dots. A swipe stays here,
- * from the screen's edges too; the dots under the workspaces leave it. Its size goes in
- * millimetres (the screen's dpi), so a finger moves the pointer as far as on a laptop's.
- */
 class Trackpad(context: Context) : View(context) {
-
-    /** At [time] (ms), [count] fingers touching: their ids, and where, in units ([RESOLUTION] a mm). */
     var onFrame: ((time: Long, count: Int, ids: IntArray, xs: IntArray, ys: IntArray) -> Unit)? = null
 
-    /** Its size changed: [widthUnits] and [heightUnits] say the new one. */
     var onSize: (() -> Unit)? = null
 
     private val unitsPerPx: Float = run {
         val metrics = resources.displayMetrics
         val measured = (metrics.xdpi + metrics.ydpi) / 2f
-        // Some phones say a dpi that isn't their screen's: then the density's.
         val dpi = if (measured > metrics.densityDpi * 0.6f && measured < metrics.densityDpi * 1.6f) measured else metrics.densityDpi.toFloat()
         RESOLUTION * 25.4f / dpi
     }
@@ -40,7 +29,6 @@ class Trackpad(context: Context) : View(context) {
     private val xs = IntArray(MAX)
     private val ys = IntArray(MAX)
 
-    // The LEDs: a dot every [pitch], lit around each finger, fading once it goes.
     private class Glow(var x: Float, var y: Float, var released: Long = -1L)
 
     private val glows = HashMap<Int, Glow>()
@@ -77,7 +65,6 @@ class Trackpad(context: Context) : View(context) {
             grid[i + 1] = top + r * pitch
         }
         light = FloatArray(columns * rows)
-        // Swipes from the screen's edges are the computer's here, not Android's back.
         systemGestureExclusionRects = listOf(Rect(0, 0, w, h))
         onSize?.invoke()
     }
@@ -85,7 +72,6 @@ class Trackpad(context: Context) : View(context) {
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val action = event.actionMasked
         if (action == MotionEvent.ACTION_DOWN) parent?.requestDisallowInterceptTouchEvent(true)
-        // Between two frames the screen may have taken more samples: each goes at its own time.
         if (action == MotionEvent.ACTION_MOVE) {
             for (h in 0 until event.historySize) {
                 var n = 0
@@ -98,7 +84,6 @@ class Trackpad(context: Context) : View(context) {
                 onFrame?.invoke(event.getHistoricalEventTime(h), n, ids, xs, ys)
             }
         }
-        // The finger going up is no longer there; with the last one, none is.
         val up = when (action) {
             MotionEvent.ACTION_POINTER_UP -> event.actionIndex
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> ALL
@@ -182,7 +167,6 @@ class Trackpad(context: Context) : View(context) {
     }
 
     companion object {
-        /** Units a millimetre, as the frames carry them. */
         const val RESOLUTION = 20
         private const val MAX = 10
         private const val ALL = -2

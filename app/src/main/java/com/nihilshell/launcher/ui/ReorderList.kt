@@ -8,12 +8,6 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import kotlin.math.abs
 
-/**
- * Rows one under another, [gap] apart and each as tall as it needs, that can be put in
- * another order by holding one and moving it, as ReorderGrid's cells (the tasks of a
- * column). A long press [arm]s a row: moving the finger lifts it, the others make room,
- * and letting go puts it there ([onReorder], with where it ends up).
- */
 class ReorderList(context: Context, private val gap: Int) : ViewGroup(context) {
     var onReorder: ((from: Int, to: Int) -> Unit)? = null
 
@@ -26,7 +20,6 @@ class ReorderList(context: Context, private val gap: Int) : ViewGroup(context) {
     private var grabY = 0f
     private var lastRawY = 0f
 
-    /** Makes [child] a row that can be held and moved. */
     fun movable(child: View) {
         child.setOnTouchListener { _, e ->
             if (e.actionMasked == MotionEvent.ACTION_DOWN) lastRawY = e.rawY
@@ -34,7 +27,6 @@ class ReorderList(context: Context, private val gap: Int) : ViewGroup(context) {
         }
     }
 
-    /** After a long press on [child]: moving the finger now picks it up. */
     fun arm(child: View) {
         if (indexOfChild(child) < 0) return
         armed = child
@@ -105,7 +97,6 @@ class ReorderList(context: Context, private val gap: Int) : ViewGroup(context) {
         return true
     }
 
-    /** Where a row dragged with its centre at [y] ends up: after every other row whose centre is above. */
     private fun slotFor(y: Float): Int {
         var slot = 0
         for (i in 0 until childCount) {
@@ -115,14 +106,12 @@ class ReorderList(context: Context, private val gap: Int) : ViewGroup(context) {
         return slot
     }
 
-    /** The rows' indices with the dragged one moved to [to]. */
     private fun order(to: Int): List<Int> {
         val rest = (0 until childCount).filter { it != from }.toMutableList()
         rest.add(to.coerceIn(0, rest.size), from)
         return rest
     }
 
-    /** Where each row's top goes in [order], one under another. */
     private fun tops(order: List<Int>): IntArray {
         val out = IntArray(childCount)
         var top = 0

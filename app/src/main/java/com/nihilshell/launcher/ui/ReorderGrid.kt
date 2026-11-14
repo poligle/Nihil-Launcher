@@ -7,14 +7,6 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import kotlin.math.hypot
 
-/**
- * Cells in a grid, [columns] across and [cellHeight] tall (one column: a list),
- * that can be put in another order by holding one and moving it, as the
- * desktop's kanban moves its cards. A long press [arm]s a cell: moving the
- * finger then lifts it ([onStart], to close the menu the press opened), the
- * others make room, and letting go puts it there ([onReorder]). The last
- * [fixedTail] cells (an "add" key) stay where they are.
- */
 class ReorderGrid(context: Context, columns: Int, private val cellHeight: Int) : ViewGroup(context) {
     var columns = columns.coerceAtLeast(1)
         set(value) {
@@ -36,13 +28,11 @@ class ReorderGrid(context: Context, columns: Int, private val cellHeight: Int) :
     private var grabX = 0f
     private var grabY = 0f
 
-    /** Where the last touch went down on a cell, in screen pixels: for [arm] from a long press. */
     var lastRawX = 0f
         private set
     var lastRawY = 0f
         private set
 
-    /** Makes [child] a cell that can be held and moved. */
     fun movable(child: View) {
         child.setOnTouchListener { _, e ->
             if (e.actionMasked == MotionEvent.ACTION_DOWN) {
@@ -53,7 +43,6 @@ class ReorderGrid(context: Context, columns: Int, private val cellHeight: Int) :
         }
     }
 
-    /** After a long press on [child]: moving the finger now picks it up. */
     fun arm(child: View, onStart: (() -> Unit)? = null) {
         val index = indexOfChild(child)
         if (index < 0 || index >= childCount - fixedTail) return
@@ -136,7 +125,6 @@ class ReorderGrid(context: Context, columns: Int, private val cellHeight: Int) :
         return (row * columns + column).coerceIn(0, (childCount - 1 - fixedTail).coerceAtLeast(0))
     }
 
-    /** Every other cell to where it goes with [from] lifted and put down at [target]. */
     private fun makeRoom() {
         for (i in 0 until childCount) {
             val c = getChildAt(i)

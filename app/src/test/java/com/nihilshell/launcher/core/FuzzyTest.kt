@@ -5,7 +5,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FuzzyTest {
-
     @Test
     fun normalizeDropsAccentsAndCase() {
         assertEquals("camara", Fuzzy.normalize("Cámara"))

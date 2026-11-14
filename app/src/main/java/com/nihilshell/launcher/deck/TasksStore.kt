@@ -7,13 +7,6 @@ import com.nihilshell.launcher.core.TaskBoard.Card
 import org.json.JSONArray
 import org.json.JSONObject
 
-/**
- * The kanban on this phone: its board, kept in the deck's preferences, and its
- * clock. Every change is stamped at once, paired or not, connected or not; a sync
- * sends the whole board to the computer (POST /v1/tasks), which merges it with its
- * own and answers with the result, merged here again for what changed meanwhile.
- * Stamps are in the computer's time: the phone keeps how far apart the two clocks are.
- */
 class TasksStore private constructor(context: Context) {
     private val sp = context.getSharedPreferences(DeckStore.FILE, Context.MODE_PRIVATE)
 
@@ -23,7 +16,6 @@ class TasksStore private constructor(context: Context) {
     private var last = sp.getLong(CLOCK, 0L)
     private var offset = sp.getLong(OFFSET, 0L)
 
-    /** Now, in the computer's time, after everything already stamped. */
     private fun stamp(): Long {
         last = maxOf(System.currentTimeMillis() + offset, last + 1)
         return last
@@ -40,10 +32,8 @@ class TasksStore private constructor(context: Context) {
         change(Board(board.cards + Card(id, clean, 0, s, s, TaskBoard.rankAt(todo, todo.size, s)), board.removed))
     }
 
-    /** To the end of another column. */
     fun move(id: String, column: Int) = place(id, column, Int.MAX_VALUE)
 
-    /** Where it is put: at [index] of [column], counted without it. */
     fun place(id: String, column: Int, index: Int) {
         val next = TaskBoard.place(board, id, column.coerceIn(0, TaskBoard.COLUMNS - 1), index, stamp())
         if (next !== board) change(next)
@@ -68,7 +58,6 @@ class TasksStore private constructor(context: Context) {
         save()
     }
 
-    /** The computer's answer to a sync: its merged board, and its clock. */
     fun received(reply: JSONObject) {
         val theirs = parse(reply)
         val serverNow = reply.optLong("now", 0L)

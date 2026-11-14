@@ -14,8 +14,6 @@
         };
       };
 
-      # Exactly what app/build.gradle.kts asks for, so Gradle never tries to
-      # install anything into the read-only store.
       android = pkgs.androidenv.composeAndroidPackages {
         platformVersions = [ "35" ];
         buildToolsVersions = [ "35.0.0" ];
@@ -32,8 +30,6 @@
         ANDROID_HOME = sdk;
         ANDROID_SDK_ROOT = sdk;
         JAVA_HOME = pkgs.jdk17.home;
-        # Gradle's own aapt2 is a generic Linux binary that NixOS can't run;
-        # use the SDK's, which nixpkgs has patched.
         GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${sdk}/build-tools/35.0.0/aapt2";
 
         shellHook = ''

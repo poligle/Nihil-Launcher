@@ -41,14 +41,7 @@ import com.nihilshell.launcher.ui.text
 import java.util.concurrent.Executors
 import kotlin.math.abs
 
-/**
- * The wallpaper studio: a photo becomes an LED matrix at the exact resolution
- * of the screen (on a tablet, a square as long as its longest side, for either
- * way up: DotMatrix.wallpaperSize), with the same algorithm as the desktop's
- * wallpapers. All on the phone; nothing is uploaded anywhere.
- */
 class WallpaperActivity : Activity() {
-
     private lateinit var prefs: Prefs
     private lateinit var preview: ImageView
     private lateinit var empty: LinearLayout
@@ -69,7 +62,6 @@ class WallpaperActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs.get(this)
-        // Edge to edge on every version (Android 15 enforces it; 12-14 need the call).
         @Suppress("DEPRECATION")
         window.setDecorFitsSystemWindows(false)
         window.isNavigationBarContrastEnforced = false
@@ -90,7 +82,6 @@ class WallpaperActivity : Activity() {
             insets
         }
 
-        // Title.
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -99,7 +90,6 @@ class WallpaperActivity : Activity() {
         header.addView(KeyButton(this, getString(R.string.studio_pick)).apply { setOnClickListener { pick() } })
         column.addView(header, llp(MATCH, WRAP))
 
-        // The preview, in the wallpaper's proportions: on a tablet, all of the square.
         val stage = AspectFrame(this, screenW.toFloat() / screenH)
         preview = ImageView(this).apply {
             scaleType = ImageView.ScaleType.FIT_CENTER
@@ -129,7 +119,6 @@ class WallpaperActivity : Activity() {
             bottomMargin = dp(16)
         })
 
-        // Controls.
         controls = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val chosen = pitches.indices.minByOrNull { abs(pitches[it] - prefs.dotPitch) } ?: 1
         dots = Choice(
@@ -142,7 +131,6 @@ class WallpaperActivity : Activity() {
         }
         controls.addView(labelled(R.string.studio_dots, dots))
 
-        // One key to apply; then where: the home screen, the lock screen or both.
         val apply = KeyButton(this, getString(R.string.studio_apply_button), accent = true)
         apply.setOnClickListener {
             AppMenu(this).show(anchor = apply, title = getString(R.string.studio_where), items = listOf(
@@ -249,14 +237,12 @@ class WallpaperActivity : Activity() {
         worker.execute {
             val ok = runCatching {
                 val id = WallpaperManager.getInstance(context).setBitmap(bitmap, null, true, which)
-                // The home screen's: the glass sees it (ui/Glass.kt).
                 if (which and WallpaperManager.FLAG_SYSTEM != 0) Glass.remember(context, bitmap, id)
             }.isSuccess
             main.post { status.text = getString(if (ok) R.string.studio_done else R.string.studio_failed) }
         }
     }
 
-    /** A frame that keeps a width / height ratio inside whatever space it gets. */
     private class AspectFrame(context: Context, private val ratio: Float) : FrameLayout(context) {
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             val maxW = MeasureSpec.getSize(widthMeasureSpec)
@@ -275,7 +261,6 @@ class WallpaperActivity : Activity() {
         }
 
         override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-            // Centre the content horizontally.
             val inner = (measuredHeight * ratio).toInt().coerceAtMost(measuredWidth)
             val dx = (measuredWidth - inner) / 2
             for (i in 0 until childCount) getChildAt(i).layout(dx, 0, dx + inner, measuredHeight)

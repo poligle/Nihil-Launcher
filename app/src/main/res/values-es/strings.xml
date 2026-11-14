@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Inicio -->
     <string name="battery_percent">%1$d %%</string>
     <string name="battery_charging">cargando</string>
     <string name="alarm_next">Alarma %1$s</string>
     <string name="favorites_empty">Desliza hacia arriba y mantén pulsada una app para añadirla aquí.</string>
 
-    <!-- Cajón -->
     <string name="search_hint">Buscar</string>
     <string name="apps_count">%1$d apps</string>
     <string name="mode_actions">Acciones</string>
@@ -17,7 +15,6 @@
     <string name="calc_copied">Copiado</string>
     <string name="no_results">Nada encontrado</string>
 
-    <!-- Acciones -->
     <string name="act_torch">Linterna</string>
     <string name="act_wifi">Wi-Fi</string>
     <string name="act_bluetooth">Bluetooth</string>
@@ -35,7 +32,6 @@
     <string name="hint_screen">Pantalla</string>
     <string name="hint_studio">Estudio</string>
 
-    <!-- Menú de apps -->
     <string name="menu_add_home">Añadir a inicio</string>
     <string name="menu_remove_home">Quitar de inicio</string>
     <string name="menu_move_up">Subir</string>
@@ -44,7 +40,6 @@
     <string name="menu_info">Información</string>
     <string name="menu_uninstall">Desinstalar</string>
 
-    <!-- Ajustes -->
     <string name="settings_title">Ajustes</string>
     <string name="set_default">App de inicio</string>
     <string name="set_default_on">NIHIL es tu pantalla de inicio</string>
@@ -74,7 +69,6 @@
     <string name="about_text">NIHIL para Android %1$s. Sin anuncios, sin rastreo y sin cuentas: solo habla con tu ordenador, y solo como su deck.</string>
     <string name="about_fonts">Doto, Space Grotesk y Space Mono, con licencia SIL Open Font License 1.1.</string>
 
-    <!-- Estudio de fondos -->
     <string name="studio_title">Fondo NIHIL</string>
     <string name="studio_empty">Elige una foto: se convertirá en una matriz de LEDs a la resolución exacta de tu pantalla.</string>
     <string name="studio_pick">Elegir foto</string>
@@ -90,12 +84,10 @@
     <string name="studio_done">Listo</string>
     <string name="studio_failed">No se pudo leer la imagen</string>
 
-    <!-- Servicios -->
     <string name="glyph_service_label">Luz Glyph de NIHIL</string>
     <string name="lock_service_label">NIHIL: bloqueo y luz Glyph</string>
     <string name="lock_service_description">Bloquea la pantalla cuando tocas dos veces el inicio de NIHIL y dibuja la luz Glyph alrededor de la pantalla mientras estás en otras apps. No lee nada de la pantalla.</string>
 
-    <!-- Avisos y etiquetas extra -->
     <string name="menu_unhide">Mostrar en la lista</string>
     <string name="launch_failed">No se puede abrir %1$s</string>
     <string name="open_failed">Nada en este móvil puede abrir eso</string>

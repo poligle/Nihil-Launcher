@@ -5,12 +5,6 @@ import android.app.NotificationManager
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 
-/**
- * Notification access, optional. NIHIL only looks at which app posted a
- * notification, its flags and its category: never at its text. That is enough
- * for the unread LEDs on the home screen and the Glyph light. Silent
- * notifications and anything Do Not Disturb holds back don't light up.
- */
 class GlyphListener : NotificationListenerService() {
     private val seen = HashSet<String>()
 
@@ -54,7 +48,6 @@ class GlyphListener : NotificationListenerService() {
         Glyph.publish(packages)
     }
 
-    /** Ongoing work (music, downloads, navigation) is not "unread". */
     private fun counts(sbn: StatusBarNotification): Boolean {
         val flags = sbn.notification.flags
         return sbn.packageName != packageName &&
@@ -68,7 +61,6 @@ class GlyphListener : NotificationListenerService() {
         return r.isAmbient || r.importance < NotificationManager.IMPORTANCE_DEFAULT
     }
 
-    /** New (or re-alerting) and allowed to interrupt right now. */
     private fun alerts(sbn: StatusBarNotification, map: RankingMap, fresh: Boolean): Boolean {
         val again = sbn.notification.flags and Notification.FLAG_ONLY_ALERT_ONCE == 0
         if (!fresh && !again) return false

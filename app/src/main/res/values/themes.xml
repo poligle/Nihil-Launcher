@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Settings and the wallpaper studio: opaque black -->
     <style name="Theme.Nihil" parent="@android:style/Theme.DeviceDefault.NoActionBar">
         <item name="android:windowBackground">@color/nihil_void</item>
         <item name="android:colorBackground">@color/nihil_void</item>
@@ -17,7 +16,6 @@
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 
-    <!-- The home screen: the system wallpaper behind it -->
     <style name="Theme.Nihil.Home" parent="@android:style/Theme.DeviceDefault.Wallpaper.NoTitleBar">
         <item name="android:windowShowWallpaper">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>

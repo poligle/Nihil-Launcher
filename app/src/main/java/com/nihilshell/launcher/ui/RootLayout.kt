@@ -8,25 +8,10 @@ import android.view.ViewConfiguration
 import android.widget.FrameLayout
 import kotlin.math.abs
 
-/**
- * The home screen's gestures, on top of whatever the children do:
- *   swipe up      the drawer follows the finger
- *   swipe down    the notification shade (or, with the drawer open and its
- *                 list at the top, the drawer closes)
- *   double tap    lock, if enabled
- *   long press    the home menu (wallpaper, a web, settings)
- * Those two on the home screen's own ground ([backgroundAt]): not on the clock's
- * card nor on a favourite, but also where the favourites' list only scrolls.
- * A touch during the drawer's animation catches it mid-way.
- */
 class RootLayout(context: Context, private val listener: Listener) : FrameLayout(context) {
-
     interface Listener {
-        /** 0 = home, 1 = drawer open. */
         val progress: Float
-        /** Distance the drawer travels between closed and open. */
         val travel: Float
-        /** Whether a downward drag starting at [y] should close the drawer. */
         fun canCloseFrom(y: Float): Boolean
         fun onGrab()
         fun onDrag(progress: Float)
@@ -45,7 +30,6 @@ class RootLayout(context: Context, private val listener: Listener) : FrameLayout
     private var startY = 0f
     private var startProgress = 0f
     private var dragging = false
-    /** A gesture already used (swipe down): ignore the rest of it. */
     private var spent = false
 
     private val detector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
@@ -61,15 +45,11 @@ class RootLayout(context: Context, private val listener: Listener) : FrameLayout
         }
     })
 
-    /** Minimum fling speed, in px/s, for a release to decide the direction. */
     val flingVelocity: Float get() = fling
 
-    /** Whether a touch at (raw) x, y lands on the home screen's own ground. */
     var backgroundAt: ((Float, Float) -> Boolean)? = null
     private var ground = false
 
-    // The double tap and the long press watch every touch on the ground, whatever else
-    // gets it there: the favourites' list, which fills the height, takes them all.
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.actionMasked == MotionEvent.ACTION_DOWN) ground = backgroundAt?.invoke(ev.rawX, ev.rawY) == true
         if (ground && listener.progress <= 0.001f && !dragging && !spent) detector.onTouchEvent(ev)
@@ -81,7 +61,6 @@ class RootLayout(context: Context, private val listener: Listener) : FrameLayout
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 begin(ev)
-                // Caught in the middle of an animation: take it from here.
                 val p = listener.progress
                 if (p > 0.001f && p < 0.999f) {
                     listener.onGrab()
@@ -98,7 +77,6 @@ class RootLayout(context: Context, private val listener: Listener) : FrameLayout
         val onHome = listener.progress <= 0.001f
         if (onHome && !dragging && !spent && backgroundAt == null) detector.onTouchEvent(ev)
         when (ev.actionMasked) {
-            // Already dragging if the down caught an animation in onInterceptTouchEvent.
             MotionEvent.ACTION_DOWN -> if (!dragging) begin(ev)
             MotionEvent.ACTION_MOVE -> {
                 if (!dragging && !spent && wantsDrag(ev)) start(ev)
@@ -116,7 +94,6 @@ class RootLayout(context: Context, private val listener: Listener) : FrameLayout
         return true
     }
 
-    /** Whether a vertical drag from a point (raw) by dy belongs to something that scrolls there. */
     var scrollableAt: ((Float, Float, Float) -> Boolean)? = null
     private var downRawX = 0f
     private var downRawY = 0f
@@ -146,7 +123,6 @@ class RootLayout(context: Context, private val listener: Listener) : FrameLayout
     private fun start(ev: MotionEvent) {
         val p = listener.progress
         if (p <= 0.001f && ev.y > downY) {
-            // Swipe down on the home screen: the notification shade.
             spent = true
             cancelDetector(ev)
             listener.onSwipeDown()

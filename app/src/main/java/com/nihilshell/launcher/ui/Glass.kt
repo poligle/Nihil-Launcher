@@ -30,37 +30,15 @@ import kotlin.math.log2
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * Smoked glass (Settings, Smoked glass), as on the desktop (the shell's shaders/surface.frag):
- * the frame and every surface as dark glass. Behind it is the wallpaper: the one NIHIL put on
- * (the studio's render or its night, kept here when it sets one), through 30 % of smoke for
- * the frame and 38 % for a card or a key. On Android 13 and later (AGSL) the bevel is clear
- * and bends it outwards, its colours a little apart where it bends most; the face beyond is
- * frosted and a little uneven, so the dots come through soft and their light spreads past
- * them; the edge glows where a bright dot is near it; a glint where the light from the top
- * left catches the edge. The frost reads the wallpaper blurred from a chain of smaller copies
- * of it, made once as it loads, as the desktop reads its mipmaps. Light surfaces (ink, red)
- * frost more, so what is on them keeps its contrast; a hairline (LINE) is the glass's own
- * edge, and a border in any other colour says something and stays.
- *
- * With a wallpaper NIHIL didn't put on, there is nothing to bend: the glass is the smoke and
- * the glint over the real wallpaper, which shows through the window. On Android 12 it is the
- * wallpaper frosted, through the smoke, flat. Screens that don't show the wallpaper
- * (Settings, the deck, the studio) are black behind: their glass is the smoke and the glint.
- */
 object Glass {
-
     @Volatile
     var enabled = false
         private set
 
-    /** The wallpaper behind, when it is one NIHIL put on. */
     @Volatile
     var backdrop: Bitmap? = null
         private set
 
-    // The wallpaper ever smaller, each half the last (index 1 is half the size): the frost's
-    // blurs, as mipmaps are on the desktop.
     @Volatile
     private var levels: List<Bitmap> = emptyList()
 
@@ -71,10 +49,6 @@ object Glass {
 
     private fun file(context: Context) = File(context.filesDir, FILE)
 
-    /**
-     * The choice in Prefs, and the wallpaper behind if it is still the one NIHIL put on;
-     * [changed] when that is known, to draw again.
-     */
     fun start(context: Context, changed: () -> Unit) {
         val app = context.applicationContext
         enabled = Prefs.get(app).glass
@@ -111,10 +85,6 @@ object Glass {
         }
     }
 
-    /**
-     * NIHIL has just put [bitmap] on as the home screen's wallpaper ([id], as setBitmap
-     * answered): kept, for the glass to see. Off the main thread.
-     */
     fun remember(context: Context, bitmap: Bitmap, id: Int) {
         val app = context.applicationContext
         val saved = runCatching {
@@ -123,7 +93,6 @@ object Glass {
         Prefs.get(app).glassWallpaperId = if (saved && id > 0) id else -1
     }
 
-    /** Each half the size of the last, filtered, down to a few pixels: index 0 is [bitmap]. */
     private fun halves(bitmap: Bitmap): List<Bitmap> {
         val chain = mutableListOf(bitmap)
         var last = bitmap
@@ -136,8 +105,6 @@ object Glass {
         return chain
     }
 
-    // The wallpaper as a shader in screen pixels: scaled to cover the screen and centred,
-    // as the system shows it (the launcher keeps its offsets in the middle).
     private var shader: BitmapShader? = null
     private var shaderFor = 0L
     private val levelShaders = HashMap<Int, BitmapShader>()
@@ -147,7 +114,6 @@ object Glass {
         return (bounds.width().toLong() shl 32 or bounds.height().toLong()) to bounds
     }
 
-    // [bitmap], a copy of the wallpaper of any size, laid where the wallpaper is.
     private fun cover(bitmap: Bitmap, full: Bitmap, bounds: android.graphics.Rect): BitmapShader {
         val scale = max(bounds.width() / full.width.toFloat(), bounds.height() / full.height.toFloat())
         val matrix = Matrix().apply {
@@ -171,9 +137,6 @@ object Glass {
         }
     }
 
-    // The copy of the wallpaper whose pixel spans about [px] screen pixels, as the mipmap
-    // level the desktop would read for that blur: a level's pixel spans 2^level of the
-    // wallpaper's, and each of those `onScreen` of the screen's.
     private fun levelFor(context: Context, px: Float): Int {
         val bitmap = backdrop ?: return 0
         val (_, bounds) = screenKey(context)
@@ -181,10 +144,6 @@ object Glass {
         return Math.round(log2(max(px / onScreen, 1f))).coerceIn(0, max(0, levels.size - 1))
     }
 
-    /**
-     * The wallpaper blurred by about [px] screen pixels: the copy that many times smaller, or
-     * the wallpaper itself when there is no chain.
-     */
     private fun blurShader(context: Context, px: Float): BitmapShader? {
         val full = backdropShader(context) ?: return null
         val bitmap = backdrop ?: return null
@@ -200,17 +159,11 @@ object Glass {
     private val edge = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
     private val flatMatrix = Matrix()
 
-    /** Whether [view]'s window shows the wallpaper behind it (the home screen does). */
     fun seesWallpaper(view: View): Boolean {
         val params = view.rootView.layoutParams as? WindowManager.LayoutParams ?: return false
         return params.flags and WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER != 0
     }
 
-    /**
-     * Glass over [shape]: a rounded box ([box], [radius]) or, with [frame], what is outside
-     * it. [screenX], [screenY]: where the canvas's origin is on the screen. [pane]: the
-     * frame's thicker glass. [wallpaper]: whether the wallpaper is what is behind.
-     */
     fun paint(
         canvas: Canvas,
         context: Context,
@@ -229,16 +182,12 @@ object Glass {
         val lightTint = luma(tint) > 0.35f
         val behind = if (wallpaper) backdropShader(context) else null
         fill.colorFilter = null
-        // As the desktop's components/Surface.qml has them, in dp: a key is glass over glass,
-        // its frost a little more.
         val dp = radius / density
         val frost = if (pane) 5f else 6f
         val bevel = if (pane) 26f else min(14f, 4f + dp)
         val bend = if (behind != null && Build.VERSION.SDK_INT >= 33) Bend.effect else null
         if (bend != null && behind != null && Build.VERSION.SDK_INT >= 33) {
             bend.setInputShader("backdrop", behind)
-            // The blurs the frost reads: each tap a little blurred, the light spread wide, and
-            // the light near the edge against that of a wider ring round it.
             bend.setInputShader("frostMip", blurShader(context, frost * density * 0.5f) ?: behind)
             bend.setInputShader("wideMip", blurShader(context, frost * 2.2f * density) ?: behind)
             bend.setInputShader("nearMip", blurShader(context, 10f * density) ?: behind)
@@ -257,7 +206,6 @@ object Glass {
             bend.setFloatUniform("scatter", if (pane) 0.4f else 0.25f)
             bend.setFloatUniform("halo", if (pane) 2.2f else 0.9f)
             bend.setFloatUniform("wobble", density * if (pane) 3f else 1.5f)
-            // A narrow bevel (a key's) is frosted too, or its dots would ring it like stitches.
             bend.setFloatUniform("clarity", smoothstep(10f, 24f, bevel))
             bend.setFloatUniform(
                 "tint",
@@ -273,7 +221,6 @@ object Glass {
         }
         val bitmap = backdrop
         if (behind != null && bitmap != null && !lightTint) {
-            // Android 12: the wallpaper frosted (a smaller copy of it), through the smoke, flat.
             flatMatrix.reset()
             flatMatrix.postTranslate(-screenX, -screenY)
             val frosted = blurShader(context, frost * density) ?: behind
@@ -288,7 +235,6 @@ object Glass {
             fill.shader = null
             fill.colorFilter = null
         } else {
-            // The smoke over the real wallpaper, which the window lets through.
             fill.shader = null
             fill.color = withAlpha(tint, (1f - if (lightTint) 0.1f else through) * ((tint ushr 24) / 255f))
             canvas.drawPath(shape, fill)
@@ -296,7 +242,6 @@ object Glass {
         if (!frame) glint(canvas, context, box, radius, pane)
     }
 
-    /** The glint without the bend: the top left edge lit, fading to nothing at the bottom right. */
     fun glint(canvas: Canvas, context: Context, box: RectF, radius: Float, pane: Boolean) {
         val density = context.resources.displayMetrics.density
         glint.strokeWidth = density
@@ -311,7 +256,6 @@ object Glass {
         )
     }
 
-    /** A border that says something (focus, the chosen one): drawn as it was, over the glass. */
     fun border(canvas: Canvas, box: RectF, radius: Float, width: Int, color: Int) {
         if (width <= 0 || color == Nihil.LINE || (color ushr 24) == 0) return
         edge.strokeWidth = width.toFloat()
@@ -339,7 +283,6 @@ object Glass {
         )
     }
 
-    // The copy of the wallpaper blurShader reads for a blur of [px].
     private fun frostBitmap(context: Context, px: Float): Bitmap? {
         val bitmap = backdrop ?: return null
         return levels.getOrNull(levelFor(context, px)) ?: bitmap
@@ -354,13 +297,7 @@ object Glass {
         (0.2126f * ((color shr 16) and 0xFF) + 0.7152f * ((color shr 8) and 0xFF) + 0.0722f * (color and 0xFF)) / 255f
 }
 
-/**
- * The surfaces of rounded(): a GradientDrawable as always, and in smoked glass the glass
- * (Glass). It finds the view it is drawn for through its callbacks (a ripple holds most of
- * them), and draws again when that view moves on the screen, so what is behind keeps up.
- */
 class GlassDrawable : GradientDrawable() {
-
     private var strokeWidth = 0
     private var strokeColor = 0
     private val box = RectF()
@@ -433,21 +370,12 @@ class GlassDrawable : GradientDrawable() {
                 at[0].toFloat(), at[1].toFloat(), false, Glass.seesWallpaper(view),
             )
         } else {
-            // A border with nothing inside: the glass's edge alone.
             Glass.glint(canvas, view.context, box, radius, false)
         }
         Glass.border(canvas, box, radius, strokeWidth, strokeColor)
     }
 }
 
-/**
- * The bend (Android 13 and later): Glass's AGSL, the glass of the desktop's
- * shaders/surface.frag, and for the frame the outside of the card's rounded rectangle. The
- * desktop reads its blurs from mipmaps; here they are smaller copies of the wallpaper
- * (frostMip and the rest, chosen by Glass for the blur each wants). One effect for every
- * surface: each draw sets its uniforms, and a draw keeps what they were when it was
- * recorded. Null where AGSL won't compile: then the glass is flat.
- */
 @TargetApi(33)
 private object Bend {
     private const val AGSL = """
@@ -484,7 +412,6 @@ private object Bend {
             return frame > 0.5 ? -d : d;
         }
 
-        // The desktop's hash and value noise, for the same grain and unevenness.
         float hash(float2 p) {
             float3 p3 = fract(float3(p.xyx) * 0.1031);
             p3 += dot(p3, p3.yzx + 33.33);
@@ -511,19 +438,16 @@ private object Bend {
             float depth = max(-d, 0.0);
             float2 screen = screenAt + coord;
 
-            // The bevel bends what is behind outwards, most at the edge.
             float k = clamp(1.0 - depth / max(bevel, 1.0), 0.0, 1.0);
             k = k * k;
             float2 bend = n * (refraction * k);
 
-            // The face beyond it is uneven (in dp, as on the desktop).
             float2 q = (coord - boxAt) / (34.0 * density);
             float2 w = float2(noise(q), noise(q + float2(19.7, 7.3)))
                 + 0.5 * float2(noise(q * 2.7 + float2(5.1, 13.9)), noise(q * 2.7 + float2(23.4, 2.2)));
             w = w / 1.5 * 2.0 - 1.0;
             float2 at = screen + bend + w * wobble * (1.0 - k);
 
-            // Clear on the bevel, its colours a little apart where it bends most; frosted beyond.
             float3 clear = float3(0.0);
             if (k > 0.01) {
                 float2 apart = bend * 0.14;
@@ -542,7 +466,6 @@ private object Bend {
             frosted *= 0.125;
             float3 behind = mix(frosted, clear, smoothstep(0.08, 0.7, k) * clarity);
 
-            // The light the frost spreads wide.
             float3 wide = float3(0.0);
             for (int i = 0; i < 4; i++) {
                 float a = float(i) * 1.5707963 + 0.7853982 + grain * 0.15;
@@ -555,7 +478,6 @@ private object Bend {
             float3 col = mix(tint.rgb, behind, t);
             col += wide * scatter * (0.35 + t);
 
-            // The edge gathers the light of bright points near it.
             float edge = exp(-depth / (2.5 * density));
             float2 past = screen + n * (3.0 * density + depth);
             float3 glow = float3(nearMip.eval(past).rgb) - float3(aroundMip.eval(past).rgb);

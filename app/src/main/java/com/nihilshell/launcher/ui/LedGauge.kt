@@ -7,18 +7,10 @@ import android.graphics.Paint
 import android.view.View
 import kotlin.math.roundToInt
 
-/**
- * A level as a row of LEDs (the battery on the home screen), as the desktop's
- * BatteryGauge and DotMeter: low and not charging, the LEDs turn red, the only
- * alarm colour; charging, a light scans from the level to the end, one LED
- * every 160 ms, each one fading in and out as the desktop's colours do. Without [warns]
- * (the deck's volume) it is a meter, never red.
- */
 class LedGauge(context: Context, private val count: Int = 10, private val warns: Boolean = true) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val size = context.dp(5f)
     private val gap = context.dp(3.5f)
-    /** How lit each LED is, 0 to 1, easing towards what it should be. */
     private val glow = FloatArray(count)
     private var head = -1
     private var lastFrame = 0L
@@ -52,7 +44,6 @@ class LedGauge(context: Context, private val count: Int = 10, private val warns:
     override fun onDraw(canvas: Canvas) {
         val now = android.os.SystemClock.uptimeMillis()
         if (running) {
-            // A step every 160 ms: the head goes up one LED, and from the top back to the level.
             if (now - lastStep >= STEP) {
                 lastStep = now
                 head = if (head < lit || head >= count - 1) lit else head + 1

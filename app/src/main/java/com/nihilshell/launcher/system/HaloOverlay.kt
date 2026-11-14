@@ -10,13 +10,6 @@ import android.view.View
 import android.view.WindowManager
 import com.nihilshell.launcher.ui.Halo
 
-/**
- * The Glyph light over other apps: while NIHIL is not on screen, the light
- * runs round the screen's own edge, as the desktop's runs round its frame.
- * A window of the accessibility service's (it needs no other permission),
- * there only while the light is: it takes no touch and no keys, and goes
- * as soon as the light has gone out.
- */
 class HaloOverlay(private val service: AccessibilityService) {
     private val windows = service.getSystemService(WindowManager::class.java)
     private var ring: Ring? = null
@@ -54,7 +47,6 @@ class HaloOverlay(private val service: AccessibilityService) {
         return runCatching { manager.addView(view, params) }.map { view.also { ring = it } }.getOrNull()
     }
 
-    /** The screen's edge, a little inside it, following its rounded corners. */
     private class Ring(context: Context) : View(context) {
         val halo = Halo(this)
 

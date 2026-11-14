@@ -2,21 +2,10 @@ package com.nihilshell.launcher.core
 
 import com.nihilshell.launcher.R
 
-/**
- * What the drawer shows for a query.
- *
- *   ""        every visible app and web, alphabetically, under letters
- *   "= 2+2"   the calculator
- *   "> wi"    actions only
- *   "lin"     apps (hidden ones too), webs and actions, best first; a sum when the
- *             query is one ("12*7"); "search the web" at the end
- */
 object Search {
-
     enum class Mode { APPS, SEARCH, ACTIONS, CALCULATOR }
 
     sealed class Row {
-        /** An app or a web, in the grid. */
         class App(val entry: Entry) : Row()
         class Act(val action: Action) : Row()
         class Calc(val expression: String, val value: Double, val text: String) : Row()
@@ -86,7 +75,6 @@ object Search {
             val s = maxOf(Fuzzy.score(app.searchLabel, q), other)
             if (s >= 0) scored += Row.App(app) to s
         }
-        // Apps win ties: an action needs a clearly better match to go first.
         for (action in actions) {
             val s = action.score(q)
             if (s >= 0) scored += Row.Act(action) to s - 50
@@ -100,15 +88,11 @@ object Search {
         return Result(Mode.SEARCH, rows, scored.size)
     }
 
-    // --- Pure helpers, tested on the JVM -------------------------------------------
-
-    /** The list letter for a label: A-Z without accents, "#" for digits and symbols. */
     fun letterOf(label: String): String {
         val c = Fuzzy.normalize(label).firstOrNull { !it.isWhitespace() } ?: return "#"
         return if (c.isLetter()) c.uppercaseChar().toString() else "#"
     }
 
-    /** True when the query reads as a sum rather than a name: "12*7", "sqrt(2)", "5!". */
     fun isMath(raw: String): Boolean {
         val s = raw.trim()
         if (s.isEmpty()) return false
@@ -122,20 +106,12 @@ object Search {
 
     private val COMMON = setOf("com", "android", "google", "samsung", "sec", "app", "apps", "org", "net", "mobile")
 
-    /**
-     * A package name word that starts with the query, so "settings" finds
-     * "Ajustes" (com.android.settings). Weaker than any label match.
-     */
     fun packageScore(packageName: String, q: String): Int {
         if (q.length < 3) return -1
         val words = packageName.lowercase().split('.', '_').filter { it.isNotEmpty() && it !in COMMON }
         return if (words.any { it.startsWith(q) }) 300 else -1
     }
 
-    /**
-     * A word of a web's address (not its ending) that starts with the query, so "yout" finds
-     * youtube.com whatever it is called. Weaker than any label match.
-     */
     fun hostScore(host: String, q: String): Int {
         if (q.length < 2) return -1
         val words = host.lowercase().removePrefix("www.").split('.').filter { it.isNotEmpty() }.dropLast(1)

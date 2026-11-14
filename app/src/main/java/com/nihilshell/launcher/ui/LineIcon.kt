@@ -12,16 +12,11 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-/**
- * NIHIL line icons, drawn in code on a 24-unit grid: 1.6-unit strokes, round
- * caps, no fills except LED dots. The same family as the desktop's icons.
- */
 class LineIcon(
     private val shape: Shape,
     color: Int = Nihil.INK,
     private val sizePx: Int = -1,
 ) : Drawable() {
-
     enum class Shape {
         SEARCH, CHEVRON, UP, DOWN, SETTINGS, GEAR, LOCK, IMAGE, TORCH, WIFI, BLUETOOTH,
         BATTERY, SOUND, ALARM, INFO, TRASH, HIDE, PLUS, MINUS, CHECK, CLOSE, CALC, BOLT,
@@ -119,7 +114,6 @@ class LineIcon(
                 Shape.UP -> p.line(6f, 15f, 12f, 9f, 18f, 15f)
                 Shape.DOWN -> p.line(6f, 9f, 12f, 15f, 18f, 9f)
                 Shape.SETTINGS -> {
-                    // Three sliders.
                     p.line(4f, 7f, 7f, 7f); p.line(11f, 7f, 20f, 7f)
                     p.addCircle(9f, 7f, 2f, Path.Direction.CW)
                     p.line(4f, 12f, 13f, 12f); p.line(17f, 12f, 20f, 12f)

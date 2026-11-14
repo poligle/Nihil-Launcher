@@ -34,14 +34,7 @@ import com.nihilshell.launcher.ui.rounded
 import com.nihilshell.launcher.ui.rule
 import com.nihilshell.launcher.ui.text
 
-/**
- * NIHIL's settings, as the desktop's Preferences (home/shell/settings): each
- * section a heading with what it is for, each setting its name on the left and
- * its control on the right, hairlines between them, the desktop's toggles,
- * choices and keys. It's also the "NIHIL" entry in the app list.
- */
 class SettingsActivity : Activity() {
-
     private lateinit var prefs: Prefs
     private lateinit var column: LinearLayout
     private val fonts by lazy { Nihil.fonts(this) }
@@ -60,7 +53,6 @@ class SettingsActivity : Activity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs.get(this)
         Apps.init(this)
-        // Edge to edge on every version (Android 15 enforces it; 12-14 need the call).
         @Suppress("DEPRECATION")
         window.setDecorFitsSystemWindows(false)
         window.isNavigationBarContrastEnforced = false
@@ -84,7 +76,6 @@ class SettingsActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        // Back from a system page: the home role or an access may have changed.
         refreshAccess()
         fillHidden()
     }
@@ -95,23 +86,19 @@ class SettingsActivity : Activity() {
     }
 
     private fun build() {
-        // The desktop's Preferences: NIHIL in dots, and what this is.
         column.addView(Wordmark(this, dp(30)), llp(WRAP, WRAP))
         column.addView(mono(getString(R.string.prefs_title), 11f, Nihil.MUTED), llp(WRAP, WRAP).apply { topMargin = dp(6) })
 
-        // Home app.
         homeLed = View(this)
         homeStatus = body("")
         column.addView(
             row(getString(R.string.set_default), homeStatus, homeLed.also { it.layoutParams = llp(dp(10), dp(10)) }) {
-                // The role dialog needs a caller to answer to: start it for a result.
                 @Suppress("DEPRECATION")
                 runCatching { startActivityForResult(Access.defaultHomeIntent(this), REQUEST_HOME) }
             },
             llp(MATCH, WRAP).apply { topMargin = dp(22) },
         )
 
-        // Look.
         section(R.string.section_look, R.string.section_look_sub)
         val icons = Choice(
             this,
@@ -143,10 +130,8 @@ class SettingsActivity : Activity() {
         val deck = DeckStore.get(this)
         column.addView(switchRow(getString(R.string.set_deck_screen), getString(R.string.set_deck_screen_sub), deck.keepScreenOn) { deck.keepScreenOn = it })
 
-        // Behaviour.
         section(R.string.section_behaviour, R.string.section_behaviour_sub)
         column.addView(switchRow(getString(R.string.set_keyboard), null, prefs.keyboardOnOpen) { prefs.keyboardOnOpen = it })
-        // Android 13 and later give each app its own language (res/xml/locales_config.xml).
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             column.addView(row(getString(R.string.set_language), body(getString(R.string.set_language_sub)), chevron()) {
                 Access.startFirst(
@@ -161,8 +146,6 @@ class SettingsActivity : Activity() {
 
         glyphSub = body(getString(R.string.set_glyph_sub))
         glyphSwitch = Toggle(this)
-        // On but without access (the default on a fresh install): the row leads to the
-        // access page instead of switching the light off.
         column.addView(row(getString(R.string.set_glyph), glyphSub, glyphSwitch) {
             if (prefs.glyph && !Access.hasNotificationAccess(this)) {
                 Access.startFirst(this, Access.notificationAccessIntents(this))
@@ -171,7 +154,6 @@ class SettingsActivity : Activity() {
             }
         })
         glyphSwitch.set(prefs.glyph)
-        // Try the light: back to the home screen, and it runs there.
         column.addView(KeyButton(this, getString(R.string.glyph_try)).apply {
             setOnClickListener {
                 finish()
@@ -203,13 +185,11 @@ class SettingsActivity : Activity() {
             refreshAccess()
         }
 
-        // Hidden apps.
         section(R.string.section_apps, R.string.section_apps_sub)
         column.addView(body(getString(R.string.set_hidden_sub)), llp(MATCH, WRAP).apply { bottomMargin = dp(6) })
         hiddenList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         column.addView(hiddenList, llp(MATCH, WRAP))
 
-        // About.
         section(R.string.section_about, R.string.section_about_sub)
         val version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull().orEmpty()
         column.addView(body(getString(R.string.about_text, version)), llp(MATCH, WRAP))
@@ -232,7 +212,6 @@ class SettingsActivity : Activity() {
         val notifications = Access.hasNotificationAccess(this)
         glyphSub.text = when {
             prefs.glyph && !notifications -> getString(R.string.glyph_needs_access) + "\n" + getString(R.string.restricted_hint)
-            // Granted, but Android hasn't bound the listener: no notification reaches NIHIL.
             prefs.glyph && !Glyph.connected -> getString(R.string.glyph_not_connected)
             prefs.glyph -> getString(R.string.set_glyph_sub) + "\n" + getString(R.string.glyph_listening)
             else -> getString(R.string.set_glyph_sub)
@@ -273,9 +252,6 @@ class SettingsActivity : Activity() {
         if (requestCode == REQUEST_HOME) refreshAccess()
     }
 
-    // --- Building blocks -------------------------------------------------------------
-
-    /** The desktop's Heading: the section's name, and what it is for. */
     private fun section(title: Int, sub: Int) {
         column.addView(text(getString(title), 22f, Nihil.INK, fonts.sans), llp(MATCH, WRAP).apply { topMargin = dp(40) })
         column.addView(text(getString(sub), 13f, Nihil.DIM, fonts.sans).apply { setLineSpacing(dp(2f), 1f) }, llp(MATCH, WRAP).apply {
@@ -300,10 +276,6 @@ class SettingsActivity : Activity() {
         return row(title, sub?.let { body(it) }, toggle) { toggle.performClick() }
     }
 
-    /**
-     * The desktop's Setting: the name (and what it does, muted) on the left,
-     * the control on the right, a hairline under it; the whole row is the target.
-     */
     private fun row(title: String, sub: TextView?, trailing: View?, rule: Boolean = true, onClick: (() -> Unit)?): LinearLayout {
         val texts = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL

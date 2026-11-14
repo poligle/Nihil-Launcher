@@ -8,14 +8,7 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
 
-/**
- * The QR reader against codes made by qrencode (as the desktop makes them,
- * with -l M), drawn here as squares and as the desktop's dots, turned, small,
- * noisy and damaged; and against the QR of Preferences, Phone, as the shell
- * drew it on a screen.
- */
 class QrDecoderTest {
-
     @Test
     fun theDesktopsCode() {
         assertEquals(URI, decode(render(NIHIL_URI, scale = 5f)))
@@ -98,7 +91,6 @@ class QrDecoderTest {
 
     @Test
     fun theShellsQrOnAScreen() {
-        // A greyscale PGM, gzipped: Android's unit tests compile without javax.imageio.
         val stream = javaClass.getResourceAsStream("/qr/nihil-preferences.pgm.gz")
         assertTrue("the screenshot is in the test resources", stream != null)
         val bytes = java.util.zip.GZIPInputStream(stream).use { it.readBytes() }
@@ -113,8 +105,6 @@ class QrDecoderTest {
         )
     }
 
-    // --- Drawing codes ----------------------------------------------------------
-
     private class Picture(val lum: ByteArray, val width: Int, val height: Int)
 
     private fun decode(p: Picture): String? = QrDecoder.decode(p.lum, p.width, p.height)
@@ -127,7 +117,6 @@ class QrDecoderTest {
         }
     }
 
-    /** The finders and the alignment patterns, which the desktop draws whole. */
     private fun whole(rows: Int, y: Int, x: Int): Boolean {
         if ((x < 7 && y < 7) || (x >= rows - 7 && y < 7) || (x < 7 && y >= rows - 7)) return true
         val version = (rows - 17) / 4

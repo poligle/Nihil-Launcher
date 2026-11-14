@@ -8,11 +8,6 @@ import com.nihilshell.launcher.core.Prefs
 import com.nihilshell.launcher.core.WebAddress
 import com.nihilshell.launcher.ui.WebDialog
 
-/**
- * "Add to NIHIL" in the share sheet: the web shared (a browser shares the page's address,
- * and its title as the subject) goes to the drawer among the apps, its name looked at
- * first; over whatever was on screen.
- */
 class WebShareActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

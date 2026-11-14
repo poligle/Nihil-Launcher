@@ -10,7 +10,6 @@ import kotlin.math.PI
 import kotlin.math.sqrt
 
 class CalculatorTest {
-
     private fun eval(expression: String): Double = Calculator.evaluate(expression) ?: error("null for $expression")
 
     @Test

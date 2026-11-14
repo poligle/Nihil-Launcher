@@ -1,25 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-        INTERNET only for the deck: this phone talks to the computer it was paired
-        with, on the local network, and nothing else; the webs' icons come through
-        it too. CAMERA only to read the computer's pairing QR.
-    -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- Dot-matrix wallpapers made in the studio -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
-    <!-- Swipe down on the home screen opens the notification shade -->
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
-    <!-- "Uninstall" in the app menu -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
-    <!-- NIHIL launcher.
-      Package visibility: every app with a launcher entry, plus the default
-      phone, messages, camera and browser (the first favourites).
-    -->
     <queries>
         <intent>
             <action android:name="android.intent.action.MAIN" />
@@ -51,7 +38,6 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.Nihil">
-
         <activity
             android:name=".LauncherActivity"
             android:clearTaskOnLaunch="true"
@@ -71,7 +57,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Shown in the app drawer as "NIHIL": the launcher's settings -->
         <activity
             android:name=".SettingsActivity"
             android:exported="true"
@@ -94,7 +79,6 @@
             android:screenOrientation="portrait"
             android:taskAffinity="com.nihilshell.launcher.settings" />
 
-        <!-- Notification access (optional): Glyph light and unread LEDs -->
         <service
             android:name=".system.GlyphListener"
             android:exported="true"
@@ -105,7 +89,6 @@
             </intent-filter>
         </service>
 
-        <!-- Accessibility (optional): only to lock the screen on a double tap -->
         <service
             android:name=".system.LockService"
             android:exported="true"
@@ -146,7 +129,6 @@
             </intent-filter>
         </activity>
 
-        <!-- "Add to NIHIL": a web shared from a browser, to the drawer -->
         <activity
             android:name=".WebShareActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"

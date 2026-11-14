@@ -6,7 +6,6 @@ import android.hardware.camera2.CameraManager
 import android.os.Handler
 import android.os.Looper
 
-/** The rear flash as a torch. CameraManager.setTorchMode needs no permission. */
 object Torch {
     private var manager: CameraManager? = null
     private var cameraId: String? = null
@@ -39,7 +38,6 @@ object Torch {
         listeners -= listener
     }
 
-    /** Switches the torch; false when there is no flash or the camera is busy. */
     fun toggle(): Boolean {
         val id = cameraId ?: return false
         return runCatching { manager?.setTorchMode(id, !on) }.isSuccess

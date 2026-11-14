@@ -6,9 +6,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 enum class IconStyle {
-    /** The app's themed (monochrome) icon in ink; desaturated when there is none. */
     MONO,
-    /** The full icon, desaturated. */
     GREY,
     COLOR;
 
@@ -17,16 +15,13 @@ enum class IconStyle {
     }
 }
 
-/** Everything the launcher remembers, in one SharedPreferences file. */
 class Prefs private constructor(context: Context) {
     private val sp: SharedPreferences = context.getSharedPreferences("nihil", Context.MODE_PRIVATE)
 
-    /** The keys of the apps and webs on the home screen (see [Entry.key]), in order. */
     var favorites: List<String>
         get() = sp.getString(FAVORITES, null)?.split('\n')?.filter { it.isNotBlank() } ?: emptyList()
         set(value) = sp.edit().putString(FAVORITES, value.joinToString("\n")).apply()
 
-    /** False until the first favourites are chosen (or the user edits them). */
     val favoritesChosen: Boolean get() = sp.contains(FAVORITES)
 
     var hidden: Set<String>
@@ -57,27 +52,22 @@ class Prefs private constructor(context: Context) {
         get() = sp.getBoolean(DOUBLE_TAP, false)
         set(value) = sp.edit().putBoolean(DOUBLE_TAP, value).apply()
 
-    /** Smoked glass: the frame and every surface as dark glass (ui/Glass.kt). */
     var glass: Boolean
         get() = sp.getBoolean(GLASS, false)
         set(value) = sp.edit().putBoolean(GLASS, value).apply()
 
-    /** The id of the home screen's wallpaper NIHIL last put on, which the glass keeps a copy of; -1 none. */
     var glassWallpaperId: Int
         get() = sp.getInt(GLASS_WALLPAPER, -1)
         set(value) = sp.edit().putInt(GLASS_WALLPAPER, value).apply()
 
-    /** Whether NIHIL's own wallpaper was put on, the first time it was the home app. */
     var wallpaperSeeded: Boolean
         get() = sp.getBoolean(SEEDED, false)
         set(value) = sp.edit().putBoolean(SEEDED, value).apply()
 
-    /** Distance between the LEDs of a studio wallpaper, in pixels. */
     var dotPitch: Int
         get() = sp.getInt(PITCH, 20)
         set(value) = sp.edit().putInt(PITCH, value).apply()
 
-    /** The webs kept here (Webs), in the order they were added. */
     var webs: List<WebEntry>
         get() = runCatching {
             val list = JSONArray(sp.getString(WEBS, "[]"))
@@ -89,7 +79,6 @@ class Prefs private constructor(context: Context) {
             sp.edit().putString(WEBS, list.toString()).apply()
         }
 
-    /** Adds [web], or puts it where the one at [replacing] was, on the home screen too. */
     fun saveWeb(web: WebEntry, replacing: String? = null) {
         val list = webs.toMutableList()
         val at = list.indexOfFirst { it.url == (replacing ?: web.url) }

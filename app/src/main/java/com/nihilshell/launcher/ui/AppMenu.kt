@@ -14,13 +14,7 @@ import android.widget.PopupWindow
 import com.nihilshell.launcher.core.Apps
 import com.nihilshell.launcher.core.IconStyle
 
-/**
- * The long-press menu, as the desktop's menus: a black card with a hairline border. The app's own
- * shortcuts first (when NIHIL is the home app), then what NIHIL can do with it.
- * Destructive entries are the only red text.
- */
 class AppMenu(private val context: Context) {
-
     class Item(
         val icon: LineIcon.Shape,
         val label: String,
@@ -38,10 +32,6 @@ class AppMenu(private val context: Context) {
         popup = null
     }
 
-    /**
-     * Shows the menu next to [anchor] (or at [point], in window coordinates).
-     * [onShortcut] opens one of [shortcuts].
-     */
     fun show(
         anchor: View,
         title: String,
@@ -102,7 +92,6 @@ class AppMenu(private val context: Context) {
         )
         val height = panel.measuredHeight
 
-        // Next to the anchor: below it if there is room, otherwise above.
         val root = anchor.rootView
         val frame = Rect().also { root.getWindowVisibleDisplayFrame(it) }
         val margin = context.dp(12)

@@ -23,21 +23,7 @@ import kotlin.math.sqrt
 import kotlin.math.tan
 import kotlin.math.tanh
 
-/**
- * The calculator's calculus, as the desktop's qalc offers it:
- *   diff(f)                derivative, symbolic: diff(x^2) = 2x
- *   diff(f; a)             its value at a (diff(f; x; a) names the variable)
- *   integrate(f)           antiderivative, symbolic where the rules reach: x^3/3 + C
- *   integrate(f; a; b)     definite integral, numeric; a or b may be inf
- *   solve(f = g)           the real solutions, numeric; "= 0" may be left out
- *   sum(f; i; a; b), product(f; i; a; b), limit(f; x; a)
- * With Spanish names too (deriva, integra, resuelve, suma, producto, límite).
- * The variable is the one letter in f, or the one named. Pure Kotlin.
- */
 object Symbolic {
-
-    // --- Expressions as trees ---------------------------------------------------------
-
     sealed class Node {
         data class Num(val v: Double) : Node()
         data class Const(val name: String, val v: Double) : Node()
@@ -68,7 +54,6 @@ object Symbolic {
 
     class Error(message: String) : Exception(message)
 
-    /** A tree from the calculator's grammar, with one-letter variables. */
     fun parse(text: String): Node = TreeParser(normalize(text)).parse()
 
     private val DECIMAL_COMMA = Regex("(?<=\\d),(?=\\d)")
@@ -167,8 +152,6 @@ object Symbolic {
         }
     }
 
-    // --- Values -----------------------------------------------------------------------
-
     fun eval(n: Node, env: Map<String, Double>): Double = when (n) {
         is Node.Num -> n.v
         is Node.Const -> n.v
@@ -182,7 +165,6 @@ object Symbolic {
         is Node.Fn -> (FUNCTIONS[n.name] ?: throw Error("unknown ${n.name}"))(eval(n.a, env))
     }
 
-    /** x^y, with odd roots of negatives: (-8)^(1/3) = -2. */
     private fun power(x: Double, y: Double): Double {
         if (x < 0 && y != floor(y)) {
             val inverse = 1 / y
@@ -207,8 +189,6 @@ object Symbolic {
     }
 
     private fun has(n: Node, v: String) = v in variables(n)
-
-    // --- Derivatives --------------------------------------------------------------------
 
     fun derivative(n: Node, v: String): Node = simplify(d(n, v))
 
@@ -251,11 +231,8 @@ object Symbolic {
         }
     }
 
-    // --- Antiderivatives (where the rules reach) -------------------------------------
-
     fun antiderivative(n: Node, v: String): Node? = runCatching { integral(simplify(n), v)?.let { simplify(it) } }.getOrNull()
 
-    /** a·v + b: the coefficient a, when [n] is that, else null. */
     private fun linear(n: Node, v: String): Double? {
         val slope = simplify(d(n, v))
         if (has(slope, v)) return null
@@ -329,8 +306,6 @@ object Symbolic {
             else -> null
         }
     }
-
-    // --- Simplifying, enough to read the results --------------------------------------
 
     fun simplify(n: Node): Node {
         var current = n
@@ -449,9 +424,6 @@ object Symbolic {
         else -> n
     }
 
-    // --- Writing them -----------------------------------------------------------------
-
-    /** As the calculator reads it back: 2x, 3x^2, x*cos(x), e^x, ln(abs(x)). */
     fun print(n: Node): String = when (n) {
         is Node.Num -> Calculator.format(n.v)
         is Node.Const -> n.name
@@ -479,9 +451,6 @@ object Symbolic {
 
     private fun wrap(n: Node, parentheses: Boolean): String = if (parentheses) "(${print(n)})" else print(n)
 
-    // --- Numbers --------------------------------------------------------------------
-
-    /** ∫ f from a to b, adaptive Simpson; an infinite end is folded onto [0, 1). */
     fun definite(f: (Double) -> Double, a: Double, b: Double): Double {
         if (a == b) return 0.0
         if (a > b) return -definite(f, b, a)
@@ -515,7 +484,6 @@ object Symbolic {
         return step(a, b, fa, fm, fb, whole, 1e-10, 48)
     }
 
-    /** The real roots of f in [-1000, 1000]: sign changes refined by bisection, and touching zeros. */
     fun roots(f: (Double) -> Double): List<Double> {
         val found = ArrayList<Double>()
         fun add(x: Double) {
@@ -542,7 +510,6 @@ object Symbolic {
                         }
                     }
                     val r = (lo + hi) / 2
-                    // A pole changes sign too: only a root where f is small.
                     if (abs(f(r)) < 1e-6 * max(1.0, abs(y0) + abs(y1))) add(r)
                 }
                 x0 = x1
@@ -552,7 +519,6 @@ object Symbolic {
         scan(-10.0, 10.0, 20000)
         scan(-1000.0, -10.0, 20000)
         scan(10.0, 1000.0, 20000)
-        // Zeros that touch without crossing (x^2 = 0): a small value at a local minimum of |f|.
         var x = -10.0
         while (x <= 10.0) {
             val y = abs(f(x))
@@ -561,8 +527,6 @@ object Symbolic {
         }
         return found.sorted()
     }
-
-    // --- The calculator's way in --------------------------------------------------------
 
     private val CALL = Regex("^\\s*([a-záéíóú]+)\\s*\\((.*)\\)\\s*$")
 
@@ -575,7 +539,6 @@ object Symbolic {
         "limit" to "limit", "limite" to "limit", "límite" to "limit", "lim" to "limit",
     )
 
-    /** For Calculator: the answer to one of these calls, or null when [text] isn't one. */
     fun calculate(text: String): Calculator.Answer? {
         val m = CALL.matchEntire(normalize(text)) ?: return null
         val what = NAMES[m.groupValues[1]] ?: return null
@@ -590,7 +553,6 @@ object Symbolic {
         }
     }
 
-    /** The arguments, apart at the ";" that aren't inside parentheses. */
     private fun split(inside: String): List<String> {
         val out = ArrayList<String>()
         var depth = 0
@@ -642,7 +604,6 @@ object Symbolic {
         val x = number(at)
         val value = symbolic?.let { runCatching { eval(it, mapOf(v to x)) }.getOrNull() }
             ?: run {
-                // Five points around x, where there is no rule.
                 val g = function(f, v)
                 val h = 1e-3 * max(1.0, abs(x))
                 (-g(x + 2 * h) + 8 * g(x + h) - 8 * g(x - h) + g(x - 2 * h)) / (12 * h)

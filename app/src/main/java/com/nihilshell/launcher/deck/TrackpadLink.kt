@@ -10,20 +10,11 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * The deck's trackpad on the wire (docs/deck.md in Nihil-Shell, The trackpad): a stream to
- * the computer while the trackpad shows, opened again a moment after it drops. The fingers
- * go as frames, each with its time; a keepalive every second, which the computer answers,
- * so each side knows the other is still there.
- */
 class TrackpadLink(private val store: DeckStore, private val onState: (State) -> Unit) {
-
     enum class State { CONNECTING, READY, OLDER, ACCESS, REFUSED, UNREACHABLE, FORGOTTEN }
 
-    /** The trackpad's size in units, [resolution] of them a millimetre. */
     data class Size(val width: Int, val height: Int, val resolution: Int)
 
-    /** One connection, and when the computer was last heard on it. */
     private class Line(val stream: DeckClient.Stream) {
         @Volatile var heard = SystemClock.uptimeMillis()
     }
@@ -35,7 +26,6 @@ class TrackpadLink(private val store: DeckStore, private val onState: (State) ->
     private var thread: Thread? = null
     @Volatile private var line: Line? = null
 
-    /** Streams with this [size] until [stop]; with another size, from the start again. */
     fun start(size: Size) {
         if (thread != null && this.size == size) return
         stop()
@@ -56,7 +46,6 @@ class TrackpadLink(private val store: DeckStore, private val onState: (State) ->
         queue.clear()
     }
 
-    /** A frame: [count] fingers touching at [time] (ms), their ids and where, in units. */
     fun frame(time: Long, count: Int, ids: IntArray, xs: IntArray, ys: IntArray) {
         if (line == null) return
         val frame = ByteBuffer.allocate(6 + 5 * count)
@@ -104,7 +93,6 @@ class TrackpadLink(private val store: DeckStore, private val onState: (State) ->
             try {
                 write(id, current)
             } catch (e: IOException) {
-                // Dropped: again in a moment.
             } catch (e: InterruptedException) {
                 return
             } finally {
@@ -116,7 +104,6 @@ class TrackpadLink(private val store: DeckStore, private val onState: (State) ->
         }
     }
 
-    /** The frames as they come, and a keepalive every second, until the stream breaks or stops. */
     private fun write(id: Int, current: Line) {
         val batch = ByteArrayOutputStream()
         var next = SystemClock.uptimeMillis() + KEEPALIVE_EVERY
@@ -140,7 +127,6 @@ class TrackpadLink(private val store: DeckStore, private val onState: (State) ->
         }
     }
 
-    /** The computer's answers to the keepalives: each one, news that it is there. */
     private fun listen(current: Line) {
         runCatching {
             current.stream.socket.soTimeout = 0

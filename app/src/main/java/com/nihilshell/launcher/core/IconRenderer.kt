@@ -15,24 +15,10 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import com.nihilshell.launcher.ui.Nihil
 
-/**
- * App icons in the NIHIL language.
- *
- *  MONO   the app's themed icon (Android 13) in ink. Apps without one get an
- *         "auto-mono" icon: the foreground layer alone, in greys, inverted
- *         when it's dark so it still reads on black. Icons that are a full
- *         picture fall back to GREY.
- *  GREY   the whole icon without colour, slightly dimmed.
- *  COLOR  the icon as the app ships it.
- *
- * Work-profile apps get a small LED as a badge.
- */
 object IconRenderer {
-
     fun render(icon: Drawable, size: Int, style: IconStyle, badge: Boolean = false, paused: Boolean = false): Bitmap {
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        // A paused work profile: its apps half lit, as LEDs switched off.
         if (paused) canvas.saveLayerAlpha(0f, 0f, size.toFloat(), size.toFloat(), 115)
         val drawn = when (style) {
             IconStyle.MONO -> drawThemed(canvas, icon, size) || drawAutoMono(canvas, icon, size)
@@ -48,10 +34,6 @@ object IconRenderer {
         return bitmap
     }
 
-    /**
-     * A web's icon: its site's own on the surface the deck gives a web, in greys (in mono,
-     * inverted when it is dark, so it reads on black), or its letter without one.
-     */
     fun renderWeb(favicon: Bitmap?, label: String, size: Int, style: IconStyle, face: Typeface): Bitmap {
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -83,7 +65,6 @@ object IconRenderer {
         return bitmap
     }
 
-    /** Greys; in mono, a dark icon inverted, as the apps' auto-mono does. */
     private fun webMatrix(favicon: Bitmap, style: IconStyle): ColorMatrix {
         val matrix = ColorMatrix(LUMINANCE)
         if (style == IconStyle.MONO) {
@@ -97,7 +78,6 @@ object IconRenderer {
         return matrix
     }
 
-    /** Android 13 themed icon: the monochrome layer, tinted ink. */
     private fun drawThemed(canvas: Canvas, icon: Drawable, size: Int): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
         val mono = (icon as? AdaptiveIconDrawable)?.monochrome?.mutate() ?: return false
@@ -107,11 +87,9 @@ object IconRenderer {
         return true
     }
 
-    /** The foreground layer alone, in greys; false when it is a full picture. */
     private fun drawAutoMono(canvas: Canvas, icon: Drawable, size: Int): Boolean {
         val foreground = (icon as? AdaptiveIconDrawable)?.foreground?.mutate() ?: return false
 
-        // Paint the layer, clipped to the icon's circle, and measure it.
         val layer = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val c = Canvas(layer)
         val clip = Path().apply { addCircle(size / 2f, size / 2f, size * 0.48f, Path.Direction.CW) }
@@ -162,7 +140,6 @@ object IconRenderer {
         canvas.drawCircle(cx, cy, r, paint)
     }
 
-    /** Adaptive layers are 108 units for a 72-unit icon: 25 % more on every side. */
     private fun layerBounds(layer: Drawable, size: Int) {
         val extra = size / 4
         layer.setBounds(-extra, -extra, size + extra, size + extra)
@@ -189,11 +166,6 @@ object IconRenderer {
     )
 }
 
-/**
- * Luminance statistics of a layer, weighted by alpha: how much of the icon it
- * covers, its mean, and its brightest and darkest visible levels (0..1).
- * Pure Kotlin, tested on the JVM.
- */
 class LayerStats(val coverage: Double, val mean: Double, val peak: Double, val low: Double) {
     companion object {
         fun of(pixels: IntArray, circleArea: Double): LayerStats {
@@ -204,7 +176,6 @@ class LayerStats(val coverage: Double, val mean: Double, val peak: Double, val l
             for (c in pixels) {
                 val a = (c ushr 24) / 255.0
                 if (a <= 0.0) continue
-                // Bitmap.getPixels returns non-premultiplied ARGB: the channels are the colour.
                 val r = (c shr 16 and 0xFF) / 255.0
                 val g = (c shr 8 and 0xFF) / 255.0
                 val b = (c and 0xFF) / 255.0

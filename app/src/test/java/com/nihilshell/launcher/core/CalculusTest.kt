@@ -4,7 +4,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** The calculator's calculus: derivatives, integrals, equations, series and limits. */
 class CalculusTest {
     private fun text(expression: String): String? = Calculator.calculate(expression)?.text
 

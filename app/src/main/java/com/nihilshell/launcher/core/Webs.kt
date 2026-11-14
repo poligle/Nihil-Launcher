@@ -18,7 +18,6 @@ import java.net.URI
 import java.net.URLEncoder
 import java.util.concurrent.Executors
 
-/** A web kept on this phone, in the drawer and on the home screen as an app is (Webs). */
 class WebEntry(val url: String, title: String) : Entry {
     override val key: String = KEY + url
     override val label: String = title.trim().ifEmpty { WebAddress.title(url) }
@@ -30,12 +29,10 @@ class WebEntry(val url: String, title: String) : Entry {
     }
 }
 
-/** Web addresses as typed or shared. Pure, tested on the JVM. */
 object WebAddress {
     private val SCHEME = Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://")
     private val IN_TEXT = Regex("https?://\\S+")
 
-    /** An http or https page with a host, https:// in front when typed without; null otherwise. */
     fun normalize(typed: String): String? {
         val text = typed.trim()
         if (text.isEmpty() || text.any { it.isWhitespace() }) return null
@@ -50,20 +47,11 @@ object WebAddress {
 
     fun host(url: String): String = runCatching { URI(url).host }.getOrNull().orEmpty()
 
-    /** The host without "www.": a web's name until it has one of its own. */
     fun title(url: String): String = host(url).removePrefix("www.").ifEmpty { url }
 
-    /** The first web address in shared text (a browser shares the page's). */
     fun find(text: String): String? = IN_TEXT.find(text)?.value
 }
 
-/**
- * The webs kept on this phone (Prefs.webs): in the drawer among the apps, on the home
- * screen as they are, opened in Chrome, or in the phone's browser without it, each in a tab
- * of its own that opening it again goes back to. Their icons come from the computer the
- * deck is paired with, as the deck's webs' do, so the phone still talks to no one else;
- * without one, they have their letter.
- */
 object Webs {
     const val CHROME = "com.android.chrome"
 
@@ -75,7 +63,6 @@ object Webs {
     private val listeners = LinkedHashSet<() -> Unit>()
     private var fetching = false
 
-    /** [listener] when icons came from the computer: draw the webs again. */
     fun listen(listener: () -> Unit) {
         listeners += listener
     }
@@ -84,19 +71,16 @@ object Webs {
         listeners -= listener
     }
 
-    /** Opens [web]; false when nothing on the phone can. */
     fun open(context: Context, web: WebEntry, options: Bundle?): Boolean {
         val view = Intent(Intent.ACTION_VIEW, Uri.parse(web.url))
             .addCategory(Intent.CATEGORY_BROWSABLE)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            // Chrome opens what one app id asks for in the tab it opened for it before.
             .putExtra(Browser.EXTRA_APPLICATION_ID, context.packageName + ".web." + Integer.toHexString(web.url.hashCode()))
         return listOf(Intent(view).setPackage(CHROME), view).any { intent ->
             runCatching { context.startActivity(intent, options) }.isSuccess
         }
     }
 
-    /** Cached icon, or null; then [ready] is called on the main thread once it's painted. */
     fun icon(context: Context, web: WebEntry, size: Int, style: IconStyle, ready: (Bitmap) -> Unit): Bitmap? {
         val cacheKey = "${web.url}|${web.label}|$style|$size"
         icons.get(cacheKey)?.let { return it }
@@ -121,17 +105,11 @@ object Webs {
 
     fun clearIcons() = icons.evictAll()
 
-    /** The site's icon kept on disk, when there is one to draw. */
     private fun kept(context: Context, url: String): Bitmap? {
         val bytes = DeckCache.file(context, WebEntry.KEY + url).takeIf { it.isFile }?.readBytes() ?: return null
         return if (bytes.isEmpty()) null else BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
     }
 
-    /**
-     * The icons missing or older than a week, asked of the paired computer in the
-     * background; when they come, whoever listens draws them. A computer that doesn't
-     * answer is asked again next time.
-     */
     fun fetchIcons(context: Context, webs: List<WebEntry>) {
         val app = context.applicationContext
         val store = DeckStore.get(app)
@@ -145,7 +123,6 @@ object Webs {
             for (web in wanted) {
                 val reply = DeckClient(computer, token).call("GET", "/v1/favicon?url=" + URLEncoder.encode(web.url, "UTF-8")) ?: break
                 if (reply.status == 401) break
-                // A miss is kept too, empty, so it isn't asked again for a week.
                 DeckCache.keep(app, WebEntry.KEY + web.url, if (reply.status == 200) reply.bytes else ByteArray(0))
                 got = true
             }
