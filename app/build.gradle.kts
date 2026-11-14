@@ -7,7 +7,7 @@ plugins {
 
 val releaseKeystore = System.getenv("NIHIL_KEYSTORE")?.let { file(it) }?.takeIf { it.isFile }
 
-val nihilVersion = "0.4.0"
+val nihilVersion = "0.4.1"
 val nihilVersionCode = 40099
 
 fun versionCodeOf(name: String): Int {
