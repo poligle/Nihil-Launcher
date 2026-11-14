@@ -21,7 +21,7 @@ class LineIcon(
         SEARCH, CHEVRON, UP, DOWN, SETTINGS, GEAR, LOCK, IMAGE, TORCH, WIFI, BLUETOOTH,
         BATTERY, SOUND, ALARM, INFO, TRASH, HIDE, PLUS, MINUS, CHECK, CLOSE, CALC, BOLT,
         ENTER, WEB, HOME, BELL, LAPTOP, PLAY, PAUSE, NEXT, PREVIOUS, TASKS, PENCIL, EXPAND, COLLAPSE,
-        SWAP, FILE, VIDEO, COPY, SHARE,
+        SWAP, FILE, VIDEO, COPY, SHARE, SAVE, OPEN,
     }
 
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -278,6 +278,16 @@ class LineIcon(
                 Shape.SHARE -> {
                     p.line(15.6f, 6.6f, 8.4f, 10.9f)
                     p.line(8.4f, 13.1f, 15.6f, 17.4f)
+                }
+                Shape.SAVE -> {
+                    p.line(12f, 4f, 12f, 15f)
+                    p.line(7.5f, 10.5f, 12f, 15f, 16.5f, 10.5f)
+                    p.line(4.5f, 15.5f, 4.5f, 19.5f, 19.5f, 19.5f, 19.5f, 15.5f)
+                }
+                Shape.OPEN -> {
+                    p.line(10.5f, 5.5f, 5.5f, 5.5f, 5.5f, 18.5f, 18.5f, 18.5f, 18.5f, 13.5f)
+                    p.line(12f, 12f, 19.5f, 4.5f)
+                    p.line(14f, 4.5f, 19.5f, 4.5f, 19.5f, 10f)
                 }
                 Shape.PLAY -> {
                     p.line(8.5f, 5.5f, 18.5f, 12f, 8.5f, 18.5f)

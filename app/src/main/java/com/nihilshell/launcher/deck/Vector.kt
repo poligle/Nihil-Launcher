@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -15,11 +16,13 @@ import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.provider.MediaStore
 import android.provider.OpenableColumns
-import android.text.format.Formatter
+import android.util.Size
 import com.nihilshell.launcher.R
 import com.nihilshell.launcher.TasksActivity
 import org.json.JSONObject
@@ -33,6 +36,7 @@ import java.util.concurrent.TimeUnit
 object Vector {
     const val MAX = 100L * 1024 * 1024
     const val NOTIFICATION = 0x7EC
+    const val FOLDER = "Vector"
     private const val CHANNEL = "vector"
     private const val WAIT = 50
     private const val TEXT = 256 * 1024
@@ -56,7 +60,18 @@ object Vector {
         }.getOrDefault("")
     }
 
-    class Payload(val name: String, val mime: String, val size: Long, val open: () -> InputStream?)
+    class Payload(val name: String, val mime: String, val size: Long, val text: String = "", val uri: Uri? = null, val open: () -> InputStream?) {
+        val kind: String
+            get() = when {
+                mime.startsWith("text/") -> "text"
+                mime.startsWith("image/") -> "image"
+                mime.startsWith("video/") -> "video"
+                else -> "file"
+            }
+
+        val label: String
+            get() = if (text.isNotEmpty()) text.trim().lineSequence().firstOrNull().orEmpty() else name
+    }
 
     enum class Outcome { SENT, EMPTY, BIG, UNREADABLE, UNPAIRED, UNREACHABLE, FORGOTTEN, OLDER, REFUSED }
 
@@ -104,6 +119,48 @@ object Vector {
     fun current(context: Context): Item? {
         load(context)
         return received?.takeIf { it.file.isFile }
+    }
+
+    fun waiting(context: Context): Item? =
+        current(context)?.takeIf { it.id != prefs(context).getString("used", "") }
+
+    fun use(context: Context) {
+        val item = current(context) ?: return
+        prefs(context).edit().putString("used", item.id).apply()
+        context.getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION)
+        emit("used")
+    }
+
+    fun discard(context: Context) {
+        synchronized(this) {
+            current(context)?.file?.delete()
+            meta(context).delete()
+            received = null
+        }
+        context.getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION)
+        emit("used")
+    }
+
+    fun save(context: Context): Boolean {
+        val item = current(context) ?: return false
+        val resolver = context.contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, item.name)
+            put(MediaStore.MediaColumns.MIME_TYPE, item.mime.substringBefore(';').trim().ifEmpty { "application/octet-stream" })
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + FOLDER)
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
+        }
+        val target = runCatching { resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) }.getOrNull() ?: return false
+        val written = runCatching {
+            resolver.openOutputStream(target)?.use { output -> item.file.inputStream().use { it.copyTo(output) } } != null
+        }.getOrDefault(false)
+        if (!written) {
+            runCatching { resolver.delete(target, null, null) }
+            return false
+        }
+        runCatching { resolver.update(target, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null) }
+        use(context)
+        return true
     }
 
     @Synchronized
@@ -225,6 +282,7 @@ object Vector {
         }
         val item = synchronized(this) {
             folder.listFiles()?.forEach { if (it != part) it.delete() }
+            prefs(app).edit().remove("used").apply()
             val file = File(folder, name)
             if (!part.renameTo(file)) {
                 part.delete()
@@ -242,25 +300,54 @@ object Vector {
     }
 
     private fun notify(app: Context, item: Item) {
-        val manager = app.getSystemService(NotificationManager::class.java) ?: return
-        if (!manager.areNotificationsEnabled()) return
-        manager.createNotificationChannel(NotificationChannel(CHANNEL, app.getString(R.string.vector), NotificationManager.IMPORTANCE_DEFAULT))
+        val manager = channel(app) ?: return
         val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         val open = PendingIntent.getActivity(app, 0, Intent(app, TasksActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), flags)
-        val copy = PendingIntent.getBroadcast(app, 0, Intent(app, VectorCopy::class.java), flags)
-        val text = if (item.kind == "text") item.text(4096) else item.name + " · " + Formatter.formatShortFileSize(app, item.size)
+        val copy = PendingIntent.getBroadcast(app, 0, Intent(app, VectorAction::class.java).setAction(VectorAction.COPY), flags)
+        val save = PendingIntent.getBroadcast(app, 1, Intent(app, VectorAction::class.java).setAction(VectorAction.SAVE), flags)
+        val text = if (item.kind == "text") item.text(4096) else item.name
         val builder = Notification.Builder(app, CHANNEL)
             .setSmallIcon(R.drawable.mdi_swap)
             .setContentTitle(app.getString(R.string.vector_from, item.from))
             .setContentText(text.lineSequence().firstOrNull().orEmpty())
             .setContentIntent(open)
             .setAutoCancel(true)
-            .addAction(Notification.Action.Builder(Icon.createWithResource(app, R.drawable.mdi_clipboard), app.getString(R.string.vector_copy), copy).build())
+        if (item.kind == "text" || item.kind == "image") {
+            builder.addAction(Notification.Action.Builder(Icon.createWithResource(app, R.drawable.mdi_clipboard), app.getString(R.string.vector_copy), copy).build())
+        }
+        builder.addAction(Notification.Action.Builder(Icon.createWithResource(app, R.drawable.mdi_download), app.getString(R.string.vector_save), save).build())
         when (item.kind) {
             "image" -> thumbnail(item.file, 512)?.let { builder.setLargeIcon(it).setStyle(Notification.BigPictureStyle().bigPicture(it)) }
             "text" -> builder.setStyle(Notification.BigTextStyle().bigText(text))
         }
         manager.notify(NOTIFICATION, builder.build())
+    }
+
+    fun notifies(context: Context): Boolean =
+        context.getSystemService(NotificationManager::class.java)?.areNotificationsEnabled() == true
+
+    private fun channel(app: Context): NotificationManager? {
+        val manager = app.getSystemService(NotificationManager::class.java) ?: return null
+        if (!manager.areNotificationsEnabled()) return null
+        manager.createNotificationChannel(NotificationChannel(CHANNEL, app.getString(R.string.vector), NotificationManager.IMPORTANCE_DEFAULT))
+        return manager
+    }
+
+    private fun notifySent(app: Context, computer: String, payload: Payload) {
+        val manager = channel(app) ?: return
+        val builder = Notification.Builder(app, CHANNEL)
+            .setSmallIcon(R.drawable.mdi_swap)
+            .setContentTitle(app.getString(R.string.vector_sent, computer))
+            .setContentText(payload.label)
+            .setTimeoutAfter(5000)
+            .setOnlyAlertOnce(true)
+        manager.notify(NOTIFICATION + 1, builder.build())
+    }
+
+    fun preview(context: Context, payload: Payload, size: Int): Bitmap? {
+        val uri = payload.uri ?: return null
+        if (payload.kind != "image" && payload.kind != "video") return null
+        return runCatching { context.contentResolver.loadThumbnail(uri, Size(size, size), null) }.getOrNull()
     }
 
     fun thumbnail(file: File, max: Int): Bitmap? = runCatching {
@@ -288,6 +375,7 @@ object Vector {
             ClipData.newUri(context.contentResolver, item.name, uri(context, item))
         }
         clipboard.setPrimaryClip(clip)
+        use(context)
         return true
     }
 
@@ -296,6 +384,7 @@ object Vector {
             folder(context).deleteRecursively()
             received = null
             see(context, "")
+            prefs(context).edit().remove("used").apply()
         }
         context.getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION)
         emit("received")
@@ -303,7 +392,7 @@ object Vector {
 
     fun text(value: String): Payload {
         val bytes = value.toByteArray(Charsets.UTF_8)
-        return Payload("", "text/plain; charset=utf-8", bytes.size.toLong()) { bytes.inputStream() }
+        return Payload("", "text/plain; charset=utf-8", bytes.size.toLong(), value) { bytes.inputStream() }
     }
 
     fun payload(context: Context, uri: Uri): Payload? {
@@ -322,7 +411,7 @@ object Vector {
             }
         }
         val mime = runCatching { resolver.getType(uri) }.getOrNull() ?: "application/octet-stream"
-        return Payload(name, mime, size) { resolver.openInputStream(uri) }
+        return Payload(name, mime, size, uri = uri) { resolver.openInputStream(uri) }
     }
 
     fun clipboard(context: Context): Payload? {
@@ -350,6 +439,7 @@ object Vector {
                     val outcome = runCatching { upload(app, store, computer, payload, part) }.getOrDefault(Outcome.UNREACHABLE)
                     part.delete()
                     sending = false
+                    if (outcome == Outcome.SENT) notifySent(app, computer.name, payload)
                     emit(if (outcome == Outcome.SENT) "sent" else "failed")
                     main.post { done(outcome, computer.name) }
                 }

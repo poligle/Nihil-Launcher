@@ -166,7 +166,7 @@
             android:grantUriPermissions="true" />
 
         <receiver
-            android:name=".deck.VectorCopy"
+            android:name=".deck.VectorAction"
             android:exported="false" />
 
         <activity

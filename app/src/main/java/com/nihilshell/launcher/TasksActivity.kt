@@ -3,6 +3,7 @@ package com.nihilshell.launcher
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.PendingIntent
 import android.content.ClipData
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -22,6 +23,8 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.view.WindowInsets
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -34,6 +37,7 @@ import com.nihilshell.launcher.deck.DeckClient
 import com.nihilshell.launcher.deck.DeckStore
 import com.nihilshell.launcher.deck.TasksStore
 import com.nihilshell.launcher.deck.Vector
+import com.nihilshell.launcher.deck.VectorAction
 import com.nihilshell.launcher.ui.AppMenu
 import com.nihilshell.launcher.ui.Choice
 import com.nihilshell.launcher.ui.LineIcon
@@ -61,9 +65,16 @@ class TasksActivity : Activity() {
     private lateinit var field: EditText
     private lateinit var notice: Notice
     private lateinit var box: VectorBox
+    private lateinit var content: LinearLayout
     private lateinit var preview: ImageView
     private lateinit var vectorTitle: TextView
     private lateinit var vectorDetail: TextView
+    private lateinit var emptyKeys: LinearLayout
+    private lateinit var itemKeys: LinearLayout
+    private lateinit var outgoing: LinearLayout
+    private lateinit var outgoingPicture: ImageView
+    private lateinit var outgoingTitle: TextView
+    private var shown = false
     private var shownId: String? = null
     private val vector: (String) -> Unit = { what -> vectorEvent(what) }
     private val popup by lazy { AppMenu(this) }
@@ -138,7 +149,7 @@ class TasksActivity : Activity() {
         Vector.listen(vector)
         Vector.start(this)
         box.busy = Vector.sending
-        showVector()
+        showVector(false)
     }
 
     override fun onResume() {
@@ -177,24 +188,17 @@ class TasksActivity : Activity() {
             isClickable = true
             contentDescription = getString(R.string.vector)
             setOnClickListener { tapVector() }
-            setOnLongClickListener {
-                vectorMenu(it)
-                true
-            }
+        }
+        content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(12), dp(12), dp(12))
         }
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            minimumHeight = dp(84)
-            setPadding(dp(16), dp(12), dp(12), dp(12))
+            minimumHeight = dp(60)
         }
-        preview = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            clipToOutline = true
-            outlineProvider = object : ViewOutlineProvider() {
-                override fun getOutline(view: View, outline: Outline) = outline.setRoundRect(0, 0, view.width, view.height, dp(8f))
-            }
-        }
+        preview = picture()
         row.addView(preview, llp(dp(48), dp(48)).apply { marginEnd = dp(14) })
         val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         texts.addView(mono(getString(R.string.vector), 11f, Nihil.MUTED), llp(WRAP, WRAP))
@@ -206,10 +210,41 @@ class TasksActivity : Activity() {
         vectorDetail = mono("", 10f, Nihil.MUTED)
         texts.addView(vectorDetail, llp(MATCH, WRAP).apply { topMargin = dp(4) })
         row.addView(texts, llp(0, WRAP, 1f))
-        row.addView(vectorKey(getDrawable(R.drawable.mdi_clipboard), R.string.vector_paste) { send(Vector.clipboard(this)) }, llp(dp(40), dp(40)).apply { marginStart = dp(8) })
-        row.addView(vectorKey(LineIcon(LineIcon.Shape.PLUS, Nihil.DIM), R.string.vector_pick) { pick() }, llp(dp(40), dp(40)).apply { marginStart = dp(8) })
-        box.addView(row, lp(MATCH, WRAP))
+        emptyKeys = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        emptyKeys.addView(vectorKey(getDrawable(R.drawable.mdi_clipboard), R.string.vector_paste) { send(Vector.clipboard(this)) }, llp(dp(40), dp(40)).apply { marginStart = dp(8) })
+        emptyKeys.addView(vectorKey(LineIcon(LineIcon.Shape.PLUS, Nihil.DIM), R.string.vector_pick) { pick() }, llp(dp(40), dp(40)).apply { marginStart = dp(8) })
+        row.addView(emptyKeys, llp(WRAP, WRAP))
+        content.addView(row, llp(MATCH, WRAP))
+        itemKeys = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.END
+        }
+        content.addView(itemKeys, llp(MATCH, WRAP).apply { topMargin = dp(10) })
+        box.addView(content, lp(MATCH, WRAP))
+
+        outgoing = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(12), dp(16), dp(12))
+            visibility = View.GONE
+        }
+        outgoingPicture = picture()
+        outgoing.addView(outgoingPicture, llp(dp(48), dp(48)).apply { marginEnd = dp(14) })
+        outgoingTitle = text("", 14f, Nihil.INK).apply {
+            maxLines = 2
+            ellipsize = TextUtils.TruncateAt.END
+        }
+        outgoing.addView(outgoingTitle, llp(0, WRAP, 1f))
+        box.addView(outgoing, lp(MATCH, MATCH))
         return box
+    }
+
+    private fun picture(): ImageView = ImageView(this).apply {
+        scaleType = ImageView.ScaleType.CENTER_CROP
+        clipToOutline = true
+        outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) = outline.setRoundRect(0, 0, view.width, view.height, dp(8f))
+        }
     }
 
     private fun vectorKey(icon: Drawable?, description: Int, onTap: () -> Unit): ImageView = ImageView(this).apply {
@@ -221,21 +256,53 @@ class TasksActivity : Activity() {
         setOnClickListener { onTap() }
     }
 
-    private fun showVector() {
-        val item = Vector.current(this)
-        if (item?.id == shownId && (item != null || preview.drawable != null)) return
+    private fun actionsOf(kind: String): List<String> = when (kind) {
+        "text" -> listOf("copy", "save", "share", "discard")
+        "image" -> listOf("copy", "save", "open", "share", "discard")
+        else -> listOf("save", "open", "share", "discard")
+    }
+
+    private fun showVector(animate: Boolean) {
+        val item = Vector.waiting(this)
+        if (shown && item?.id == shownId) return
+        when {
+            !animate || !shown -> render(item)
+            item == null -> content.animate().scaleX(0.6f).scaleY(0.6f).alpha(0f).setDuration(260)
+                .setInterpolator(AccelerateInterpolator())
+                .withEndAction {
+                    if (isDestroyed) return@withEndAction
+                    render(Vector.waiting(this))
+                    content.scaleX = 1f
+                    content.scaleY = 1f
+                    content.animate().alpha(1f).setDuration(200).setInterpolator(DecelerateInterpolator()).start()
+                }.start()
+            else -> {
+                render(item)
+                content.scaleX = 0.85f
+                content.scaleY = 0.85f
+                content.alpha = 0f
+                content.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(320).setInterpolator(DecelerateInterpolator()).start()
+            }
+        }
+    }
+
+    private fun render(item: Vector.Item?) {
+        shown = true
         shownId = item?.id
         preview.setImageDrawable(null)
         preview.setPadding(0, 0, 0, 0)
         preview.visibility = View.VISIBLE
         vectorTitle.visibility = if (item == null) View.GONE else View.VISIBLE
-        vectorDetail.visibility = vectorTitle.visibility
+        vectorDetail.visibility = if (item == null || item.kind == "text") View.GONE else View.VISIBLE
+        emptyKeys.visibility = if (item == null) View.VISIBLE else View.GONE
+        itemKeys.visibility = if (item == null) View.GONE else View.VISIBLE
+        itemKeys.removeAllViews()
         if (item == null) {
             preview.setImageDrawable(LineIcon(LineIcon.Shape.SWAP, Nihil.MUTED))
             preview.pad(dp(10))
             return
         }
-        vectorDetail.text = getString(R.string.vector_detail, Formatter.formatShortFileSize(this, item.size), item.from)
+        vectorDetail.text = Formatter.formatShortFileSize(this, item.size)
         when (item.kind) {
             "text" -> {
                 preview.visibility = View.GONE
@@ -255,6 +322,23 @@ class TasksActivity : Activity() {
                 preview.pad(dp(10))
             }
         }
+        for (action in actionsOf(item.kind)) {
+            val shape = when (action) {
+                "copy" -> LineIcon.Shape.COPY
+                "save" -> LineIcon.Shape.SAVE
+                "open" -> LineIcon.Shape.OPEN
+                "share" -> LineIcon.Shape.SHARE
+                else -> LineIcon.Shape.CLOSE
+            }
+            val label = when (action) {
+                "copy" -> R.string.vector_copy
+                "save" -> R.string.vector_save
+                "open" -> R.string.vector_open
+                "share" -> R.string.vector_share
+                else -> R.string.vector_discard
+            }
+            itemKeys.addView(vectorKey(LineIcon(shape, Nihil.DIM), label) { act(action) }, llp(dp(40), dp(40)).apply { marginStart = dp(8) })
+        }
     }
 
     private fun vectorEvent(what: String) {
@@ -264,9 +348,10 @@ class TasksActivity : Activity() {
             "missed" -> box.busy = Vector.sending
             "received" -> {
                 box.busy = Vector.sending
-                showVector()
+                showVector(true)
                 box.lap()
             }
+            "used" -> showVector(true)
             "sent" -> {
                 box.busy = false
                 box.lap()
@@ -279,11 +364,38 @@ class TasksActivity : Activity() {
     }
 
     private fun tapVector() {
-        if (Vector.current(this) == null) {
-            send(Vector.clipboard(this))
-        } else if (Vector.copy(this)) {
-            box.blink(Nihil.INK)
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) notice.show(getString(R.string.vector_copied))
+        val item = Vector.waiting(this)
+        if (item == null) pick() else act(actionsOf(item.kind).first())
+    }
+
+    private fun act(action: String) {
+        val item = Vector.waiting(this) ?: return
+        val uri = Vector.uri(this, item)
+        when (action) {
+            "copy" -> if (Vector.copy(this) && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                notice.show(getString(R.string.vector_copied))
+            }
+            "save" -> worker.execute {
+                val saved = Vector.save(this)
+                main.post { if (!isDestroyed) notice.show(getString(if (saved) R.string.vector_saved else R.string.vector_no_save)) }
+            }
+            "open" -> {
+                val view = Intent(Intent.ACTION_VIEW).setDataAndType(uri, item.mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                if (runCatching { startActivity(view) }.isSuccess) Vector.use(this) else notice.show(getString(R.string.vector_none_opens))
+            }
+            "share" -> {
+                val share = Intent(Intent.ACTION_SEND)
+                if (item.kind == "text") {
+                    share.setType("text/plain").putExtra(Intent.EXTRA_TEXT, item.text())
+                } else {
+                    share.setType(item.mime).putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    share.clipData = ClipData.newRawUri(item.name, uri)
+                }
+                val chosen = Intent(this, VectorAction::class.java).setAction(VectorAction.SHARED)
+                val callback = PendingIntent.getBroadcast(this, 2, chosen, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+                runCatching { startActivity(Intent.createChooser(share, null, callback.intentSender)) }
+            }
+            else -> Vector.discard(this)
         }
     }
 
@@ -292,13 +404,49 @@ class TasksActivity : Activity() {
             notice.show(getString(R.string.vector_nothing))
             return
         }
+        launch(payload)
         Vector.send(this, payload) { outcome, computer ->
-            if (!isDestroyed) notice.show(Vector.say(this, outcome, computer))
+            if (!isDestroyed && (outcome != Vector.Outcome.SENT || !Vector.notifies(this))) notice.show(Vector.say(this, outcome, computer))
         }
     }
 
+    private fun launch(payload: Vector.Payload) {
+        val words = payload.text.isNotEmpty()
+        outgoingTitle.text = if (words) payload.text.trim() else payload.name
+        outgoingPicture.setPadding(0, 0, 0, 0)
+        outgoingPicture.visibility = if (words) View.GONE else View.VISIBLE
+        val shape = when (payload.kind) {
+            "image" -> LineIcon.Shape.IMAGE
+            "video" -> LineIcon.Shape.VIDEO
+            else -> LineIcon.Shape.FILE
+        }
+        outgoingPicture.setImageDrawable(LineIcon(shape, Nihil.DIM))
+        outgoingPicture.pad(dp(10))
+        val size = dp(96)
+        worker.execute {
+            val picture = Vector.preview(this, payload, size) ?: return@execute
+            main.post {
+                if (isDestroyed) return@post
+                outgoingPicture.setPadding(0, 0, 0, 0)
+                outgoingPicture.setImageBitmap(picture)
+            }
+        }
+        outgoing.animate().cancel()
+        outgoing.scaleX = 1f
+        outgoing.scaleY = 1f
+        outgoing.alpha = 1f
+        outgoing.visibility = View.VISIBLE
+        content.alpha = 0f
+        outgoing.animate().scaleX(0.06f).scaleY(0.06f).alpha(0f).setStartDelay(220).setDuration(520)
+            .setInterpolator(AccelerateInterpolator())
+            .withEndAction {
+                outgoing.visibility = View.GONE
+                content.animate().alpha(1f).setDuration(200).start()
+            }.start()
+    }
+
     private fun pick() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*")
+        val intent = Intent(Intent.ACTION_GET_CONTENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*")
         @Suppress("DEPRECATION")
         runCatching { startActivityForResult(intent, REQUEST_PICK) }
     }
@@ -308,31 +456,6 @@ class TasksActivity : Activity() {
         super.onActivityResult(requestCode, resultCode, data)
         val uri = data?.data
         if (requestCode == REQUEST_PICK && resultCode == RESULT_OK && uri != null) send(Vector.payload(this, uri))
-    }
-
-    private fun vectorMenu(anchor: View) {
-        val item = Vector.current(this) ?: return
-        val uri = Vector.uri(this, item)
-        val items = ArrayList<AppMenu.Item>()
-        items += AppMenu.Item(LineIcon.Shape.COPY, getString(R.string.vector_copy)) { tapVector() }
-        if (item.kind != "text") {
-            items += AppMenu.Item(LineIcon.Shape.EXPAND, getString(R.string.vector_open)) {
-                val view = Intent(Intent.ACTION_VIEW).setDataAndType(uri, item.mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                if (runCatching { startActivity(view) }.isFailure) notice.show(getString(R.string.vector_none_opens))
-            }
-        }
-        items += AppMenu.Item(LineIcon.Shape.SHARE, getString(R.string.vector_share)) {
-            val share = Intent(Intent.ACTION_SEND)
-            if (item.kind == "text") {
-                share.setType("text/plain").putExtra(Intent.EXTRA_TEXT, item.text())
-            } else {
-                share.setType(item.mime).putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                share.clipData = ClipData.newRawUri(item.name, uri)
-            }
-            runCatching { startActivity(Intent.createChooser(share, null)) }
-        }
-        val title = if (item.kind == "text") item.text(256).lineSequence().firstOrNull().orEmpty() else item.name
-        popup.show(anchor = anchor, title = title, items = items)
     }
 
     private fun titles(): List<String> {

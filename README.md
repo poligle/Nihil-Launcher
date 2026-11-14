@@ -270,13 +270,16 @@ anything older (`core/TaskBoard.kt`, as `Tasks.qml` and `TaskMerge.js` on the de
 
 ### Vector
 
-Above the kanban, in a box of LEDs, the last thing the computer sent: a picture, a text, a video
-or any file, up to 100 MB. A tap copies it, a picture or a file as itself, to paste in another
-app; held, it opens or is shared. Its keys send what this phone copied, or a file picked, and
-**Vector** in the share sheet sends anything shared to it. A notification says when something
-comes, and the box keeps only the last one: the next takes its place. On the computer it is the
-dashboard's Vector, under the clock. While the phone is on and paired it listens, the request
-held open by the computer until there is something; with the screen off it waits.
+Above the kanban, a box of LEDs that carries one thing at a time between this phone and the
+computer: a text, a picture, a video or any file, up to 100 MB. What the computer sends waits
+in it, and a notification says it came, until it is used: copied (a text or a picture), saved
+in `Download/Vector`, opened, shared or let go. Then the box is empty again. A tap does the
+first of these, and the notification copies and saves too. Empty, a tap picks a picture or a
+file to send, its key sends what this phone copied, and **Vector** in the share sheet sends
+anything shared to it; what goes shrinks out of the box, and a notification says it went. On
+the computer it is the dashboard's Vector, under the clock, and what it saves goes to
+`~/Vector`. While the phone is on and paired it listens, the request held open by the computer
+until there is something; with the screen off it waits.
 
 ---
 
@@ -395,7 +398,7 @@ app/src/main/java/com/nihilshell/launcher/
 │   ├── TrackpadLink.kt    the trackpad's stream to the computer
 │   ├── Vector.kt          what comes from the computer and goes to it, its listening and notification
 │   ├── VectorProvider.kt  the last thing that came, for other apps to read
-│   ├── VectorCopy.kt      the notification's Copy
+│   ├── VectorAction.kt    the notification's Copy and Save, and the share sheet's answer
 │   └── TasksStore.kt      the kanban on the phone, its clock and its sync
 ├── core/
 │   ├── Apps.kt            every launchable app, in every profile; icons off the main thread

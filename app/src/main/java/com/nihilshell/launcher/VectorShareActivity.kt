@@ -46,8 +46,12 @@ class VectorShareActivity : Activity() {
         Vector.start(this)
         Vector.send(this, payload) { outcome, computer ->
             if (isDestroyed) return@send
-            notice.show(Vector.say(this, outcome, computer))
-            main.postDelayed({ finish() }, 1600)
+            if (outcome == Vector.Outcome.SENT && Vector.notifies(this)) {
+                finish()
+            } else {
+                notice.show(Vector.say(this, outcome, computer))
+                main.postDelayed({ finish() }, 1800)
+            }
         }
     }
 

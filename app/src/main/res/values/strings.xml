@@ -198,7 +198,6 @@
     <string name="vector" translatable="false">Vector</string>
     <string name="vector_from">Received from %1$s</string>
     <string name="vector_sent">Sent to %1$s</string>
-    <string name="vector_detail">%1$s · from %2$s</string>
     <string name="vector_copy">Copy</string>
     <string name="vector_copied">Copied</string>
     <string name="vector_open">Open</string>
@@ -210,4 +209,8 @@
     <string name="vector_unreadable">It can’t be read</string>
     <string name="vector_unpaired">Pair this phone with a computer first</string>
     <string name="vector_none_opens">No app opens it</string>
+    <string name="vector_save">Save</string>
+    <string name="vector_saved">Saved in Download/Vector</string>
+    <string name="vector_no_save">Couldn’t save it</string>
+    <string name="vector_discard">Let it go</string>
 </resources>

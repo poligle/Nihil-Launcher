@@ -194,7 +194,6 @@
     <string name="deck_full_screen_leave">Salir de pantalla completa</string>
     <string name="vector_from">Recibido de %1$s</string>
     <string name="vector_sent">Enviado a %1$s</string>
-    <string name="vector_detail">%1$s · de %2$s</string>
     <string name="vector_copy">Copiar</string>
     <string name="vector_copied">Copiado</string>
     <string name="vector_open">Abrir</string>
@@ -206,4 +205,8 @@
     <string name="vector_unreadable">No se puede leer</string>
     <string name="vector_unpaired">Empareja antes el móvil con un ordenador</string>
     <string name="vector_none_opens">Ninguna app lo abre</string>
+    <string name="vector_save">Guardar</string>
+    <string name="vector_saved">Guardado en Download/Vector</string>
+    <string name="vector_no_save">No se ha podido guardar</string>
+    <string name="vector_discard">Descartar</string>
 </resources>
