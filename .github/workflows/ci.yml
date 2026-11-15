@@ -2,8 +2,8 @@ name: ci
 
 on:
   push:
-    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -45,11 +45,16 @@ jobs:
             echo "systemProp.org.gradle.internal.repository.max.tentatives=8"
             echo "systemProp.org.gradle.internal.repository.initial.backoff=2000"
           } >> "$HOME/.gradle/gradle.properties"
-      - run: $GRADLE --no-daemon test assembleDebug
+      - run: $GRADLE --no-daemon test assembleDebug assembleRelease
       - uses: actions/upload-artifact@v4
         with:
           name: nihil-launcher-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nihil-launcher-release
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
       - name: Lint
         run: $GRADLE --no-daemon lintDebug
