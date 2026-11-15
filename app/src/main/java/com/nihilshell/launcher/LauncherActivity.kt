@@ -28,12 +28,10 @@ import android.graphics.ImageDecoder
 import android.service.notification.NotificationListenerService
 import android.text.format.DateFormat
 import android.view.Gravity
-import android.view.RoundedCorner
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
-import android.view.WindowInsetsAnimation
-import android.view.inputmethod.InputMethodManager
+import android.view.WindowManager
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import com.nihilshell.launcher.core.Action
@@ -65,9 +63,17 @@ import com.nihilshell.launcher.ui.Notice
 import com.nihilshell.launcher.ui.RootLayout
 import com.nihilshell.launcher.ui.WebDialog
 import com.nihilshell.launcher.ui.WRAP
+import com.nihilshell.launcher.ui.barInsets
+import com.nihilshell.launcher.ui.bottomLeftCornerRadius
 import com.nihilshell.launcher.ui.dp
+import com.nihilshell.launcher.ui.edgeToEdge
+import com.nihilshell.launcher.ui.hideIme
+import com.nihilshell.launcher.ui.imeBottom
 import com.nihilshell.launcher.ui.isTablet
 import com.nihilshell.launcher.ui.lp
+import com.nihilshell.launcher.ui.screenBounds
+import com.nihilshell.launcher.ui.showIme
+import com.nihilshell.launcher.ui.watchImeInsets
 import java.net.URLEncoder
 import java.text.Collator
 import java.text.SimpleDateFormat
@@ -99,7 +105,7 @@ class LauncherActivity :
     private var receiving = false
     private var charging: Boolean? = null
     private var resumed = false
-    private var backCallback: OnBackInvokedCallback? = null
+    private var backCallback: Any? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -108,11 +114,11 @@ class LauncherActivity :
         Torch.init(this)
         Glass.start(this) { if (::root.isInitialized) redraw(root) }
 
-        @Suppress("DEPRECATION")
-        window.setDecorFitsSystemWindows(false)
-        window.isNavigationBarContrastEnforced = false
-        @Suppress("DEPRECATION")
-        window.isStatusBarContrastEnforced = false
+        window.edgeToEdge()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            @Suppress("DEPRECATION")
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        }
 
         popup = AppMenu(this)
         home = HomeView(this, this)
@@ -133,12 +139,7 @@ class LauncherActivity :
             applyInsets(insets)
             insets
         }
-        root.setWindowInsetsAnimationCallback(object : WindowInsetsAnimation.Callback(DISPATCH_MODE_CONTINUE_ON_SUBTREE) {
-            override fun onProgress(insets: WindowInsets, running: MutableList<WindowInsetsAnimation>): WindowInsets {
-                if (running.any { it.typeMask and WindowInsets.Type.ime() != 0 }) applyInsets(insets)
-                return insets
-            }
-        })
+        root.watchImeInsets { applyInsets(it) }
 
         actions = Actions.all(this, this)
         Apps.listen(appsChanged)
@@ -147,8 +148,9 @@ class LauncherActivity :
         Torch.listen(torchChanged)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            backCallback = OnBackInvokedCallback { back() }
-            onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, backCallback!!)
+            val callback = OnBackInvokedCallback { back() }
+            backCallback = callback
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, callback)
         }
 
         home.setDim(prefs.dimWallpaper)
@@ -224,7 +226,7 @@ class LauncherActivity :
         prefs.unlisten(prefsChanged)
         Torch.unlisten(torchChanged)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            backCallback?.let { onBackInvokedDispatcher.unregisterOnBackInvokedCallback(it) }
+            (backCallback as? OnBackInvokedCallback)?.let { onBackInvokedDispatcher.unregisterOnBackInvokedCallback(it) }
         }
         super.onDestroy()
     }
@@ -250,15 +252,15 @@ class LauncherActivity :
     }
 
     private fun applyInsets(insets: WindowInsets) {
-        val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+        val bars = insets.barInsets()
         val side = dp(6)
         val left = max(bars.left, side)
         val right = max(bars.right, side)
         bandTop = max(bars.top, dp(24))
         bandBottom = max(bars.bottom, dp(10))
-        imeBottom = insets.getInsets(WindowInsets.Type.ime()).bottom
+        imeBottom = insets.imeBottom()
 
-        val corner = insets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_LEFT)?.radius ?: 0
+        val corner = insets.bottomLeftCornerRadius()
         val radius = if (corner > 0) (corner - side).toFloat().coerceIn(dp(18f), dp(34f)) else dp(26f)
 
         frame.setFrame(left, bandTop, right, bandBottom, radius)
@@ -534,14 +536,11 @@ class LauncherActivity :
     }
 
     override fun hideKeyboard() {
-        window.insetsController?.hide(WindowInsets.Type.ime())
+        window.hideIme(this)
     }
 
     override fun showKeyboard(view: View) {
-        view.post {
-            window.insetsController?.show(WindowInsets.Type.ime())
-            getSystemService(InputMethodManager::class.java)?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
-        }
+        window.showIme(view)
     }
 
     override val context: Context get() = this
@@ -652,7 +651,7 @@ class LauncherActivity :
         prefs.wallpaperSeeded = true
         val info = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull() ?: return
         if (info.firstInstallTime != info.lastUpdateTime) return
-        val bounds = windowManager.maximumWindowMetrics.bounds
+        val bounds = screenBounds()
         val (width, height) = DotMatrix.wallpaperSize(bounds.width(), bounds.height(), isTablet)
         val pitch = prefs.dotPitch
         val app = applicationContext

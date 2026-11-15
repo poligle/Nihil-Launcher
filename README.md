@@ -36,7 +36,7 @@ if you pair it as a deck: that is all its `INTERNET` permission is for. It is ab
 lines of Kotlin on the Android framework alone — no AndroidX, no Compose, no libraries
 beyond the Kotlin standard library; even the QR reader is its own.
 
-> Any phone with Android 12 or newer should work.
+> Any phone with Android 9 or newer should work.
 
 ---
 
@@ -335,6 +335,7 @@ Open **NIHIL** from the app list, the gear in the drawer, or hold the home scree
 | `REQUEST_DELETE_PACKAGES`      | "Uninstall" in the app menu                                       |
 | `INTERNET`                     | The deck, only ever to the computer it was paired with            |
 | `CAMERA`                       | The deck, to read the computer's pairing QR                       |
+| `WRITE_EXTERNAL_STORAGE` (Android 9) | Save files from Vector into `Download/Vector`               |
 | Notification access, optional  | The light on the frame and the unread icons                       |
 | Accessibility, optional        | To lock the phone on a double tap, and the Glyph light over other apps |
 

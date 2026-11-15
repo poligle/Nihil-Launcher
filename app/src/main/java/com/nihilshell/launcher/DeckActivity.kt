@@ -16,11 +16,9 @@ import android.text.InputType
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
-import android.view.WindowInsets
 import com.nihilshell.launcher.ui.LedGauge
 import com.nihilshell.launcher.ui.ReorderGrid
 import com.nihilshell.launcher.ui.AppMenu
-import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -48,7 +46,9 @@ import com.nihilshell.launcher.ui.Trackpad
 import com.nihilshell.launcher.ui.Wordmark
 import com.nihilshell.launcher.ui.Workspaces
 import com.nihilshell.launcher.ui.WRAP
+import com.nihilshell.launcher.ui.barInsets
 import com.nihilshell.launcher.ui.dp
+import com.nihilshell.launcher.ui.edgeToEdge
 import com.nihilshell.launcher.ui.llp
 import com.nihilshell.launcher.ui.lp
 import com.nihilshell.launcher.ui.mono
@@ -56,6 +56,7 @@ import com.nihilshell.launcher.ui.pad
 import com.nihilshell.launcher.ui.ripple
 import com.nihilshell.launcher.ui.rounded
 import com.nihilshell.launcher.ui.rule
+import com.nihilshell.launcher.ui.setSystemBarsVisible
 import com.nihilshell.launcher.ui.text
 import org.json.JSONObject
 import java.net.URLEncoder
@@ -107,9 +108,7 @@ class DeckActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         store = DeckStore.get(this)
-        @Suppress("DEPRECATION")
-        window.setDecorFitsSystemWindows(false)
-        window.isNavigationBarContrastEnforced = false
+        window.edgeToEdge()
         content = FrameLayout(this).apply { setBackgroundColor(Nihil.VOID) }
         notice = Notice(this)
         val root = FrameLayout(this)
@@ -117,7 +116,7 @@ class DeckActivity : Activity() {
         root.addView(notice, lp(WRAP, WRAP, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL))
         setContentView(root)
         root.setOnApplyWindowInsetsListener { _, insets ->
-            val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+            val bars = insets.barInsets()
             val side = dp(if (full) 8 else 20)
             content.setPadding(bars.left + side, bars.top + dp(if (full) 8 else 14), bars.right + side, bars.bottom + dp(8))
             (notice.layoutParams as FrameLayout.LayoutParams).bottomMargin = bars.bottom + dp(20)
@@ -271,14 +270,13 @@ class DeckActivity : Activity() {
         content.requestApplyInsets()
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && full) bars(false)
+    }
+
     private fun bars(shown: Boolean) {
-        val controller = window.insetsController ?: return
-        if (shown) {
-            controller.show(WindowInsets.Type.systemBars())
-        } else {
-            controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            controller.hide(WindowInsets.Type.systemBars())
-        }
+        window.setSystemBarsVisible(shown)
     }
 
     private var backCallback: Any? = null

@@ -13,6 +13,6 @@ NIHIL is a home screen in black, greys and dots: the language of NIHIL, a deskto
 
 Its INTERNET permission is for the deck alone: it talks only to the computer it was paired with, over HTTPS pinned to that computer's key. Of a notification, NIHIL looks at which app posted it, its flags and its category, never its text. The accessibility service reads no content.
 
-Android 12 or newer. The desktop: github.com/poligle/Nihil-Shell
+Android 9 or newer. The desktop: github.com/poligle/Nihil-Shell
 
 NIHIL is an independent project, not affiliated with Nothing Technology Limited.

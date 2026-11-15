@@ -110,7 +110,7 @@ object Glass {
     private val levelShaders = HashMap<Int, BitmapShader>()
 
     private fun screenKey(context: Context): Pair<Long, android.graphics.Rect> {
-        val bounds = context.getSystemService(WindowManager::class.java).maximumWindowMetrics.bounds
+        val bounds = context.screenBounds()
         return (bounds.width().toLong() shl 32 or bounds.height().toLong()) to bounds
     }
 

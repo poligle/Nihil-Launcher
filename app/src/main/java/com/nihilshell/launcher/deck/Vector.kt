@@ -1,5 +1,6 @@
 package com.nihilshell.launcher.deck
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -11,9 +12,13 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.graphics.drawable.Icon
+import android.media.MediaMetadataRetriever
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -141,12 +146,34 @@ object Vector {
         emit("used")
     }
 
+    fun canSave(context: Context): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
+            context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+
     fun save(context: Context): Boolean {
         val item = current(context) ?: return false
+        val mime = item.mime.substringBefore(';').trim().ifEmpty { "application/octet-stream" }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (!canSave(context) || Environment.getExternalStorageState() != Environment.MEDIA_MOUNTED) return false
+            @Suppress("DEPRECATION")
+            val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), FOLDER)
+            if (!dir.isDirectory && !dir.mkdirs()) return false
+            val target = uniqueFile(dir, item.name)
+            val written = runCatching {
+                target.outputStream().use { output -> item.file.inputStream().use { it.copyTo(output) } }
+            }.isSuccess
+            if (!written) {
+                target.delete()
+                return false
+            }
+            MediaScannerConnection.scanFile(context.applicationContext, arrayOf(target.absolutePath), arrayOf(mime), null)
+            use(context)
+            return true
+        }
         val resolver = context.contentResolver
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, item.name)
-            put(MediaStore.MediaColumns.MIME_TYPE, item.mime.substringBefore(';').trim().ifEmpty { "application/octet-stream" })
+            put(MediaStore.MediaColumns.MIME_TYPE, mime)
             put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + FOLDER)
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         }
@@ -161,6 +188,18 @@ object Vector {
         runCatching { resolver.update(target, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null) }
         use(context)
         return true
+    }
+
+    internal fun uniqueFile(dir: File, name: String): File {
+        val first = File(dir, name)
+        if (!first.exists()) return first
+        val dot = name.lastIndexOf('.')
+        val (stem, ext) = if (dot > 0) name.substring(0, dot) to name.substring(dot) else name to ""
+        for (i in 1..999) {
+            val candidate = File(dir, "$stem ($i)$ext")
+            if (!candidate.exists()) return candidate
+        }
+        return File(dir, "$stem (${System.currentTimeMillis()})$ext")
     }
 
     @Synchronized
@@ -347,7 +386,31 @@ object Vector {
     fun preview(context: Context, payload: Payload, size: Int): Bitmap? {
         val uri = payload.uri ?: return null
         if (payload.kind != "image" && payload.kind != "video") return null
-        return runCatching { context.contentResolver.loadThumbnail(uri, Size(size, size), null) }.getOrNull()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return runCatching { context.contentResolver.loadThumbnail(uri, Size(size, size), null) }.getOrNull()
+        }
+        return runCatching {
+            if (payload.kind == "image") {
+                ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, uri)) { decoder, info, _ ->
+                    val longest = maxOf(info.size.width, info.size.height)
+                    if (longest > size && longest > 0) {
+                        val scale = size.toFloat() / longest
+                        decoder.setTargetSize(
+                            (info.size.width * scale).toInt().coerceAtLeast(1),
+                            (info.size.height * scale).toInt().coerceAtLeast(1),
+                        )
+                    }
+                }
+            } else {
+                val retriever = MediaMetadataRetriever()
+                try {
+                    retriever.setDataSource(context, uri)
+                    retriever.getScaledFrameAtTime(-1L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, size, size)
+                } finally {
+                    runCatching { retriever.release() }
+                }
+            }
+        }.getOrNull()
     }
 
     fun thumbnail(file: File, max: Int): Bitmap? = runCatching {

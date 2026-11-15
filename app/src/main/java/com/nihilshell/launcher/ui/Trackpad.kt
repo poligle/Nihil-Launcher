@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
+import android.os.Build
 import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.View
@@ -65,7 +66,9 @@ class Trackpad(context: Context) : View(context) {
             grid[i + 1] = top + r * pitch
         }
         light = FloatArray(columns * rows)
-        systemGestureExclusionRects = listOf(Rect(0, 0, w, h))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            systemGestureExclusionRects = listOf(Rect(0, 0, w, h))
+        }
         onSize?.invoke()
     }
 
