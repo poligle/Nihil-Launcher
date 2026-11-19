@@ -15,6 +15,8 @@ app/src/main/java/com/nihilshell/launcher/
 ├── VectorShareActivity.kt "Vector" in the share sheet
 ├── deck/
 │   ├── DeckClient.kt      HTTPS pinned to the computer, pairing, mDNS
+│   ├── BleLink.kt         the computer over Bluetooth LE, when no network reaches it
+│   ├── Wire.kt            TLS and HTTP by hand on a Bluetooth channel
 │   ├── DeckStore.kt       the computer, its token in the Keystore, the webs
 │   ├── DeckCache.kt       the icons the computer gives, kept a week
 │   ├── TrackpadLink.kt    the trackpad's stream to the computer
@@ -82,6 +84,12 @@ app/src/main/java/com/nihilshell/launcher/
   computer they become a uinput touchpad as large as the phone's screen, so libinput's taps,
   scrolling and pinches and Hyprland's gestures behave as on the laptop. The frames keep the
   phone's spacing there, 25 ms late: libinput reads speed from their times.
+- **Bluetooth**, when none of the computer's addresses answer: an LE connection-oriented
+  channel (L2CAP) to the computer, found by the UUID its pin makes, with no bonding: TLS is the
+  check, as over the network. The channel is no socket, so TLS runs in an `SSLEngine` on its
+  two streams and HTTP/1.1 is written by hand on top (`deck/Wire.kt`), the trackpad's upgrade
+  too. A channel is kept six seconds for the next request, and once Bluetooth has answered
+  where the network didn't, it goes first for half a minute.
 - **Webs** open with an app id each (`Browser.EXTRA_APPLICATION_ID`), so Chrome goes back to
   the tab it opened for that web instead of opening another.
 - **Search** strips accents (NFD), scores exact, prefix, start of a word, inside and
@@ -97,4 +105,6 @@ app/src/main/java/com/nihilshell/launcher/
   equations, sums and limits numerically (adaptive Simpson, bisection).
 - **Tests** cover the pure core on the JVM: search, the calculator and its calculus, the QR
   reader (codes drawn square and in dots, turned, small, noisy and damaged, and the
-  desktop's QR as it shows on a screen), the LED font, the dot matrix and icon statistics.
+  desktop's QR as it shows on a screen), the LED font, the dot matrix and icon statistics,
+  and the deck's wire: TLS both ways at once on two streams, heads and bodies, and the
+  Bluetooth UUID as the computer makes it.

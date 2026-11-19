@@ -30,6 +30,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import com.nihilshell.launcher.core.IconStyle
 import com.nihilshell.launcher.core.Prefs
+import com.nihilshell.launcher.deck.BleLink
 import com.nihilshell.launcher.deck.Computer
 import com.nihilshell.launcher.deck.DeckCache
 import com.nihilshell.launcher.deck.DeckClient
@@ -138,6 +139,7 @@ class DeckActivity : Activity() {
         onScreen = true
         refresh()
         trackpadOn()
+        askForBluetooth()
         if (full) bars(false)
         main.removeCallbacks(poll)
         main.postDelayed(poll, POLL)
@@ -455,7 +457,7 @@ class DeckActivity : Activity() {
                     unpaired(computer)
                     return@post
                 }
-                status?.text = getString(R.string.deck_connected, computer.last.orEmpty())
+                status?.text = getString(R.string.deck_connected, if (apps.air) getString(R.string.deck_bluetooth) else computer.last.orEmpty())
                 apps.json?.optJSONArray("apps")?.let { list ->
                     showApps(List(list.length()) { list.getJSONObject(it) }.map { it.getString("id") to it.optString("name") }, computer)
                 }
@@ -465,6 +467,7 @@ class DeckActivity : Activity() {
     }
 
     private fun showState(state: JSONObject) {
+        learn(state)
         val media = state.optJSONObject("media")
         if (media == null) {
             track?.text = getString(R.string.deck_nothing_playing)
@@ -480,6 +483,24 @@ class DeckActivity : Activity() {
         showVolume(state.optJSONObject("volume"))
         lit(caffeineKey, state.optBoolean("caffeine"))
         lit(nightKey, state.optBoolean("night"))
+    }
+
+    /** What the computer says of its Bluetooth, kept: the deck reaches it so with no network in common. */
+    private fun learn(state: JSONObject) {
+        val computer = store.computer ?: return
+        val psm = BleLink.psm(state.optJSONObject("ble"), computer.pin)
+        if (psm == computer.psm) return
+        computer.psm = psm
+        store.save(computer)
+        askForBluetooth()
+    }
+
+    /** Once, when the computer is on Bluetooth: Android's question for nearby devices. */
+    private fun askForBluetooth() {
+        val computer = store.computer ?: return
+        if (!onScreen || computer.psm == null || store.askedBluetooth || BleLink.allowed(this)) return
+        store.askedBluetooth = true
+        requestPermissions(BleLink.PERMISSIONS, REQUEST_BLUETOOTH)
     }
 
     private fun showCover(token: String) {
@@ -779,5 +800,6 @@ class DeckActivity : Activity() {
         const val EXTRA_PAIRED = "paired"
         private const val TRACKPAD = 2
         private const val POLL = 2500L
+        private const val REQUEST_BLUETOOTH = 13
     }
 }

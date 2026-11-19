@@ -29,6 +29,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.nihilshell.launcher.core.QrDecoder
+import com.nihilshell.launcher.deck.BleLink
 import com.nihilshell.launcher.deck.DeckClient
 import com.nihilshell.launcher.deck.DeckStore
 import com.nihilshell.launcher.ui.KeyButton
@@ -59,6 +60,8 @@ class DeckScanActivity : Activity() {
 
     @Volatile
     private var done = false
+
+    private var waiting: DeckClient.Invitation? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,6 +125,13 @@ class DeckScanActivity : Activity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == BLUETOOTH_REQUEST) {
+            waiting?.let {
+                waiting = null
+                pair(it)
+            }
+            return
+        }
         if (requestCode != CAMERA_REQUEST) return
         if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) start() else say(getString(R.string.deck_camera_denied))
     }
@@ -260,6 +270,18 @@ class DeckScanActivity : Activity() {
         }
         done = true
         stop()
+        // The computer is on Bluetooth too: Android asks once for nearby devices, then the pairing goes on.
+        val store = DeckStore.get(this)
+        if (invitation.psm != null && !store.askedBluetooth && !BleLink.allowed(this)) {
+            store.askedBluetooth = true
+            waiting = invitation
+            requestPermissions(BleLink.PERMISSIONS, BLUETOOTH_REQUEST)
+            return
+        }
+        pair(invitation)
+    }
+
+    private fun pair(invitation: DeckClient.Invitation) {
         say(getString(R.string.deck_pairing, invitation.name))
         val device = Settings.Global.getString(contentResolver, Settings.Global.DEVICE_NAME)?.takeIf { it.isNotBlank() }
             ?: android.os.Build.MODEL
@@ -294,5 +316,6 @@ class DeckScanActivity : Activity() {
 
     private companion object {
         const val CAMERA_REQUEST = 4
+        const val BLUETOOTH_REQUEST = 5
     }
 }

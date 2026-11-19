@@ -129,7 +129,7 @@ class TrackpadLink(private val store: DeckStore, private val onState: (State) ->
 
     private fun listen(current: Line) {
         runCatching {
-            current.stream.socket.soTimeout = 0
+            current.stream.untimed()
             while (current.stream.input.read() >= 0) current.heard = SystemClock.uptimeMillis()
         }
         current.heard = 0L

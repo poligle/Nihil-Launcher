@@ -19,6 +19,7 @@ class Computer(
     val hosts: List<String>,
     var last: String?,
     val device: String,
+    var psm: Int? = null,           // the LE channel the computer takes over Bluetooth, if it is on it
 )
 
 class Web(val url: String, val title: String)
@@ -26,11 +27,18 @@ class Web(val url: String, val title: String)
 class DeckStore private constructor(context: Context) {
     private val sp = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
+    init {
+        BleLink.attach(context)
+    }
+
     val computer: Computer?
         get() = runCatching {
             val o = JSONObject(sp.getString(COMPUTER, null) ?: return null)
             val hosts = o.getJSONArray("hosts").let { a -> List(a.length()) { a.getString(it) } }
-            Computer(o.getString("name"), o.getString("pin"), o.getInt("port"), hosts, o.optString("last").ifEmpty { null }, o.getString("device"))
+            Computer(
+                o.getString("name"), o.getString("pin"), o.getInt("port"), hosts, o.optString("last").ifEmpty { null }, o.getString("device"),
+                o.optInt("psm").takeIf { it > 0 },
+            )
         }.getOrNull()
 
     fun token(): String? = runCatching {
@@ -48,6 +56,7 @@ class DeckStore private constructor(context: Context) {
             .put("hosts", JSONArray(computer.hosts))
             .put("last", computer.last ?: "")
             .put("device", computer.device)
+            .put("psm", computer.psm ?: 0)
         val edit = sp.edit().putString(COMPUTER, o.toString())
         if (token != null) {
             val cipher = Cipher.getInstance(CIPHER)
@@ -81,6 +90,11 @@ class DeckStore private constructor(context: Context) {
         get() = sp.getBoolean(KEEP_ON, false)
         set(value) = sp.edit().putBoolean(KEEP_ON, value).apply()
 
+    /** Whether Android was asked once for nearby devices, for the computer over Bluetooth. */
+    var askedBluetooth: Boolean
+        get() = sp.getBoolean(ASKED_BLUETOOTH, false)
+        set(value) = sp.edit().putBoolean(ASKED_BLUETOOTH, value).apply()
+
     private fun key(): SecretKey {
         val store = KeyStore.getInstance(KEYSTORE).apply { load(null) }
         (store.getKey(ALIAS, null) as? SecretKey)?.let { return it }
@@ -102,6 +116,7 @@ class DeckStore private constructor(context: Context) {
         private const val WEBS = "webs"
         private const val APPS_ORDER = "apps_order"
         private const val KEEP_ON = "keep_screen_on"
+        private const val ASKED_BLUETOOTH = "asked_bluetooth"
         private const val KEYSTORE = "AndroidKeyStore"
         private const val ALIAS = "nihil-deck-token"
         private const val CIPHER = "AES/GCM/NoPadding"

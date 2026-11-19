@@ -117,6 +117,7 @@
     <string name="deck_error_unreachable">%1$s no responde: ¿estáis en la misma red?</string>
     <string name="deck_pair">Emparejar</string>
     <string name="deck_connected">Conectado: %1$s</string>
+    <string name="deck_bluetooth">Bluetooth</string>
     <string name="deck_looking">Buscando %1$s…</string>
     <string name="deck_unreachable_status">%1$s no responde</string>
     <string name="deck_forgotten">%1$s ha olvidado este móvil: vuelve a emparejarlo.</string>

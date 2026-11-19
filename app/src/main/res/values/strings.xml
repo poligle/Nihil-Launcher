@@ -120,6 +120,7 @@
     <string name="deck_error_unreachable">%1$s doesn’t answer: are you on the same network?</string>
     <string name="deck_pair">Pair</string>
     <string name="deck_connected">Connected: %1$s</string>
+    <string name="deck_bluetooth">Bluetooth</string>
     <string name="deck_looking">Looking for %1$s…</string>
     <string name="deck_unreachable_status">%1$s doesn’t answer</string>
     <string name="deck_forgotten">%1$s forgot this phone: pair it again.</string>
