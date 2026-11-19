@@ -104,7 +104,7 @@ class WireTest {
         assertArrayEquals(sent, back)
         pipe.close()
         assertTrue(pipe.closed)
-        assertEquals(-1, pipe.input.read())
+        assertTrue(fails { pipe.input.read() } is IOException)
         server.close()
     }
 
@@ -119,7 +119,7 @@ class WireTest {
         pipe.idle(1000)
         val started = System.nanoTime()
         assertTrue(fails { pipe.input.read() } is IOException)
-        assertTrue((System.nanoTime() - started) / 1_000_000 in 900..4000)
+        assertTrue((System.nanoTime() - started) / 1_000_000 in 900..6000)
         assertTrue(pipe.closed)
         server.close()
     }

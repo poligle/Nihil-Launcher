@@ -109,10 +109,17 @@ class TlsPipe(
         runCatching { shut() }
     }
 
+    /** What has come, or -1 once the other side has closed; closed here, an IOException, however the channel ended. */
     private fun take(b: ByteArray, off: Int, len: Int): Int = guarded {
         synchronized(reading) {
             if (len == 0) return@guarded 0
-            while (!plain.hasRemaining()) if (closed || !open(false)) return@guarded -1
+            while (!plain.hasRemaining()) {
+                if (closed) throw IOException("closed")
+                if (!open(false)) {
+                    if (closed) throw IOException("closed")
+                    return@guarded -1
+                }
+            }
             val count = minOf(len, plain.remaining())
             plain.get(b, off, count)
             count
