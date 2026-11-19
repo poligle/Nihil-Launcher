@@ -207,6 +207,7 @@
     <string name="vector_pick">Send a file</string>
     <string name="vector_nothing">Nothing to send</string>
     <string name="vector_big">Too big: up to 100 MB</string>
+    <string name="vector_slow">Over Bluetooth: a few minutes</string>
     <string name="vector_unreadable">It can’t be read</string>
     <string name="vector_unpaired">Pair this phone with a computer first</string>
     <string name="vector_none_opens">No app opens it</string>

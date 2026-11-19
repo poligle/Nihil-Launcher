@@ -203,6 +203,7 @@
     <string name="vector_pick">Enviar un archivo</string>
     <string name="vector_nothing">Nada que enviar</string>
     <string name="vector_big">Demasiado grande: hasta 100 MB</string>
+    <string name="vector_slow">Por Bluetooth: unos minutos</string>
     <string name="vector_unreadable">No se puede leer</string>
     <string name="vector_unpaired">Empareja antes el móvil con un ordenador</string>
     <string name="vector_none_opens">Ninguna app lo abre</string>

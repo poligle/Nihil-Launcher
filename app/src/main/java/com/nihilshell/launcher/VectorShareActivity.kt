@@ -44,7 +44,7 @@ class VectorShareActivity : Activity() {
             return
         }
         Vector.start(this)
-        Vector.send(this, payload) { outcome, computer ->
+        Vector.send(this, payload, slow = { if (!isDestroyed) notice.show(getString(R.string.vector_slow)) }) { outcome, computer ->
             if (isDestroyed) return@send
             if (outcome == Vector.Outcome.SENT && Vector.notifies(this)) {
                 finish()

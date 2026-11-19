@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit
 
 object Vector {
     const val MAX = 100L * 1024 * 1024
+    const val SLOW = 5L * 1024 * 1024        // over Bluetooth, more than a minute or so
     const val NOTIFICATION = 0x7EC
     const val FOLDER = "Vector"
     private const val CHANNEL = "vector"
@@ -424,7 +425,8 @@ object Vector {
         return if (text.isEmpty()) null else text(text)
     }
 
-    fun send(context: Context, payload: Payload, done: (Outcome, String) -> Unit) {
+    /** Sends what it is given; slow, when it is big and the computer is reached over Bluetooth, before it goes. */
+    fun send(context: Context, payload: Payload, slow: () -> Unit = {}, done: (Outcome, String) -> Unit) {
         val app = context.applicationContext
         val store = DeckStore.get(app)
         val computer = store.computer
@@ -435,6 +437,7 @@ object Vector {
                 sending = true
                 emit("sending")
                 pool.execute {
+                    if (payload.size > SLOW && DeckClient(computer, store.token()).call("GET", "/v1/hello")?.air == true) main.post(slow)
                     val part = File(app.cacheDir, "vector-out").apply { mkdirs() }.let { File.createTempFile("send", ".part", it) }
                     val outcome = runCatching { upload(app, store, computer, payload, part) }.getOrDefault(Outcome.UNREACHABLE)
                     part.delete()

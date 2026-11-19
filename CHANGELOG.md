@@ -5,8 +5,9 @@
   same (`deck/BleLink.kt`, `deck/Wire.kt`). Everything goes that way: the keys, the music, the
   apps, the trackpad, Vector and pairing, even from a QR with no address. Nothing to pair in
   Android's settings; Android asks once for nearby devices, when the QR or the computer says it
-  is on Bluetooth. The deck says **Connected: Bluetooth**. It needs NIHIL on the computer with
-  **Without a network, over Bluetooth** on.
+  is on Bluetooth. The deck says **Connected: Bluetooth**, and a file over 5 MB to Vector says
+  first that it will take a few minutes. It needs NIHIL on the computer with **Without a
+  network, over Bluetooth** on.
 - Vector, as on the desktop: what the computer sends waits in the box until it is used,
   copied (a text or a picture), saved in `Download/Vector`, opened, shared or let go, and then
   the box is empty again; a tap does the first, and keys under it the rest, in place of the

@@ -35,8 +35,8 @@ while it is open. The apps come with the computer's icons; the webs are kept on 
   phone finds it over Bluetooth LE, by a UUID made from the pin, and opens a channel to it with
   the same HTTPS on it, pinned the same. Nothing to pair in Android's settings; Android asks
   once for nearby devices. Slower than Wi-Fi: enough for the keys, the music and the trackpad,
-  but a big file to Vector takes minutes. It needs NIHIL on the computer with **Without a
-  network, over Bluetooth** on, in Preferences → Devices.
+  but a big file to Vector takes minutes, and the phone says so before it goes. It needs NIHIL
+  on the computer with **Without a network, over Bluetooth** on, in Preferences → Devices.
 
 The protocol is [docs/deck.md](https://github.com/poligle/Nihil-Shell/blob/nihil/docs/deck.md)
 in Nihil-Shell.
