@@ -1,0 +1,88 @@
+name: android9-apk
+
+# The fork's own APK, for an Android 9 phone, as a file to download rather than a zip of an
+# artifact. It is signed with the debug key: the release key stays upstream's (RELEASING.md),
+# and release.yml publishes nothing without it. A tag here, `android9-…`, is a build of this
+# fork, not a release of NIHIL, and the workflows of `v*` don't see it.
+
+on:
+  push:
+    tags: ["android9-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', 'gradle/wrapper/gradle-wrapper.properties', 'gradle.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+      - name: Gradle
+        run: |
+          url=$(sed -n 's/^distributionUrl=//p' gradle/wrapper/gradle-wrapper.properties | sed 's/\\:/:/g')
+          version=$(basename "$url" | sed -E 's/^gradle-(.+)-(bin|all)\.zip$/\1/')
+          home="$HOME/.gradle/wrapper/ci/gradle-$version"
+          if [ ! -x "$home/bin/gradle" ]; then
+            mkdir -p "$(dirname "$home")"
+            if curl -fsSL --retry 8 --retry-all-errors --retry-delay 20 --connect-timeout 20 -o "$RUNNER_TEMP/gradle.zip" "$url" &&
+               unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP/gradle"; then
+              mv "$RUNNER_TEMP/gradle/gradle-$version" "$home"
+            else
+              echo "::warning::$url isn't answering: Gradle $version from its official Docker image instead"
+              docker run --rm --user "$(id -u):$(id -g)" -v "$(dirname "$home"):/out" \
+                "gradle:$version-jdk17" cp -r /opt/gradle "/out/gradle-$version"
+            fi
+          fi
+          "$home/bin/gradle" --version
+          echo "GRADLE=$home/bin/gradle" >> "$GITHUB_ENV"
+          {
+            echo "systemProp.org.gradle.internal.http.connectionTimeout=120000"
+            echo "systemProp.org.gradle.internal.http.socketTimeout=120000"
+            echo "systemProp.org.gradle.internal.repository.max.tentatives=8"
+            echo "systemProp.org.gradle.internal.repository.initial.backoff=2000"
+          } >> "$HOME/.gradle/gradle.properties"
+      - name: Test and build
+        run: $GRADLE --no-daemon test assembleDebug assembleRelease
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(sed -n 's/^val nihilVersion = "\(.*\)"/\1/p' app/build.gradle.kts)
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            name="$GITHUB_REF_NAME"
+            target=()
+          else
+            name="android9-v$version-run$GITHUB_RUN_NUMBER"
+            target=(--target "$GITHUB_SHA")
+          fi
+          debug="nihil-launcher-$name-debug.apk"
+          release="nihil-launcher-$name-release.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "$debug"
+          cp app/build/outputs/apk/release/app-release.apk "$release"
+          sha256sum "$debug" "$release" > SHA256SUMS
+          cat > NOTES.md <<'NOTES'
+          The fork's own build of NIHIL, with Android 9 (API 28).
+
+          Both APKs are signed with the debug key, so neither installs over an official
+          NIHIL release, and an official one won't install over them: uninstall first,
+          and favourites, hidden apps and settings start from zero.
+
+          `-release.apk` is the minified build; `-debug.apk` is the same code unminified,
+          for when the minified one misbehaves. `SHA256SUMS` checks both:
+          `sha256sum -c SHA256SUMS`.
+          NOTES
+          gh release create "$name" "$debug" "$release" SHA256SUMS \
+            --title "NIHIL $version for Android 9, debug-signed ($name)" \
+            --prerelease "${target[@]}" --notes-file NOTES.md
