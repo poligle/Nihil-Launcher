@@ -12,6 +12,7 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.ParcelUuid
 import android.os.SystemClock
 import org.json.JSONObject
@@ -88,7 +89,15 @@ object BleLink {
         return ble.optInt("psm", 0).takeIf { it in 0x80..0xFF && ble.optString("uuid") == uuid(pin).toString() }
     }
 
-    fun allowed(context: Context): Boolean = PERMISSIONS.all { context.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
+    /**
+     * Whether this phone has the channel and the asking for it: an L2CAP one came in Android 10, and
+     * BLUETOOTH_SCAN and BLUETOOTH_CONNECT in Android 12, where a scan asks for no location. Below
+     * 12 the deck goes over the network only, as it did before Bluetooth.
+     */
+    val available: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+    fun allowed(context: Context): Boolean =
+        available && PERMISSIONS.all { context.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
 
     /** Whether Bluetooth answered lately where the network didn't: then it goes first. */
     fun lately(): Boolean = SystemClock.elapsedRealtime() - answered < LATELY
@@ -183,6 +192,7 @@ object BleLink {
     /** An LE channel to the device; insecure, as Android calls one with no bonding: TLS is the check. */
     @SuppressLint("MissingPermission")
     private fun channel(device: BluetoothDevice, psm: Int): BluetoothSocket? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
         val socket = try {
             device.createInsecureL2capChannel(psm)
         } catch (e: Exception) {

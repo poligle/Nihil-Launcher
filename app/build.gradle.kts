@@ -28,7 +28,7 @@ android {
 
     defaultConfig {
         applicationId = "com.nihilshell.launcher"
-        minSdk = 31
+        minSdk = 28
         targetSdk = 35
         versionCode = nihilVersionCode
         versionName = nihilVersion

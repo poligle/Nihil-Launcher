@@ -1,6 +1,8 @@
 package com.nihilshell.launcher.ui
 
 import android.content.Context
+import android.os.Build
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -96,7 +98,12 @@ class ReorderGrid(context: Context, columns: Int, private val cellHeight: Int) :
         grabY = downY - child.top
         child.translationZ = 8 * resources.displayMetrics.density
         child.animate().scaleX(1.06f).scaleY(1.06f).alpha(0.92f).setDuration(Nihil.FAST).start()
-        child.performHapticFeedback(android.view.HapticFeedbackConstants.DRAG_START)
+        val haptic = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            HapticFeedbackConstants.DRAG_START
+        } else {
+            HapticFeedbackConstants.LONG_PRESS
+        }
+        child.performHapticFeedback(haptic)
         parent?.requestDisallowInterceptTouchEvent(true)
         onStart?.invoke()
     }

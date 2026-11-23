@@ -15,7 +15,6 @@ import android.provider.MediaStore
 import android.view.Gravity
 import android.view.View
 import android.view.ViewOutlineProvider
-import android.view.WindowInsets
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -31,12 +30,15 @@ import com.nihilshell.launcher.ui.LineIcon
 import com.nihilshell.launcher.ui.AppMenu
 import com.nihilshell.launcher.ui.Choice
 import com.nihilshell.launcher.ui.WRAP
+import com.nihilshell.launcher.ui.barInsets
 import com.nihilshell.launcher.ui.dp
+import com.nihilshell.launcher.ui.edgeToEdge
 import com.nihilshell.launcher.ui.isTablet
 import com.nihilshell.launcher.ui.llp
 import com.nihilshell.launcher.ui.lp
 import com.nihilshell.launcher.ui.mono
 import com.nihilshell.launcher.ui.rounded
+import com.nihilshell.launcher.ui.screenBounds
 import com.nihilshell.launcher.ui.text
 import java.util.concurrent.Executors
 import kotlin.math.abs
@@ -62,11 +64,9 @@ class WallpaperActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs.get(this)
-        @Suppress("DEPRECATION")
-        window.setDecorFitsSystemWindows(false)
-        window.isNavigationBarContrastEnforced = false
+        window.edgeToEdge()
 
-        val bounds = windowManager.maximumWindowMetrics.bounds
+        val bounds = screenBounds()
         val (width, height) = DotMatrix.wallpaperSize(bounds.width(), bounds.height(), isTablet)
         screenW = width
         screenH = height
@@ -77,7 +77,7 @@ class WallpaperActivity : Activity() {
         }
         setContentView(column)
         column.setOnApplyWindowInsetsListener { _, insets ->
-            val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+            val bars = insets.barInsets()
             column.setPadding(bars.left + dp(20), bars.top + dp(16), bars.right + dp(20), bars.bottom + dp(16))
             insets
         }

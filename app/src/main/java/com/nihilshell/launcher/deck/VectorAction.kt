@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import com.nihilshell.launcher.R
+import com.nihilshell.launcher.TasksActivity
 
 class VectorAction : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -17,6 +18,14 @@ class VectorAction : BroadcastReceiver() {
                 Toast.makeText(app, R.string.vector_copied, Toast.LENGTH_SHORT).show()
             }
             SAVE -> {
+                if (!Vector.canSave(app)) {
+                    app.startActivity(
+                        Intent(app, TasksActivity::class.java)
+                            .putExtra(TasksActivity.EXTRA_SAVE, true)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                    return
+                }
                 val pending = goAsync()
                 Thread({
                     val saved = Vector.save(app)

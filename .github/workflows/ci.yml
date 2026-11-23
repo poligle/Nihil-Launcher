@@ -2,8 +2,8 @@ name: ci
 
 on:
   push:
-    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -45,11 +45,16 @@ jobs:
             echo "systemProp.org.gradle.internal.repository.max.tentatives=8"
             echo "systemProp.org.gradle.internal.repository.initial.backoff=2000"
           } >> "$HOME/.gradle/gradle.properties"
-      - run: $GRADLE --no-daemon test assembleDebug
+      - run: $GRADLE --no-daemon test assembleDebug assembleRelease
       - uses: actions/upload-artifact@v4
         with:
           name: nihil-launcher-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nihil-launcher-release
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
       - name: Lint
         run: $GRADLE --no-daemon lintDebug
@@ -60,3 +65,35 @@ jobs:
           name: lint
           path: app/build/reports/lint-results-debug.html
           if-no-files-found: ignore
+      - name: Android 9 is the floor
+        run: |
+          report=app/build/reports/lint-results-debug.html
+          if [ ! -f "$report" ]; then
+            echo "::warning::lint wrote no report: the Android 9 check can't run"
+            exit 0
+          fi
+          python3 - "$report" <<'PY'
+          import re
+          import sys
+
+          text = open(sys.argv[1], encoding="utf-8", errors="replace").read()
+          found = []
+          for hit in re.finditer(r'name="NewApi"', text):
+              after = text[hit.start():hit.start() + 3000]
+              where = re.search(r"([\w./-]+\.kts?)</a>:(\d+)", after)
+              if not where:
+                  continue
+              what = re.search(r"</a>:\d+</span>:(.{0,400})", after, re.S)
+              path = where.group(1).split("/java/")[-1]
+              if not path.startswith(("app/", "buildSrc/")):
+                  path = "app/src/main/java/" + path
+              line = where.group(2)
+              message = re.sub(r"<[^>]+>", "", what.group(1)).strip() if what else "an API above Android 9 with no version check"
+              if (path, line, message) not in found:
+                  found.append((path, line, message))
+          for path, line, message in found:
+              print(f"::error file={path},line={line}::{message[:500]}")
+          if found:
+              sys.exit(f"{len(found)} above Android 9 with no version check")
+          PY
+          echo "Nothing above Android 9 without a version check."

@@ -1,5 +1,13 @@
 # Changelog
 
+- Android 9, and later: `minSdk` is 28, and everything the app does has Android 9's way of
+  doing it, Android 12's where the phone has it — edge to edge, the insets and the keyboard,
+  rounded corners, the home role, the settings panels, thumbnails, and Vector's saves in
+  `Download/Vector` (`ui/Windows.kt`). The deck's Bluetooth LE stays Android 12 and later's,
+  which has its channel (L2CAP) and its permissions; below, the deck goes over the network
+  as before, and nothing is asked of a phone that hasn't it. The builds are on GitHub
+  Actions too, debug and release, and every Android 9 CI run reads lint for a call above
+  Android 9 with no version check.
 - The deck with no network in common: when none of the computer's addresses answer, the phone
   reaches it over Bluetooth LE, a channel to it (L2CAP) with the same HTTPS on it, pinned the
   same (`deck/BleLink.kt`, `deck/Wire.kt`). Everything goes that way: the keys, the music, the

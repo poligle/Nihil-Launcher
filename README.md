@@ -53,7 +53,8 @@ beyond the Kotlin standard library; even the QR reader is its own.
 
 ## Install
 
-Any phone with Android 12 or newer should work.
+Any phone with Android 9 or newer should work. The deck's Bluetooth, when no network
+reaches the computer, needs Android 12 or newer.
 
 1. Download `nihil-launcher-v….apk` from the
    [latest release](https://github.com/poligle/Nihil-Launcher/releases/latest).
