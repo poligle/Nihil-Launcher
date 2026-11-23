@@ -55,6 +55,19 @@ jobs:
           } >> "$HOME/.gradle/gradle.properties"
       - name: Test and build
         run: $GRADLE --no-daemon test assembleDebug assembleRelease
+      - name: What the APK says it is
+        run: |
+          apk=app/build/outputs/apk/release/app-release.apk
+          aapt2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 2>/dev/null | tail -1)
+          if [ -n "$aapt2" ]; then
+            "$aapt2" dump badging "$apk" | head -1 | sed 's/^/::notice::/'
+            echo "::notice::minSdk $("$aapt2" dump badging "$apk" | sed -n "s/^sdkVersion:'\(.*\)'/\1/p")  targetSdk $("$aapt2" dump badging "$apk" | sed -n "s/^targetSdkVersion:'\(.*\)'/\1/p")"
+          else
+            echo "::warning::no aapt2 on the runner"
+          fi
+          echo "::notice::$(sha256sum "$apk" | cut -c1-64)  app-release.apk"
+          echo "::notice::$(sha256sum app/build/outputs/apk/debug/app-debug.apk | cut -c1-64)  app-debug.apk"
+
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -83,6 +96,9 @@ jobs:
           for when the minified one misbehaves. `SHA256SUMS` checks both:
           `sha256sum -c SHA256SUMS`.
           NOTES
+          printf '\n```\n' >> NOTES.md
+          cat SHA256SUMS >> NOTES.md
+          printf '```\n' >> NOTES.md
           gh release create "$name" "$debug" "$release" SHA256SUMS \
             --title "NIHIL $version for Android 9, debug-signed ($name)" \
             --prerelease "${target[@]}" --notes-file NOTES.md
