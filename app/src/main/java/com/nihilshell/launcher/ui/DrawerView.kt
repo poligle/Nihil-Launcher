@@ -1,6 +1,7 @@
 package com.nihilshell.launcher.ui
 
 import android.content.Context
+import android.os.Build
 import android.text.Editable
 import android.text.InputType
 import android.text.TextUtils
@@ -109,7 +110,9 @@ class DrawerView(context: Context, private val host: Host) : FrameLayout(context
             isSingleLine = true
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or InputType.TYPE_TEXT_VARIATION_FILTER
             imeOptions = EditorInfo.IME_ACTION_GO or EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_FLAG_NO_FULLSCREEN
-            textCursorDrawable = rounded(Nihil.INK, 0f).apply { setSize(context.dp(2), 0) }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                textCursorDrawable = rounded(Nihil.INK, 0f).apply { setSize(context.dp(2), 0) }
+            }
             setOnEditorActionListener { _, actionId, event ->
                 val enter = actionId == EditorInfo.IME_ACTION_GO ||
                     (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)

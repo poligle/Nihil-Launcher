@@ -2,6 +2,7 @@ package com.nihilshell.launcher.core
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.provider.AlarmClock
 import android.provider.Settings
 import com.nihilshell.launcher.R
@@ -53,11 +54,15 @@ object Actions {
             Action(TORCH, s(R.string.act_torch), "torch flashlight linterna flash luz light", LineIcon.Shape.TORCH) {
                 s(if (Torch.on) R.string.hint_on else R.string.hint_off)
             },
-            Action(WIFI, s(R.string.act_wifi), "wifi internet red network datos data", LineIcon.Shape.WIFI) { s(R.string.hint_panel) },
+            Action(WIFI, s(R.string.act_wifi), "wifi internet red network datos data", LineIcon.Shape.WIFI) {
+                s(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) R.string.hint_panel else R.string.hint_system)
+            },
             Action(BLUETOOTH, s(R.string.act_bluetooth), "bluetooth bt auriculares headphones", LineIcon.Shape.BLUETOOTH) {
                 s(R.string.hint_system)
             },
-            Action(SOUND, s(R.string.act_sound), "sound volume sonido volumen audio", LineIcon.Shape.SOUND) { s(R.string.hint_panel) },
+            Action(SOUND, s(R.string.act_sound), "sound volume sonido volumen audio", LineIcon.Shape.SOUND) {
+                s(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) R.string.hint_panel else R.string.hint_system)
+            },
             Action(BATTERY, s(R.string.act_battery), "battery bateria energia power", LineIcon.Shape.BATTERY) { s(R.string.hint_system) },
             Action(ALARMS, s(R.string.act_alarms), "alarm alarma reloj clock despertador", LineIcon.Shape.ALARM) {
                 host.nextAlarmText() ?: s(R.string.hint_system)
@@ -79,9 +84,17 @@ object Actions {
 
     fun run(action: Action, host: ActionHost): Boolean = when (action.id) {
         TORCH -> Torch.toggle().also { ok -> if (!ok) host.notice(host.context.getString(R.string.torch_unavailable)) }
-        WIFI -> host.start(Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY), Intent(Settings.ACTION_WIFI_SETTINGS))
+        WIFI -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            host.start(Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY), Intent(Settings.ACTION_WIFI_SETTINGS))
+        } else {
+            host.start(Intent(Settings.ACTION_WIFI_SETTINGS))
+        }
         BLUETOOTH -> host.start(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
-        SOUND -> host.start(Intent(Settings.Panel.ACTION_VOLUME), Intent(Settings.ACTION_SOUND_SETTINGS))
+        SOUND -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            host.start(Intent(Settings.Panel.ACTION_VOLUME), Intent(Settings.ACTION_SOUND_SETTINGS))
+        } else {
+            host.start(Intent(Settings.ACTION_SOUND_SETTINGS))
+        }
         BATTERY -> host.start(Intent(Intent.ACTION_POWER_USAGE_SUMMARY), Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS))
         ALARMS -> host.start(Intent(AlarmClock.ACTION_SHOW_ALARMS))
         LOCK -> {

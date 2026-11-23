@@ -6,17 +6,27 @@ import android.app.role.RoleManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
 
 object Access {
-    fun isDefaultHome(context: Context): Boolean =
-        context.getSystemService(RoleManager::class.java)?.isRoleHeld(RoleManager.ROLE_HOME) == true
+    fun isDefaultHome(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return context.getSystemService(RoleManager::class.java)?.isRoleHeld(RoleManager.ROLE_HOME) == true
+        }
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        val info = context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+        return info?.activityInfo?.packageName == context.packageName
+    }
 
     fun defaultHomeIntent(context: Context): Intent {
-        val roles = context.getSystemService(RoleManager::class.java)
-        if (roles != null && roles.isRoleAvailable(RoleManager.ROLE_HOME) && !roles.isRoleHeld(RoleManager.ROLE_HOME)) {
-            return roles.createRequestRoleIntent(RoleManager.ROLE_HOME)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val roles = context.getSystemService(RoleManager::class.java)
+            if (roles != null && roles.isRoleAvailable(RoleManager.ROLE_HOME) && !roles.isRoleHeld(RoleManager.ROLE_HOME)) {
+                return roles.createRequestRoleIntent(RoleManager.ROLE_HOME)
+            }
         }
         return Intent(Settings.ACTION_HOME_SETTINGS)
     }
@@ -27,11 +37,15 @@ object Access {
         context.getSystemService(NotificationManager::class.java)
             ?.isNotificationListenerAccessGranted(glyphComponent(context)) == true
 
-    fun notificationAccessIntents(context: Context): List<Intent> = listOf(
-        Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS)
-            .putExtra(Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME, glyphComponent(context).flattenToString()),
-        Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS),
-    )
+    fun notificationAccessIntents(context: Context): List<Intent> = buildList {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            add(
+                Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS)
+                    .putExtra(Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME, glyphComponent(context).flattenToString()),
+            )
+        }
+        add(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+    }
 
     fun hasLockService(context: Context): Boolean {
         val manager = context.getSystemService(AccessibilityManager::class.java) ?: return false

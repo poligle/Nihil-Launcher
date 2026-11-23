@@ -13,6 +13,6 @@ NIHIL es una pantalla de inicio en negro, grises y puntos: el lenguaje de NIHIL,
 
 Su permiso INTERNET es solo para el deck: habla únicamente con el ordenador con el que se emparejó, por HTTPS fijado a la clave de ese ordenador. De una notificación, NIHIL mira qué app la publicó, sus indicadores y su categoría, nunca su texto. El servicio de accesibilidad no lee ningún contenido.
 
-Android 12 o posterior. El escritorio: github.com/poligle/Nihil-Shell
+Android 9 o posterior. El escritorio: github.com/poligle/Nihil-Shell
 
 NIHIL es un proyecto independiente, sin relación con Nothing Technology Limited.

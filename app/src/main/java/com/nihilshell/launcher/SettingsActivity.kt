@@ -3,11 +3,11 @@ package com.nihilshell.launcher
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
-import android.view.WindowInsets
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -26,7 +26,9 @@ import com.nihilshell.launcher.ui.KeyButton
 import com.nihilshell.launcher.ui.Choice
 import com.nihilshell.launcher.ui.WRAP
 import com.nihilshell.launcher.ui.Wordmark
+import com.nihilshell.launcher.ui.barInsets
 import com.nihilshell.launcher.ui.dp
+import com.nihilshell.launcher.ui.edgeToEdge
 import com.nihilshell.launcher.ui.llp
 import com.nihilshell.launcher.ui.mono
 import com.nihilshell.launcher.ui.ripple
@@ -53,9 +55,7 @@ class SettingsActivity : Activity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs.get(this)
         Apps.init(this)
-        @Suppress("DEPRECATION")
-        window.setDecorFitsSystemWindows(false)
-        window.isNavigationBarContrastEnforced = false
+        window.edgeToEdge()
 
         column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val scroll = ScrollView(this).apply {
@@ -65,7 +65,7 @@ class SettingsActivity : Activity() {
         }
         setContentView(scroll)
         scroll.setOnApplyWindowInsetsListener { _, insets ->
-            val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+            val bars = insets.barInsets()
             column.setPadding(bars.left + dp(24), bars.top + dp(28), bars.right + dp(24), bars.bottom + dp(40))
             insets
         }
@@ -208,16 +208,17 @@ class SettingsActivity : Activity() {
         homeStatus.text = getString(if (isHome) R.string.set_default_on else R.string.set_default_off)
         homeLed.background = rounded(if (isHome) Nihil.INK else Nihil.OFF, dp(5f))
 
+        val restricted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) "\n" + getString(R.string.restricted_hint) else ""
         val notifications = Access.hasNotificationAccess(this)
         glyphSub.text = when {
-            prefs.glyph && !notifications -> getString(R.string.glyph_needs_access) + "\n" + getString(R.string.restricted_hint)
+            prefs.glyph && !notifications -> getString(R.string.glyph_needs_access) + restricted
             prefs.glyph && !Glyph.connected -> getString(R.string.glyph_not_connected)
             prefs.glyph -> getString(R.string.glyph_listening)
             else -> ""
         }
         glyphSub.visibility = if (glyphSub.text.isEmpty()) View.GONE else View.VISIBLE
         val lock = Access.hasLockService(this)
-        lockSub.text = if (prefs.doubleTapLock && !lock) getString(R.string.lock_needs_service) + "\n" + getString(R.string.restricted_hint) else ""
+        lockSub.text = if (prefs.doubleTapLock && !lock) getString(R.string.lock_needs_service) + restricted else ""
         lockSub.visibility = if (lockSub.text.isEmpty()) View.GONE else View.VISIBLE
     }
 

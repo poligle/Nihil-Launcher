@@ -5,10 +5,11 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.PixelFormat
 import android.graphics.RectF
-import android.view.RoundedCorner
+import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import com.nihilshell.launcher.ui.Halo
+import com.nihilshell.launcher.ui.topLeftCornerRadius
 
 class HaloOverlay(private val service: AccessibilityService) {
     private val windows = service.getSystemService(WindowManager::class.java)
@@ -39,8 +40,14 @@ class HaloOverlay(private val service: AccessibilityService) {
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT,
         ).apply {
-            layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
-            fitInsetsTypes = 0
+            layoutInDisplayCutoutMode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            } else {
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                fitInsetsTypes = 0
+            }
             title = "NIHIL Glyph light"
         }
         val view = Ring(service)
@@ -60,7 +67,7 @@ class HaloOverlay(private val service: AccessibilityService) {
         private fun layoutRing() {
             if (width == 0 || height == 0) return
             val inset = 2.5f * resources.displayMetrics.density
-            val corner = rootWindowInsets?.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT)?.radius?.toFloat() ?: 0f
+            val corner = rootWindowInsets?.topLeftCornerRadius()?.toFloat() ?: 0f
             halo.setRing(RectF(inset, inset, width - inset, height - inset), (corner - inset).coerceAtLeast(0f))
         }
 

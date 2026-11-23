@@ -3,6 +3,8 @@
 1. Download `nihil-launcher-v….apk` from the
    [latest release](https://github.com/poligle/Nihil-Launcher/releases/latest). The
    `.sha256` next to it checks the download: `sha256sum -c nihil-launcher-v….apk.sha256`.
+   Any phone with Android 9 or newer takes it; the deck's Bluetooth, for a computer no
+   network reaches, needs Android 12.
 2. Open it on the phone and let your browser or file manager install apps when Android
    asks.
 3. Open **NIHIL** from the app list and tap **Home app**, or Settings → Apps → Default

@@ -8,12 +8,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
-import android.view.WindowInsets
 import android.widget.FrameLayout
 import com.nihilshell.launcher.deck.DeckStore
 import com.nihilshell.launcher.deck.Vector
 import com.nihilshell.launcher.ui.Notice
 import com.nihilshell.launcher.ui.WRAP
+import com.nihilshell.launcher.ui.barInsets
 import com.nihilshell.launcher.ui.dp
 import com.nihilshell.launcher.ui.lp
 
@@ -28,7 +28,7 @@ class VectorShareActivity : Activity() {
         root.addView(notice, lp(WRAP, WRAP, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL))
         setContentView(root)
         root.setOnApplyWindowInsetsListener { _, insets ->
-            val bars = insets.getInsets(WindowInsets.Type.systemBars())
+            val bars = insets.barInsets(cutout = false)
             (notice.layoutParams as FrameLayout.LayoutParams).bottomMargin = bars.bottom + dp(28)
             insets
         }

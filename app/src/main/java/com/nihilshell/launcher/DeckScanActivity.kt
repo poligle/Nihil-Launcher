@@ -24,7 +24,6 @@ import android.view.Gravity
 import android.view.Surface
 import android.view.TextureView
 import android.view.View
-import android.view.WindowInsets
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -36,12 +35,15 @@ import com.nihilshell.launcher.ui.KeyButton
 import com.nihilshell.launcher.ui.MATCH
 import com.nihilshell.launcher.ui.Nihil
 import com.nihilshell.launcher.ui.WRAP
+import com.nihilshell.launcher.ui.barInsets
 import com.nihilshell.launcher.ui.dp
+import com.nihilshell.launcher.ui.edgeToEdge
 import com.nihilshell.launcher.ui.llp
 import com.nihilshell.launcher.ui.lp
 import com.nihilshell.launcher.ui.mono
 import com.nihilshell.launcher.ui.rounded
 import com.nihilshell.launcher.ui.text
+import java.nio.Buffer
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
@@ -65,9 +67,7 @@ class DeckScanActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        @Suppress("DEPRECATION")
-        window.setDecorFitsSystemWindows(false)
-        window.isNavigationBarContrastEnforced = false
+        window.edgeToEdge()
         val root = FrameLayout(this).apply { setBackgroundColor(Nihil.VOID) }
         texture = TextureView(this)
         root.addView(texture, lp(MATCH, MATCH))
@@ -96,7 +96,7 @@ class DeckScanActivity : Activity() {
             llp(WRAP, WRAP).apply { topMargin = dp(14) })
         root.addView(bottom, lp(MATCH, WRAP, Gravity.BOTTOM))
         root.setOnApplyWindowInsetsListener { _, insets ->
-            val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+            val bars = insets.barInsets()
             top.setPadding(dp(24) + bars.left, dp(20) + bars.top, dp(24) + bars.right, dp(20))
             bottom.setPadding(dp(24) + bars.left, dp(16), dp(24) + bars.right, dp(20) + bars.bottom)
             insets
@@ -238,7 +238,7 @@ class DeckScanActivity : Activity() {
         val lum = ByteArray(w * h)
         runCatching {
             for (y in 0 until h) {
-                buffer.position(y * plane.rowStride)
+                (buffer as Buffer).position(y * plane.rowStride)
                 buffer.get(lum, y * w, w)
             }
         }
@@ -272,7 +272,7 @@ class DeckScanActivity : Activity() {
         stop()
         // The computer is on Bluetooth too: Android asks once for nearby devices, then the pairing goes on.
         val store = DeckStore.get(this)
-        if (invitation.psm != null && !store.askedBluetooth && !BleLink.allowed(this)) {
+        if (BleLink.available && invitation.psm != null && !store.askedBluetooth && !BleLink.allowed(this)) {
             store.askedBluetooth = true
             waiting = invitation
             requestPermissions(BleLink.PERMISSIONS, BLUETOOTH_REQUEST)

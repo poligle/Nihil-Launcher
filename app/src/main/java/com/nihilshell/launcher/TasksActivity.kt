@@ -22,7 +22,6 @@ import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewOutlineProvider
-import android.view.WindowInsets
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.EditorInfo
@@ -47,7 +46,9 @@ import com.nihilshell.launcher.ui.Notice
 import com.nihilshell.launcher.ui.ReorderList
 import com.nihilshell.launcher.ui.VectorBox
 import com.nihilshell.launcher.ui.WRAP
+import com.nihilshell.launcher.ui.barInsets
 import com.nihilshell.launcher.ui.dp
+import com.nihilshell.launcher.ui.edgeToEdge
 import com.nihilshell.launcher.ui.llp
 import com.nihilshell.launcher.ui.lp
 import com.nihilshell.launcher.ui.mono
@@ -87,9 +88,7 @@ class TasksActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         tasks = TasksStore.get(this)
-        @Suppress("DEPRECATION")
-        window.setDecorFitsSystemWindows(false)
-        window.isNavigationBarContrastEnforced = false
+        window.edgeToEdge()
         val fonts = Nihil.fonts(this)
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         column.addView(text(getString(R.string.tasks_title), 22f, Nihil.INK), llp(MATCH, WRAP))
@@ -133,7 +132,7 @@ class TasksActivity : Activity() {
         root.addView(column, lp(MATCH, MATCH))
         root.addView(notice, lp(WRAP, WRAP, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL))
         root.setOnApplyWindowInsetsListener { _, insets ->
-            val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.ime() or WindowInsets.Type.displayCutout())
+            val bars = insets.barInsets(ime = true)
             column.setPadding(bars.left + dp(24), bars.top + dp(24), bars.right + dp(24), bars.bottom + dp(16))
             (notice.layoutParams as FrameLayout.LayoutParams).bottomMargin = bars.bottom + dp(84)
             insets
@@ -141,6 +140,10 @@ class TasksActivity : Activity() {
         setContentView(root)
         show(0)
         askToNotify()
+        if (intent?.getBooleanExtra(EXTRA_SAVE, false) == true) {
+            intent.removeExtra(EXTRA_SAVE)
+            act("save")
+        }
     }
 
     override fun onStart() {
@@ -375,9 +378,10 @@ class TasksActivity : Activity() {
             "copy" -> if (Vector.copy(this) && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                 notice.show(getString(R.string.vector_copied))
             }
-            "save" -> worker.execute {
-                val saved = Vector.save(this)
-                main.post { if (!isDestroyed) notice.show(getString(if (saved) R.string.vector_saved else R.string.vector_no_save)) }
+            "save" -> if (Vector.canSave(this)) {
+                saveVector()
+            } else {
+                requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_SAVE)
             }
             "open" -> {
                 val view = Intent(Intent.ACTION_VIEW).setDataAndType(uri, item.mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -392,10 +396,30 @@ class TasksActivity : Activity() {
                     share.clipData = ClipData.newRawUri(item.name, uri)
                 }
                 val chosen = Intent(this, VectorAction::class.java).setAction(VectorAction.SHARED)
-                val callback = PendingIntent.getBroadcast(this, 2, chosen, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+                val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
+                val callback = PendingIntent.getBroadcast(this, 2, chosen, flags)
                 runCatching { startActivity(Intent.createChooser(share, null, callback.intentSender)) }
             }
             else -> Vector.discard(this)
+        }
+    }
+
+    private fun saveVector() {
+        worker.execute {
+            val saved = Vector.save(this)
+            main.post { if (!isDestroyed) notice.show(getString(if (saved) R.string.vector_saved else R.string.vector_no_save)) }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_SAVE) {
+            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+                saveVector()
+            } else {
+                notice.show(getString(R.string.vector_no_save))
+            }
         }
     }
 
@@ -617,8 +641,10 @@ class TasksActivity : Activity() {
         }
     }
 
-    private companion object {
-        const val REQUEST_PICK = 11
-        const val REQUEST_NOTIFY = 12
+    companion object {
+        const val EXTRA_SAVE = "save"
+        private const val REQUEST_PICK = 11
+        private const val REQUEST_NOTIFY = 12
+        private const val REQUEST_SAVE = 13
     }
 }

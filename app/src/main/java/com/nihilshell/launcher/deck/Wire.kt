@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -26,8 +27,8 @@ class TlsPipe(
 ) {
     private val reading = Any()
     private val writing = Any()
-    private var sealedIn: ByteBuffer = ByteBuffer.allocate(engine.session.packetBufferSize).apply { flip() }
-    private var plain: ByteBuffer = ByteBuffer.allocate(engine.session.applicationBufferSize).apply { flip() }
+    private var sealedIn: ByteBuffer = ByteBuffer.allocate(engine.session.packetBufferSize).apply { flipBuffer() }
+    private var plain: ByteBuffer = ByteBuffer.allocate(engine.session.applicationBufferSize).apply { flipBuffer() }
     private var sealedOut: ByteBuffer = ByteBuffer.allocate(engine.session.packetBufferSize)
     private var ended = false
     private var watch: ScheduledFuture<*>? = null
@@ -146,7 +147,7 @@ class TlsPipe(
                 try {
                     result = engine.unwrap(sealedIn, plain)
                 } finally {
-                    plain.flip()
+                    plain.flipBuffer()
                 }
                 when (result.status) {
                     Status.BUFFER_OVERFLOW -> {
@@ -188,9 +189,9 @@ class TlsPipe(
         var count = -1
         try {
             count = from.read(sealedIn.array(), sealedIn.arrayOffset() + sealedIn.position(), sealedIn.remaining())
-            if (count > 0) sealedIn.position(sealedIn.position() + count)
+            if (count > 0) sealedIn.positionAt(sealedIn.position() + count)
         } finally {
-            sealedIn.flip()
+            sealedIn.flipBuffer()
         }
         if (count < 0) ended = true else moved = System.nanoTime()
         return count > 0
@@ -199,13 +200,13 @@ class TlsPipe(
     /** Seals and sends all of src; with src empty, what the handshake has to say. */
     private fun seal(src: ByteBuffer) {
         while (true) {
-            sealedOut.clear()
+            sealedOut.clearBuffer()
             val result = engine.wrap(src, sealedOut)
             if (result.status == Status.BUFFER_OVERFLOW) {
                 sealedOut = ByteBuffer.allocate(maxOf(sealedOut.capacity() * 2, engine.session.packetBufferSize))
                 continue
             }
-            sealedOut.flip()
+            sealedOut.flipBuffer()
             if (sealedOut.hasRemaining()) {
                 to.write(sealedOut.array(), sealedOut.arrayOffset() + sealedOut.position(), sealedOut.remaining())
                 moved = System.nanoTime()
@@ -228,7 +229,7 @@ class TlsPipe(
     private fun grown(buffer: ByteBuffer, size: Int): ByteBuffer =
         ByteBuffer.allocate(maxOf(size, buffer.capacity() * 2)).apply {
             put(buffer)
-            flip()
+            flipBuffer()
         }
 
     private companion object {
@@ -319,4 +320,26 @@ object Http {
         }
         return total
     }
+}
+
+/**
+ * flip, clear and position, through Buffer. Java 9 gave ByteBuffer its own of these, returning the
+ * buffer, and the SDK this is built against has them there; before Android 14 the runtime has only
+ * Buffer's, returning a Buffer, so a call written the other way is a method it hasn't, and throws
+ * NoSuchMethodError (`ByteBuffer.flip()Ljava/nio/ByteBuffer;`). Through Buffer, it is the same
+ * bytecode on every version.
+ */
+private fun ByteBuffer.flipBuffer(): ByteBuffer {
+    (this as Buffer).flip()
+    return this
+}
+
+private fun ByteBuffer.clearBuffer(): ByteBuffer {
+    (this as Buffer).clear()
+    return this
+}
+
+private fun ByteBuffer.positionAt(position: Int): ByteBuffer {
+    (this as Buffer).position(position)
+    return this
 }
